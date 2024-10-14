@@ -1,10 +1,7 @@
 {
-  "/setting/page": "app/setting/page.js",
-  "/page": "app/page.js",
-  "/create-role/page": "app/create-role/page.js",
-  "/list-page/page": "app/list-page/page.js",
-  "/components/page": "app/components/page.js",
-  "/home-3/page": "app/home-3/page.js",
-  "/add-product/page": "app/add-product/page.js",
-  "/product-list/page": "app/product-list/page.js"
+  "/login/page": "app/login/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/not-found": "app/not-found.js",
+  "/api/auth/oauth/route": "app/api/auth/oauth/route.js",
+  "/page": "app/page.js"
 }

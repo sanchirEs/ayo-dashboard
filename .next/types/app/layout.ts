@@ -1,4 +1,4 @@
-// File: C:\Users\snchr\Downloads\themeforest-BrfwRHRs-remos-ecommerce-admin-dashboard-react-nextjs-template\remons-package\remos-react\app\layout.js
+// File: D:\Projects\Electro\electro-dashboard\app\layout.js
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

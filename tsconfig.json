@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true, // Allows JS and JSX files
+    "skipLibCheck": true,
+    "strict": false, // Set to true for stricter type checking if needed
+    "noEmit": true,
+    "incremental": true,
+    "module": "esnext",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve", // Use 'react-jsx' to handle JSX with React (for React 17+)
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js", // Include JS files as well
+    "**/*.jsx", // Include JSX files
+    "components/auth/LoginForm.jsx",
+    "auth.ts"
+  ],
+  "exclude": ["node_modules"]
+}
