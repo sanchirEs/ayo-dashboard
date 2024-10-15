@@ -59,7 +59,7 @@ export default function Login() {
               <Link href="/" id="site-logo-inner"></Link>
               <div className="login-box">
                 <div>
-                  <h3>Login to account</h3>
+                  <h3>Нэвтрэх</h3>
                   <div className="body-text">
                     Enter your email &amp; password to login
                   </div>
@@ -68,7 +68,7 @@ export default function Login() {
                   <Form {...form}>
                     <form
                       onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-3"
+                      className="space-y-8"
                     >
                       {error && (
                         <p className="text-center text-destructive">{error}</p>
@@ -78,10 +78,12 @@ export default function Login() {
                         name="identifier"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Нэвтрэх нэр эсвэл и-мэйл</FormLabel>
+                            <FormLabel className="text-xl mb-6 font-extrabold text-black dark:text-white">
+                              Нэвтрэх нэр эсвэл и-мэйл
+                            </FormLabel>
                             <FormControl>
                               <Input
-                                className="h-14 border-2 border-gray-300 focus:border-black transition duration-250"
+                                className="h-20 rounded-2xl border-1 text-xl mt-6 focus:border-black transition duration-250"
                                 placeholder="Нэвтрэх нэр эсвэл и-мэйл"
                                 {...field}
                               />
@@ -95,10 +97,12 @@ export default function Login() {
                         name="password"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Нууц үг</FormLabel>
+                            <FormLabel className="text-xl font-extrabold text-black dark:text-white">
+                              Нууц үг
+                            </FormLabel>
                             <FormControl>
                               <PasswordInput
-                                className="h-14 border-2 border-gray-300 focus:border-black transition duration-250"
+                                className="h-20 border-1 text-xl mt-6 focus:border-black transition duration-250"
                                 placeholder="Нууц үг"
                                 {...field}
                               />
@@ -107,18 +111,23 @@ export default function Login() {
                           </FormItem>
                         )}
                       />
+                      <div className="flex justify-end">
+                        <Link href="#" className="link link-primary text-xl">
+                          Нууц үг мартсан
+                        </Link>
+                      </div>
                       <LoadingButton
                         loading={isPending}
                         type="submit"
                         // size="lg"
 
-                        className="w-full h-14 mt-3"
+                        className="tf-button w-full bg-red-500"
                       >
                         Нэвтрэх
                       </LoadingButton>
                     </form>
                   </Form>
-                  <Separator className="my-4" />
+                  {/* <Separator className="my-4" />
                   <Button
                     size="lg"
                     variant="outline"
@@ -135,14 +144,18 @@ export default function Login() {
                     onClick={() => alert("Not implemented")}
                   >
                     Facebook <FaFacebook className="size-4" />
-                  </Button>
+                  </Button> */}
                 </>
+
                 <div>
                   <div className="text-tiny mb-16 text-center">
                     Or continue with social account
                   </div>
                   <div className="flex gap16 mobile-wrap">
-                    <Link href="/" className="tf-button style-2 w-full">
+                    <button
+                      onClick={handleGoogleLogin}
+                      className="tf-button style-2 w-full"
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width={23}
@@ -188,7 +201,7 @@ export default function Login() {
                         </defs>
                       </svg>
                       <span className="tf-color-3">Sign in with Google</span>
-                    </Link>
+                    </button>
                     <Link href="/" className="tf-button style-2 w-full">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
