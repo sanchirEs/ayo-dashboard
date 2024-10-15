@@ -8,7 +8,7 @@ import "/public/css/swiper-bundle.min.css";
 import "/public/css/style.css";
 import "/public/font/fonts.css";
 import "/public/icon/style.css";
-
+import { SessionProvider } from "next-auth/react";
 const nunito = Nunito({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
@@ -23,7 +23,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${nunito.variable} body`}>{children}</body>
+      <body className={`${nunito.variable} body`}>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

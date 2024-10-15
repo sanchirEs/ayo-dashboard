@@ -1,27 +1,44 @@
-'use client'
-import { Menu } from '@headlessui/react'
-import dynamic from 'next/dynamic'
-import Link from "next/link"
-import FullScreenButton from '../elements/FullScreenButton'
-import Language from '../elements/Language'
-const ThemeSwitch = dynamic(() => import('../elements/ThemeSwitch'), {
-    ssr: false,
-})
+"use client";
+import { Menu } from "@headlessui/react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import FullScreenButton from "../elements/FullScreenButton";
+import Language from "../elements/Language";
+import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
+const ThemeSwitch = dynamic(() => import("../elements/ThemeSwitch"), {
+  ssr: false,
+});
 
-export default function Header1({ scroll, isMobileMenu, handleSidebar, handleOffcanvas }) {
-    return (
-        <>
-
-            <div className="header-dashboard">
-                <div className="wrap">
-                    <div className="header-left">
-                        <Link href="/">
-                            <img id="logo_header_mobile" alt="" src="/images/logo/logo.png" data-light="images/logo/logo.png" data-dark="images/logo/logo-dark.png" data-width="154px" data-height="52px" data-retina="images/logo/logo@2x.png" />
-                        </Link>
-                        <div className="button-show-hide" onClick={handleSidebar}>
-                            <i className="icon-menu-left" />
-                        </div>
-                        {/* <form className="form-search flex-grow">
+export default function Header1({
+  scroll,
+  isMobileMenu,
+  handleSidebar,
+  handleOffcanvas,
+}) {
+  const session = useSession();
+  const user = session.data?.user;
+  return (
+    <>
+      <div className="header-dashboard">
+        <div className="wrap">
+          <div className="header-left">
+            <Link href="/">
+              <img
+                id="logo_header_mobile"
+                alt=""
+                src="/images/logo/logo.png"
+                data-light="images/logo/logo.png"
+                data-dark="images/logo/logo-dark.png"
+                data-width="154px"
+                data-height="52px"
+                data-retina="images/logo/logo@2x.png"
+              />
+            </Link>
+            <div className="button-show-hide" onClick={handleSidebar}>
+              <i className="icon-menu-left" />
+            </div>
+            {/* <form className="form-search flex-grow">
                             <fieldset className="name">
                                 <input type="text" placeholder="Search here..." className="show-search" name="name" tabIndex={2} aria-required="true" required />
                             </fieldset>
@@ -147,13 +164,13 @@ export default function Header1({ scroll, isMobileMenu, handleSidebar, handleOff
                                 </ul>
                             </div>
                         </form> */}
-                    </div>
-                    <div className="header-grid">
-                        {/* <div className="header-item country">
+          </div>
+          <div className="header-grid">
+            {/* <div className="header-item country">
                             <Language />
                         </div> */}
-                        <ThemeSwitch />
-                        {/* <div className="popup-wrap noti type-header">
+            <ThemeSwitch />
+            {/* <div className="popup-wrap noti type-header">
                             <Menu as="div" className="dropdown">
                                 <Menu.Button className="btn btn-secondary dropdown-toggle" type="button">
                                     <span className="header-item">
@@ -225,7 +242,7 @@ export default function Header1({ scroll, isMobileMenu, handleSidebar, handleOff
                                 </Menu.Items>
                             </Menu>
                         </div> */}
-                        {/* <div className="popup-wrap message type-header">
+            {/* <div className="popup-wrap message type-header">
                             <Menu as="div" className="dropdown">
                                 <Menu.Button className="btn btn-secondary dropdown-toggle" type="button">
                                     <span className="header-item">
@@ -289,8 +306,8 @@ export default function Header1({ scroll, isMobileMenu, handleSidebar, handleOff
                                 </Menu.Items>
                             </Menu>
                         </div> */}
-                        <FullScreenButton />
-                        {/* <div className="popup-wrap apps type-header">
+            <FullScreenButton />
+            {/* <div className="popup-wrap apps type-header">
                             <Menu as="div" className="dropdown">
                                 <Menu.Button className="btn btn-secondary dropdown-toggle" type="button">
                                     <span className="header-item">
@@ -381,63 +398,89 @@ export default function Header1({ scroll, isMobileMenu, handleSidebar, handleOff
                                 </Menu.Items>
                             </Menu>
                         </div> */}
-                        <div className="popup-wrap user type-header">
-                            <Menu as="div" className="dropdown">
-                                <Menu.Button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton3" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span className="header-user wg-user">
-                                        <span className="image">
-                                            <img src="/images/avatar/user-1.png" alt="" />
-                                        </span>
-                                        <span className="flex flex-column">
-                                            <span className="body-title mb-2">Kristin Watson</span>
-                                            <span className="text-tiny">Admin</span>
-                                        </span>
-                                    </span>
-                                </Menu.Button>
-                                <Menu.Items as="ul" className="dropdown-menu dropdown-menu-end has-content show d-flex end-0" aria-labelledby="dropdownMenuButton3">
-                                    <li>
-                                        <Link href="#" className="user-item">
-                                            <div className="icon">
-                                                <i className="icon-user" />
-                                            </div>
-                                            <div className="body-title-2">Account</div>
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/setting" className="user-item">
-                                            <div className="icon">
-                                                <i className="icon-settings" />
-                                            </div>
-                                            <div className="body-title-2">Setting</div>
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="#" className="user-item">
-                                            <div className="icon">
-                                                <i className="icon-headphones" />
-                                            </div>
-                                            <div className="body-title-2">Support</div>
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/login" className="user-item">
-                                            <div className="icon">
-                                                <i className="icon-log-out" />
-                                            </div>
-                                            <div className="body-title-2">Log out</div>
-                                        </Link>
-                                    </li>
-                                </Menu.Items>
-                            </Menu>
-                        </div>
-                        <div className="divider" />
-
-                        {/* <div className="setting cursor-pointer" onClick={handleOffcanvas}><i className="icon-settings" /></div> */}
-
-                    </div>
-                </div>
+            <div className="popup-wrap user type-header">
+              <Menu as="div" className="dropdown">
+                <Menu.Button
+                  className="btn btn-secondary dropdown-toggle"
+                  type="button"
+                  id="dropdownMenuButton3"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <span className="header-user wg-user">
+                    <span className="image">
+                      <img
+                        src={
+                          user && user.image
+                            ? user.image
+                            : "/images/avatar/user-1.png"
+                        }
+                        alt=""
+                      />
+                    </span>
+                    <span className="flex flex-column">
+                      <span className="body-title mb-2">
+                        {user && user.firstName} {user && user.lastName}
+                      </span>
+                      <span className="text-tiny">{user && user.role}</span>
+                    </span>
+                  </span>
+                </Menu.Button>
+                <Menu.Items
+                  as="ul"
+                  className="dropdown-menu dropdown-menu-end has-content show d-flex end-0"
+                  aria-labelledby="dropdownMenuButton3"
+                >
+                  <li>
+                    <Link href="#" className="user-item">
+                      <div className="icon">
+                        <i className="icon-user" />
+                      </div>
+                      <div className="body-title-2">Хаяг</div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/setting" className="user-item">
+                      <div className="icon">
+                        <i className="icon-settings" />
+                      </div>
+                      <div className="body-title-2">Тохиргоо</div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="#" className="user-item">
+                      <div className="icon">
+                        <i className="icon-headphones" />
+                      </div>
+                      <div className="body-title-2">Тусламж</div>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/login" className="user-item">
+                      <div className="icon">
+                        <i className="icon-log-out" />
+                      </div>
+                      <div
+                        className="body-title-2"
+                        onClick={() => {
+                          // queryClient.clear();
+                          // logout();
+                          signOut({ redirectTo: "/" });
+                        }}
+                      >
+                        Гарах
+                      </div>
+                    </Link>
+                  </li>
+                </Menu.Items>
+              </Menu>
             </div>
+            <div className="divider" />
 
-        </>
-    )
+            {/* <div className="setting cursor-pointer" onClick={handleOffcanvas}><i className="icon-settings" /></div> */}
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
