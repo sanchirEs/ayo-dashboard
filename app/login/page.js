@@ -79,7 +79,8 @@ export default function Login() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xl mb-6 font-extrabold text-black dark:text-white">
-                              Нэвтрэх нэр эсвэл и-мэйл
+                              Нэвтрэх нэр эсвэл и-мэйл{" "}
+                              <span className="tf-color-1">*</span>
                             </FormLabel>
                             <FormControl>
                               <Input
@@ -98,7 +99,7 @@ export default function Login() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-xl font-extrabold text-black dark:text-white">
-                              Нууц үг
+                              Нууц үг <span className="tf-color-1">*</span>
                             </FormLabel>
                             <FormControl>
                               <PasswordInput

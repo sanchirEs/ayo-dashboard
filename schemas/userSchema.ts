@@ -1,5 +1,12 @@
 import { z } from "zod";
-const requiredString = z.string().trim().min(1, "Required");
+const {
+  optionalString,
+  optionalNumber,
+  optionalBoolean,
+  requiredString,
+  requiredNumber,
+  // optionalDate,
+} = require("./constantValidation");
 
 export const loginSchema = z.object({
   identifier: z
