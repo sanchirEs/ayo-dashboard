@@ -2,7 +2,6 @@ import Credentials from "next-auth/providers/credentials";
 
 import type { NextAuthConfig } from "next-auth";
 import { InvalidLoginError } from "@/auth.errors";
-import { clippingParents } from "@popperjs/core";
 export default {
   providers: [
     Credentials({

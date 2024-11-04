@@ -3,6 +3,8 @@ import { signIn } from "@/auth";
 import jwt from "jsonwebtoken";
 import { AuthError } from "next-auth";
 export async function GET(req) {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
   const cookie = req.cookies.get("auth_token");
   const myCookie = cookie?.value;
   let decodedToken;
@@ -10,7 +12,7 @@ export async function GET(req) {
     decodedToken = jwt.verify(myCookie, process.env.AUTH_SECRET);
   } catch (error) {
     console.error("Token verification failed", error);
-    return Response.redirect(`/login_register?err_msg${"oauthlogin"}`, 302);
+    return Response.redirect(`${baseUrl}/login?err_msg=${"oauthlogin"}`, 302);
   }
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -37,16 +39,16 @@ export async function GET(req) {
           // console.log("credentials aldaa");
           if ((error as any)?.code === "credentials")
             return Response.redirect(
-              `/login_register?err_msg=${"oauthlogin"}`,
+              `${baseUrl}/login?err_msg=${"oauthlogin"}`,
               302
             ); // 302 is the default redirect status
           return Response.redirect(
-            `/login_register?err_msg=${"oauthlogin"}`,
+            `${baseUrl}/login?err_msg=${"oauthlogin"}`,
             302
           ); // 302 is the default redirect status
         default:
           return Response.redirect(
-            `/login_register?err_msg=${"oauthlogin"}`,
+            `${baseUrl}/login?err_msg=${"oauthlogin"}`,
             302
           ); // 302 is the default redirect status
       }

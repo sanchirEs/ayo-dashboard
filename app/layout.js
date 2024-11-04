@@ -1,13 +1,13 @@
 import "../globals.css";
 import { Nunito } from "next/font/google";
-import "/public/css/animate.min.css";
-import "/public/css/animation.css";
-import "/public/css/bootstrap-select.min.css";
-import "/public/css/bootstrap.css";
-import "/public/css/swiper-bundle.min.css";
-import "/public/css/style.css";
-import "/public/font/fonts.css";
-import "/public/icon/style.css";
+import "../public/css/animate.min.css";
+import "../public/css/animation.css";
+import "../public/css/bootstrap-select.min.css";
+import "../public/css/bootstrap.css";
+import "../public/css/swiper-bundle.min.css";
+import "../public/css/style.css";
+import "../public/font/fonts.css";
+import "../public/icon/style.css";
 import { SessionProvider } from "next-auth/react";
 const nunito = Nunito({
   weight: ["300", "400", "500", "600", "700"],

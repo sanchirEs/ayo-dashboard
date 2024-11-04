@@ -23,6 +23,7 @@ export default function AddProduct() {
   const [success, setSuccess] = useState(""); //Ur dun barih
   const [isPending, startTransition] = useTransition(); //Form submit transition process
   const TOKEN = GetToken();
+
   const form = useForm({
     // Form
     resolver: zodResolver(addProductsSchema),
@@ -32,6 +33,7 @@ export default function AddProduct() {
     },
   });
   async function onSubmit(values) {
+    console.log("TOKEN", TOKEN);
     setError(undefined);
     startTransition(async () => {
       //File, JSON zereg ilgeehiin tuld formdata ashiglana.
@@ -123,9 +125,7 @@ export default function AddProduct() {
                           <select
                             {...field} // Spread field props to bind the select with react-hook-form
                           >
-                            <option value="" selected>
-                              Бүтээгдэхүүн сонгоно уу
-                            </option>{" "}
+                            <option value="">Бүтээгдэхүүн сонгоно уу</option>{" "}
                             {/* Use value to indicate unselected state */}
                             <option value={1}>Cat1</option>
                             <option value={2}>Cat2</option>
