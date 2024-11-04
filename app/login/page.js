@@ -53,7 +53,7 @@ export default function Login() {
     <>
       <div id="wrapper">
         {/* #page */}
-        <div id="page" className>
+        <div id="page">
           <div className="wrap-login-page">
             <div className="flex-grow flex flex-column justify-center gap30">
               <Link href="/" id="site-logo-inner"></Link>

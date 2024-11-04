@@ -17,7 +17,7 @@ export default function ProductList() {
               <div className="show">
                 <div className="text-tiny">Showing</div>
                 <div className="select">
-                  <select className>
+                  <select>
                     <option>10</option>
                     <option>20</option>
                     <option>30</option>

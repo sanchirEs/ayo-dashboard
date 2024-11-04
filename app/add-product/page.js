@@ -246,7 +246,7 @@ export default function AddProduct() {
                 <fieldset className="name">
                   <div className="body-title mb-10">Add size</div>
                   <div className="select mb-10">
-                    <select className>
+                    <select >
                       <option>EU - 44</option>
                       <option>EU - 40</option>
                       <option>EU - 50</option>

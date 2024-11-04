@@ -75,7 +75,11 @@ export default function Menu() {
               activeAccordion === 1 ? "active" : ""
             }`}
           >
-            <a className="menu-item-button" href="/home-3" onClick={() => handleAccordion(1)}>
+            <a
+              className="menu-item-button"
+              href="/home-3"
+              onClick={() => handleAccordion(1)}
+            >
               <div className="icon">
                 <i className="icon-grid" />
               </div>
@@ -429,7 +433,11 @@ export default function Menu() {
               activeAccordion === 8 ? "active" : ""
             }`}
           >
-            <a className="menu-item-button" href="/cities" onClick={() => handleAccordion(8)}>
+            <a
+              className="menu-item-button"
+              href="/cities"
+              onClick={() => handleAccordion(8)}
+            >
               <div className="icon">
                 <i className="icon-map-pin" />
               </div>
@@ -541,7 +549,7 @@ export default function Menu() {
         <div className="center-heading">Support</div>
         <ul className="menu-list">
           <li className={`menu-item`}>
-            <Link href="#" className>
+            <Link href="#">
               <div className="icon">
                 <i className="icon-help-circle" />
               </div>
@@ -549,7 +557,7 @@ export default function Menu() {
             </Link>
           </li>
           <li className={`menu-item`}>
-            <Link href="#" className>
+            <Link href="#">
               <div className="icon">
                 <svg
                   width={20}
@@ -568,7 +576,7 @@ export default function Menu() {
             </Link>
           </li>
           {/* <li className={`menu-item`}>
-            <Link href="#" className>
+            <Link href="#" >
               <div className="icon">
                 <svg
                   width={20}
