@@ -1,6 +1,8 @@
+"use server";
 import Link from "next/link";
-
-export default function DataTable() {
+import getToken from "@/lib/GetTokenServer";
+export default async function DataTable() {
+  const TOKEN = await getToken();
   return (
     <div className="wg-table table-all-user">
       <ul className="table-title flex gap20 mb-14">

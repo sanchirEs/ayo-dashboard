@@ -1,7 +1,9 @@
+"use server";
 import Layout from "@/components/layout/Layout";
 import DataTable from "./UserTable";
 import Link from "next/link";
-export default function AllUser() {
+export default async function AllUser({ searchParams }) {
+  console.log("aaa", searchParams.name);
   return (
     <>
       <Layout breadcrumbTitleParent="User" breadcrumbTitle="All User">
