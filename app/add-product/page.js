@@ -4,7 +4,7 @@ import { addProductsSchema } from "@/schemas/productSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -137,6 +137,7 @@ export default function AddProduct() {
                     )}
                   />
                 </div>
+
                 <div className="w-1/2">
                   <FormField
                     control={form.control}

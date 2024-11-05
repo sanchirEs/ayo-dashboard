@@ -23,6 +23,7 @@ export default function Layout({
   headerStyle,
   breadcrumbTitleParent,
   breadcrumbTitle,
+  pageTitle,
   children,
   boxed,
   menuIconHover,
@@ -73,6 +74,7 @@ export default function Layout({
                       <Breadcrumb
                         breadcrumbTitle={breadcrumbTitle}
                         breadcrumbTitleParent={breadcrumbTitleParent}
+                        pageTitle={pageTitle}
                       />
                     )}
 

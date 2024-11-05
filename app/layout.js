@@ -9,6 +9,8 @@ import "../public/css/style.css";
 import "../public/font/fonts.css";
 import "../public/icon/style.css";
 import { SessionProvider } from "next-auth/react";
+import ToastProvider from "@/context/ToastProvider";
+import { Toast } from "@radix-ui/react-toast";
 const nunito = Nunito({
   weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
@@ -24,6 +26,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={`${nunito.variable} body`}>
+        <ToastProvider />
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
