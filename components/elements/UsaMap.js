@@ -1,6 +1,6 @@
 'use client'
 import React, { useRef } from "react"
-import { VectorMap } from "react-jvectormap"
+import { VectorMap } from '@react-jvectormap/core';
 
 const UsaMap = React.memo(() => {
     const mapRef = useRef()
