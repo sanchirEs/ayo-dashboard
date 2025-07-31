@@ -39,11 +39,9 @@ export default {
         );
         if (!res.ok) {
           const errorMessage = await res.json();
-          // console.log("aldaanii messageeeee", errorMessage);
           throw new InvalidLoginError(errorMessage.message);
         }
         const data = await res.json();
-        // console.log("login", data);
         if (data.data) {
           return data.data;
         } else {
@@ -52,23 +50,30 @@ export default {
       },
     }),
   ],
-  // callbacks: {
-  //   async jwt({ token, user }) {
-  //     if (user) {
-  //       token.role = user.role;
-  //       token.accessToken = user.accessToken;
-  //       token.company_name = user.company_name;
-  //     }
-  //     return token;
-  //   },
-  //   async session({ session, token, user }) {
-  //     if (session?.user) {
-  //       session.user.company_name = token.company_name;
-  //       session.user.role = token.role;
-  //       session.user.accessToken = token.accessToken;
-  //       // console.log("session data", session);
-  //     }
-  //     return session;
-  //   },
-  // },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.accessToken = user.accessToken;
+        token.userId = user.userId;
+        token.email = user.email;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.username = user.username;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.role = token.role;
+        session.user.accessToken = token.accessToken;
+        session.user.userId = token.userId;
+        session.user.email = token.email;
+        session.user.firstName = token.firstName;
+        session.user.lastName = token.lastName;
+        session.user.username = token.username;
+      }
+      return session;
+    },
+  },
 } satisfies NextAuthConfig;

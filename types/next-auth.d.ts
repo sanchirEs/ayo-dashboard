@@ -1,42 +1,28 @@
 import NextAuth, { type DefaultSession } from "next-auth";
-export type ExtendedUser = DefaultSession["user"] & {
-  user: {};
-};
+
 declare module "next-auth" {
   interface Session {
-    // user: {
-    //   /** The user's postal address. */
-    //   address: string;
-    //   role: string;
-    //   firstName: string;
-    //   lastName: string;
-    //   emailVerified: string;
-    //   accessToken: string;
-    //   username: string;
-    // } & DefaultSession["user"];
     user: User & DefaultSession["user"];
   }
   interface User {
-    role: string | null;
-    firstName: string | null;
-    lastName: string | null;
-    email_verified: string | null;
-    accessToken: string | null;
-    username: string | null;
+    userId: number;
+    role: string;
+    firstName: string;
+    lastName: string;
+    email_verified: boolean;
+    accessToken: string;
+    username: string;
   }
-  // interface Session {
-  //   user: ExtendedUser;
-  // }
 }
-// import { JWT } from "@auth/core/jwt";
-// declare;
-// module "@auth/core/jwt" {
-//   interface JWT {
-//     role?: string;
-//     firstName?: string;
-//     lastName?: string;
-//     emailVerified?: string;
-//     accessToken?: string;
-//     username?: string;
-//   }
-// }
+
+declare module "@auth/core/jwt" {
+  interface JWT {
+    userId: number;
+    role: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    accessToken: string;
+    username: string;
+  }
+}
