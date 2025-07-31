@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { loginSchema } from "@/schemas/userSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
@@ -23,7 +23,20 @@ import { PasswordInput } from "@/components/customui/PasswordInput";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { login } from "@/components/auth/actions/login";
+
+// Force dynamic rendering to prevent SSR issues with browser APIs
+export const dynamic = 'force-dynamic';
+
 export default function Login() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null; // or a loading spinner
+  }
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const form = useForm({
@@ -43,10 +56,12 @@ export default function Login() {
     });
   }
   const handleGoogleLogin = () => {
-    window.open(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`,
-      "_self"
-    );
+    if (typeof window !== 'undefined') {
+      window.open(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`,
+        "_self"
+      );
+    }
   };
 
   return (

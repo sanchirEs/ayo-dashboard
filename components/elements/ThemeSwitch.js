@@ -3,7 +3,14 @@
 import { useEffect, useState } from 'react'
 
 const ThemeSwitch = ({ radioBtn }) => {
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light-theme')
+    const [theme, setTheme] = useState('light-theme')
+    const [isClient, setIsClient] = useState(false)
+
+    useEffect(() => {
+        setIsClient(true)
+        const savedTheme = localStorage.getItem('theme') || 'light-theme'
+        setTheme(savedTheme)
+    }, [])
 
     const lightLogo = '/images/logo/logo.png'
     const darkLogo = '/images/logo/logo-dark.png'
@@ -11,23 +18,33 @@ const ThemeSwitch = ({ radioBtn }) => {
     const toggleTheme = () => {
         const newTheme = theme === 'light-theme' ? 'dark-theme' : 'light-theme'
         setTheme(newTheme)
-        localStorage.setItem('theme', newTheme)
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('theme', newTheme)
+        }
     }
 
     useEffect(() => {
-        if (theme === 'dark-theme') {
-            document.body.classList.add('dark-theme')
-            document.body.classList.remove('light-theme')
-        } else {
-            document.body.classList.add('light-theme')
-            document.body.classList.remove('dark-theme')
-        }
+        if (typeof document !== 'undefined' && isClient) {
+            if (theme === 'dark-theme') {
+                document.body.classList.add('dark-theme')
+                document.body.classList.remove('light-theme')
+            } else {
+                document.body.classList.add('light-theme')
+                document.body.classList.remove('dark-theme')
+            }
 
-        // Set logo when theme changes
-        const logo = theme === 'dark-theme' ? darkLogo : lightLogo
-        document.getElementById('logo_header').setAttribute('src', logo)
-        document.getElementById('logo_header_mobile').setAttribute('src', logo)
-    }, [theme]) // Add theme as dependency
+            // Set logo when theme changes
+            const logo = theme === 'dark-theme' ? darkLogo : lightLogo
+            const logoHeader = document.getElementById('logo_header')
+            const logoHeaderMobile = document.getElementById('logo_header_mobile')
+            if (logoHeader) logoHeader.setAttribute('src', logo)
+            if (logoHeaderMobile) logoHeaderMobile.setAttribute('src', logo)
+        }
+    }, [theme, isClient]) // Add theme and isClient as dependencies
+
+    if (!isClient) {
+        return null; // or a loading spinner
+    }
 
     return (
         <>
