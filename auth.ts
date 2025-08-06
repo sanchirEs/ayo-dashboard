@@ -19,7 +19,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token, user }) {
       if (session?.user) {
         session.user.username = token.username as string;
-        session.user.email_verified = token.email_verified as string;
+        session.user.email_verified = token.email_verified as boolean;
         session.user.image = token.image as string;
         session.user.accessToken = token.accessToken as string;
         session.user.firstName = token.firstName as string;
