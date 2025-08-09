@@ -140,7 +140,7 @@ export default async function FlashSalesManager({ searchParams }) {
                     <div className="image no-bg">
                       {product.images && product.images.length > 0 ? (
                         <img 
-                          src={product.images[0].url} 
+                          src={require("@/lib/api/env").resolveImageUrl(product.images[0].url)} 
                           alt={product.name}
                           style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '6px' }}
                         />

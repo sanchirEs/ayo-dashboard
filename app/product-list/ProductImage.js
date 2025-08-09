@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
+import { resolveImageUrl } from "@/lib/api/env";
 
 export default function ProductImage({ product, size = 64 }) {
   const [imageSrc, setImageSrc] = useState(
     product.images && product.images.length > 0
-      ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${product.images[0].url}`
-      : "/images/products/1.png" // Use existing product image as default
+      ? resolveImageUrl(product.images[0].url)
+      : "/images/products/1.png"
   );
 
   const handleError = () => {

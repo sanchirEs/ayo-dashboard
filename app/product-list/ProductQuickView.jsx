@@ -35,7 +35,7 @@ export default function ProductQuickView({ open, onOpenChange, product }) {
           <div className="md:col-span-7">
             <div className="relative w-full aspect-[4/3] overflow-hidden rounded-xl border bg-white">
               <img
-                src={images[index]?.url ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${images[index].url}` : "/images/products/1.png"}
+                src={images[index]?.url ? require("@/lib/api/env").resolveImageUrl(images[index].url) : "/images/products/1.png"}
                 alt={product?.name}
                 className="w-full h-full object-cover"
               />
@@ -60,7 +60,7 @@ export default function ProductQuickView({ open, onOpenChange, product }) {
                     aria-label={`Preview image ${i + 1}`}
                   >
                     <img
-                      src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${img.url}`}
+                      src={require("@/lib/api/env").resolveImageUrl(img.url)}
                       alt="thumb"
                       className="w-full h-full object-cover"
                     />

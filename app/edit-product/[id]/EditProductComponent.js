@@ -352,7 +352,7 @@ export default function EditProductComponent({ id }) {
                   <div className="upload-image mb-16 ">
                     {existingImages.map((image) => (
                       <div className="item" key={image.id}>
-                        <img src={`${process.env.NEXT_PUBLIC_BACKEND_URL}${image.url}`} alt="existing" />
+                        <img src={require("@/lib/api/env").resolveImageUrl(image.url)} alt="existing" />
                         <div className="mt-2 text-center">
                           <Button type="button" size="sm" variant="destructive" onClick={() => removeExistingImage(image.id)}>Remove</Button>
                         </div>
