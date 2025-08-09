@@ -156,8 +156,9 @@ export default function AddProductComponent() {
         // Also send tagsCsv for convenience/compat
         formData.append("tagsCsv", tagsCsv);
       }
-      values.images.forEach((image, index) => {
-        formData.append(`images[${index}]`, image); // Append images to FormData
+      values.images.forEach((image) => {
+        // Backend expects 'images' field repeatedly with files
+        formData.append('images', image);
       });
       const response = await fetch(
         `${require("@/lib/api/env").getBackendUrl()}/api/v1/products/createproduct`,

@@ -10,18 +10,10 @@ export function getBackendUrl(): string {
 export function resolveImageUrl(input: string | undefined | null): string {
   const fallback = '/images/products/1.png';
   if (!input || typeof input !== 'string') return fallback;
+  // Allow absolute URLs (e.g., Cloudinary) to pass through unchanged
+  if (input.startsWith('http://') || input.startsWith('https://')) return input;
   const base = getBackendUrl();
-  try {
-    if (input.startsWith('http://') || input.startsWith('https://')) {
-      const u = new URL(input);
-      const baseU = new URL(base);
-      // Force using backend origin to avoid mixed content and wrong hosts
-      return `${baseU.origin}${u.pathname}${u.search}`;
-    }
-  } catch {
-    // ignore parse errors, fall through
-  }
-  // Treat as relative path
+  // Treat as relative path to backend
   if (input.startsWith('/')) return `${base}${input}`;
   return `${base}/${input}`;
 }

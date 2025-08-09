@@ -99,10 +99,10 @@ export async function updateProduct(
     if (typeof payload.quantity !== 'undefined') formData.append('quantity', String(payload.quantity));
     if (Array.isArray(payload.removeImageIds)) formData.append('removeImageIds', JSON.stringify(payload.removeImageIds));
     if (Array.isArray(payload.images)) {
-      payload.images.forEach((file, idx) => {
-        // File extends Blob in browsers; accept any Blob-compatible object
+      payload.images.forEach((file) => {
+        // Backend expects field name "images" because we use upload.array('images')
         if (file instanceof Blob) {
-          formData.append(`images[${idx}]`, file);
+          formData.append('images', file);
         }
       });
     }
