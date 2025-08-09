@@ -24,8 +24,12 @@ export default {
           }
           return null;
         }
+        const baseUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+        if (!baseUrl) {
+          throw new InvalidLoginError("BACKEND_URL is not configured");
+        }
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/login`,
+          `${baseUrl}/api/v1/auth/login`,
           {
             method: "POST",
             headers: {

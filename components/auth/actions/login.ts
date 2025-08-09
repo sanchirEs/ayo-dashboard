@@ -29,6 +29,9 @@ export const login = async (values) => {
           return { error: "Ямар нэгэн зүйл буруудлаа!" };
       }
     }
-    throw error;
+    // Allow Next.js redirect signals to bubble up (successful login)
+    if ((error as any)?.digest === 'NEXT_REDIRECT') throw error;
+    // For any other unexpected error, return a generic message
+    return { error: "Ямар нэгэн зүйл буруудлаа!" };
   }
 };
