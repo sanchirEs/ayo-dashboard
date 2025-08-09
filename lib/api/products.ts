@@ -1,4 +1,5 @@
 import getToken from "@/lib/GetTokenServer";
+import { getBackendUrl } from "@/lib/api/env";
 
 export interface Product {
   id: number;
@@ -41,7 +42,7 @@ export async function getProductById(productId: number, tokenOverride?: string |
   try {
     const token = tokenOverride ?? null;
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}`,
+      `${getBackendUrl()}/api/v1/products/${productId}`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: 'no-store',
@@ -106,7 +107,7 @@ export async function updateProduct(
       });
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}`,
+    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
@@ -128,7 +129,7 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     const params = new URLSearchParams(searchParams);
     
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products?${params.toString()}`,
+      `${getBackendUrl()}/api/v1/products?${params.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -175,7 +176,7 @@ export async function deleteProduct(productId: number): Promise<boolean> {
     const token = await getToken();
     
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}`,
+      `${getBackendUrl()}/api/v1/products/${productId}`,
       {
         method: 'DELETE',
         headers: {

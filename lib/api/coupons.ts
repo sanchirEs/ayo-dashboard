@@ -1,4 +1,5 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+import { getBackendUrl } from "@/lib/api/env";
+const BACKEND_URL = getBackendUrl();
 
 export interface Coupon {
   id: number;

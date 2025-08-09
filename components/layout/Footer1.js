@@ -7,7 +7,7 @@ export default function Footer1() {
             <div className="bottom-page">
                 <div className="body-text">Copyright © {new Date().getFullYear()} Remos. Design with</div>
                 <i className="icon-heart" />
-                <div className="body-text">by <Link href="/https://themeforest.net/user/themesflat/portfolio">Themesflat</Link> All rights reserved.</div>
+                <div className="body-text">All rights reserved.</div>
             </div>
 
         </>

@@ -142,12 +142,8 @@ export default function NewPage() {
                 <div>
                   <h6 className="mb-10">Lorem ipsum dolor sit amet</h6>
                   <div className="mb-2">
-                    <Link
-                      className="body-text tf-color"
-                      href="/https://themeforest.net/user/themesflat"
-                    >
-                      https://themeforest.net/user/themesflat
-                    </Link>
+                    {/* External marketing link removed for production */}
+                    <span className="body-text tf-color">&nbsp;</span>
                   </div>
                   <div className="body-text">20 Nov 2023</div>
                 </div>

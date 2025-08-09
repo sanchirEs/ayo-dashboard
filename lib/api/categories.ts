@@ -1,4 +1,5 @@
 import getToken from "@/lib/GetTokenServer";
+import { getBackendUrl } from "@/lib/api/env";
 
 export interface Category {
   id: number;
@@ -21,7 +22,7 @@ export async function getCategories(): Promise<Category[]> {
   try {
     const token = await getToken();
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/`,
+      `${getBackendUrl()}/api/v1/categories/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -46,7 +47,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   try {
     const token = await getToken();
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/tree/all`,
+      `${getBackendUrl()}/api/v1/categories/tree/all`,
       {
         headers: {
           Authorization: token ? `Bearer ${token}` : "",
@@ -68,7 +69,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
 export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/tree/all`,
+      `${getBackendUrl()}/api/v1/categories/tree/all`,
       { cache: "no-store" }
     );
     if (!response.ok) {
@@ -85,7 +86,7 @@ export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
 export async function getCategoriesClient(token: string): Promise<Category[]> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/`,
+      `${getBackendUrl()}/api/v1/categories/`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

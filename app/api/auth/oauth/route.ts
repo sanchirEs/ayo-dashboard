@@ -3,8 +3,10 @@ import { signIn } from "@/auth";
 import jwt from "jsonwebtoken";
 import { AuthError } from "next-auth";
 export async function GET(req) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3000";
+  const baseUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_FRONTEND_URL || "";
+  if (!baseUrl) {
+    return Response.redirect(`/login?err_msg=${"oauthlogin"}`, 302);
+  }
   const cookie = req.cookies.get("auth_token");
   const myCookie = cookie?.value;
   let decodedToken;

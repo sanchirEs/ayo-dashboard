@@ -1,4 +1,5 @@
 import getToken from "@/lib/GetTokenServer";
+import { getBackendUrl } from "@/lib/api/env";
 
 export interface ProductTag {
   id: number;
@@ -21,7 +22,7 @@ export interface TagPreset {
 export async function getTags(productId: number): Promise<GetTagsResponse | null> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/${productId}`,
+      `${getBackendUrl()}/api/v1/tags/${productId}`,
       { cache: "no-store" }
     );
 
@@ -50,7 +51,7 @@ export async function createTags(
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/${productId}`,
+      `${getBackendUrl()}/api/v1/tags/${productId}`,
       {
         method: "POST",
         headers: {
@@ -75,7 +76,7 @@ export async function createTags(
 export async function getTagPresets(): Promise<TagPreset[]> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/presets`,
+      `${getBackendUrl()}/api/v1/tags/presets`,
       { cache: "no-store" }
     );
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
@@ -95,7 +96,7 @@ export async function createTagPreset(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/presets`,
+      `${getBackendUrl()}/api/v1/tags/presets`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -118,7 +119,7 @@ export async function updateTagPreset(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/presets/${id}`,
+      `${getBackendUrl()}/api/v1/tags/presets/${id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -137,7 +138,7 @@ export async function deleteTagPreset(id: number, tokenOverride?: string | null)
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/presets/${id}`,
+      `${getBackendUrl()}/api/v1/tags/presets/${id}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
     );
     return res.ok;
