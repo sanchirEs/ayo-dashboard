@@ -29,14 +29,6 @@ export const dynamic = 'force-dynamic';
 
 export default function Login() {
   const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  if (!isClient) {
-    return null; // or a loading spinner
-  }
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const form = useForm({
@@ -46,6 +38,14 @@ export default function Login() {
       password: "",
     },
   });
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null; // or a loading spinner
+  }
 
   async function onSubmit(values) {
     setError(undefined);

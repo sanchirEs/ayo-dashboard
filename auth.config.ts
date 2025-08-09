@@ -2,25 +2,25 @@ import Credentials from "next-auth/providers/credentials";
 
 import type { NextAuthConfig } from "next-auth";
 import { InvalidLoginError } from "@/auth.errors";
+import { type UserRole } from "@/types/next-auth";
 export default {
   providers: [
     Credentials({
       async authorize(credentials) {
         if (!credentials?.identifier || !credentials?.password) {
           if (credentials?.credentialsMethod === "oauth") {
-            const user = {
-              accessToken: credentials.accessToken,
-              userId: credentials.id,
-              email: credentials.email,
-              firstName: credentials.firstName,
-              lastName: credentials.lastName,
-              username: credentials.username,
-              image: credentials.image,
-              email_verified: credentials.email_verified,
-              role: credentials.role,
+            return {
+              id: String(credentials.id || ''),
+              userId: Number(credentials.id || 0),
+              email: String(credentials.email || ''),
+              firstName: String(credentials.firstName || ''),
+              lastName: String(credentials.lastName || ''),
+              username: String(credentials.username || ''),
+              role: String(credentials.role || 'CUSTOMER') as UserRole,
+              image: String(credentials.image || ''),
+              email_verified: Boolean(credentials.email_verified),
+              accessToken: String(credentials.accessToken || '')
             };
-
-            return user;
           }
           return null;
         }
@@ -43,7 +43,20 @@ export default {
         }
         const data = await res.json();
         if (data.data) {
-          return data.data;
+          // Map backend user data to NextAuth expected format
+          const user = data.data;
+          return {
+            id: String(user.id),
+            userId: Number(user.id),
+            email: String(user.email || ''),
+            firstName: String(user.firstName || ''),
+            lastName: String(user.lastName || ''),
+            username: String(user.username || ''),
+            role: String(user.role || 'CUSTOMER') as UserRole,
+            image: String(user.image || ''),
+            email_verified: Boolean(user.emailVerified),
+            accessToken: String(user.accessToken || '')
+          };
         } else {
           return null;
         }
@@ -53,25 +66,29 @@ export default {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
-        token.accessToken = user.accessToken;
-        token.userId = user.userId;
-        token.email = user.email;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.username = user.username;
+        token.role = user.role as UserRole;
+        token.accessToken = user.accessToken as string;
+        token.userId = user.userId as number;
+        token.email = user.email as string;
+        token.firstName = user.firstName as string;
+        token.lastName = user.lastName as string;
+        token.username = user.username as string;
+        token.image = user.image as string;
+        token.email_verified = user.email_verified as boolean;
       }
       return token;
     },
     async session({ session, token }) {
       if (session?.user) {
-        session.user.role = token.role;
-        session.user.accessToken = token.accessToken;
-        session.user.userId = token.userId;
-        session.user.email = token.email;
-        session.user.firstName = token.firstName;
-        session.user.lastName = token.lastName;
-        session.user.username = token.username;
+        session.user.role = token.role as UserRole;
+        session.user.accessToken = token.accessToken as string;
+        session.user.userId = token.userId as number;
+        session.user.email = token.email as string;
+        session.user.firstName = token.firstName as string;
+        session.user.lastName = token.lastName as string;
+        session.user.username = token.username as string;
+        session.user.image = token.image as string;
+        session.user.email_verified = token.email_verified as boolean;
       }
       return session;
     },

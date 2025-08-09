@@ -8,11 +8,11 @@ export default function Breadcrumb({
   return (
     <>
       <div className="flex items-center flex-wrap justify-between gap20 mb-27">
-        <h3>{pageTitle ? pageTitle : "Add Attribute"}</h3>
+        <h3>{pageTitle ? pageTitle : " "}</h3>
         <ul className="breadcrumbs flex items-center flex-wrap justify-start gap10">
           <li>
             <Link href="/">
-              <div className="text-tiny">Dashboard</div>
+              <div className="text-tiny">Хяналтын самбар</div>
             </Link>
           </li>
           <li>
@@ -20,7 +20,7 @@ export default function Breadcrumb({
           </li>
           <li>
             <Link href="#">
-              <div className="text-tiny">{breadcrumbTitleParent}</div>
+              <div className="text-tiny">{breadcrumbTitleParent || " "}</div>
             </Link>
           </li>
           <li>

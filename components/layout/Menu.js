@@ -24,15 +24,19 @@ export default function Menu() {
       // '/product-detail-3': 2,
       "/category-list": 3,
       "/new-category": 3,
-      "/attributes": 4,
-      "/add-attributes": 4,
+      "/tags": 4,
+      "/add-tags": 4,
       "/oder-list": 5,
       "/oder-detail": 5,
       "/oder-tracking": 5,
-      "/all-user": 6,
-      "/add-new-user": 6,
-      "/login": 6,
-      "/sign-up": 6,
+      "/coupons": 7,
+      "/new-coupon": 7,
+      "/discounts": 8,
+      "/sales": 9,
+      "/all-user": 10,
+      "/add-new-user": 10,
+      "/login": 10,
+      "/sign-up": 10,
       // '/all-roles': 7,
       // '/create-role': 7,
       // '/gallery': 0,
@@ -44,7 +48,7 @@ export default function Menu() {
       // '/list-page': 9,
       // '/new-page': 9,
       // '/edit-page': 9,
-      "/components": 0,
+      // "/components": 0,
       "/faq": 10,
       "/privacy-policy": 10,
     };
@@ -68,7 +72,7 @@ export default function Menu() {
   return (
     <div className="center">
       <div className="center-item">
-        <div className="center-heading">Main Home</div>
+         <div className="center-heading">Админ Самбар</div>
         <ul className="menu-list">
           <li
             className={`menu-item has-children ${
@@ -77,20 +81,20 @@ export default function Menu() {
           >
             <a
               className="menu-item-button"
-              href="/home-3"
+              href="/product-list"
               onClick={() => handleAccordion(1)}
             >
               <div className="icon">
                 <i className="icon-grid" />
               </div>
-              <div className="text">Dashboard</div>
+              <div className="text">Хяналтын самбар</div>
             </a>
           </li>
         </ul>
       </div>
       <div className="center-item">
         <div className="center-item">
-          <div className="center-heading">All page</div>
+           <div className="center-heading">Хуудсууд</div>
           <ul className="menu-list">
             <li
               className={`menu-item has-children ${
@@ -104,7 +108,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-shopping-cart" />
                 </div>
-                <div className="text">Ecommerce</div>
+                 <div className="text">Бараа (Ecommerce)</div>
               </a>
               <ul
                 className="sub-menu"
@@ -119,7 +123,7 @@ export default function Menu() {
                       isSubMenuItemActive("/add-product") ? "active" : ""
                     }
                   >
-                    <div className="text">Add Product</div>
+                     <div className="text">Бараа нэмэх</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -129,7 +133,7 @@ export default function Menu() {
                       isSubMenuItemActive("/product-list") ? "active" : ""
                     }
                   >
-                    <div className="text">Product List</div>
+                     <div className="text">Барааны жагсаалт</div>
                   </Link>
                 </li>
                 {/* <li className="sub-menu-item">
@@ -176,7 +180,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-layers" />
                 </div>
-                <div className="text">Category</div>
+                 <div className="text">Ангилал</div>
               </a>
               <ul
                 className="sub-menu"
@@ -191,7 +195,7 @@ export default function Menu() {
                       isSubMenuItemActive("/category-list") ? "active" : ""
                     }
                   >
-                    <div className="text">Category list</div>
+                     <div className="text">Ангиллын жагсаалт</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -201,7 +205,7 @@ export default function Menu() {
                       isSubMenuItemActive("/new-category") ? "active" : ""
                     }
                   >
-                    <div className="text">New category</div>
+                     <div className="text">Шинэ ангилал</div>
                   </Link>
                 </li>
               </ul>
@@ -218,7 +222,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-box" />
                 </div>
-                <div className="text">Attributes</div>
+                 <div className="text">Таг</div>
               </a>
               <ul
                 className="sub-menu"
@@ -228,22 +232,22 @@ export default function Menu() {
               >
                 <li className="sub-menu-item">
                   <Link
-                    href="/attributes"
+                    href="/tags"
                     className={
-                      isSubMenuItemActive("/attributes") ? "active" : ""
+                      isSubMenuItemActive("/tags") ? "active" : ""
                     }
                   >
-                    <div className="text">Attributes</div>
+                     <div className="text">Тагууд</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
                   <Link
-                    href="/add-attributes"
+                    href="/add-tags"
                     className={
-                      isSubMenuItemActive("/add-attributes") ? "active" : ""
+                      isSubMenuItemActive("/add-tags") ? "active" : ""
                     }
                   >
-                    <div className="text">Add attributes</div>
+                     <div className="text">Таг нэмэх</div>
                   </Link>
                 </li>
               </ul>
@@ -260,7 +264,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-file-plus" />
                 </div>
-                <div className="text">Order</div>
+                 <div className="text">Захиалга</div>
               </a>
               <ul
                 className="sub-menu"
@@ -275,7 +279,7 @@ export default function Menu() {
                       isSubMenuItemActive("/oder-list") ? "active" : ""
                     }
                   >
-                    <div className="text">Order list</div>
+                     <div className="text">Захиалгын жагсаалт</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -285,7 +289,7 @@ export default function Menu() {
                       isSubMenuItemActive("/oder-detail") ? "active" : ""
                     }
                   >
-                    <div className="text">Order detail</div>
+                     <div className="text">Захиалгын дэлгэрэнгүй</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -295,29 +299,106 @@ export default function Menu() {
                       isSubMenuItemActive("/oder-tracking") ? "active" : ""
                     }
                   >
-                    <div className="text">Order tracking</div>
+                     <div className="text">Захиалгын хяналт</div>
                   </Link>
                 </li>
               </ul>
             </li>
             <li
               className={`menu-item has-children ${
-                activeAccordion === 6 ? "active" : ""
+                activeAccordion === 7 ? "active" : ""
               }`}
             >
               <a
                 className="menu-item-button"
-                onClick={() => handleAccordion(6)}
+                onClick={() => handleAccordion(7)}
               >
                 <div className="icon">
-                  <i className="icon-user" />
+                  <i className="icon-tag" />
                 </div>
-                <div className="text">User</div>
+                 <div className="text">Купон</div>
               </a>
               <ul
                 className="sub-menu"
                 style={{
-                  display: `${activeAccordion === 6 ? "block" : "none"}`,
+                  display: `${activeAccordion === 7 ? "block" : "none"}`,
+                }}
+              >
+                <li className="sub-menu-item">
+                  <Link
+                    href="/coupons"
+                    className={
+                      isSubMenuItemActive("/coupons") ? "active" : ""
+                    }
+                  >
+                   <div className="text">Бүх купон</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/new-coupon"
+                    className={
+                      isSubMenuItemActive("/new-coupon") ? "active" : ""
+                    }
+                  >
+                   <div className="text">Шинэ купон</div>
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li
+              className={`menu-item ${
+                activeAccordion === 8 ? "active" : ""
+              }`}
+            >
+              <Link
+                href="/discounts"
+                className={isSubMenuItemActive("/discounts") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-percent" />
+                </div>
+                 <div className="text">Хөнгөлөлт</div>
+              </Link>
+            </li>
+            {/** Removed from sidebar as requested
+             *  Sales (/sales)
+             */}
+            {false && (
+              <li
+                className={`menu-item ${
+                  activeAccordion === 9 ? "active" : ""
+                }`}
+              >
+                <Link
+                  href="/sales"
+                  className={isSubMenuItemActive("/sales") ? "active" : ""}
+                >
+                  <div className="icon">
+                    <i className="icon-trending-up" />
+                  </div>
+                  <div className="text">Sales Analytics</div>
+                </Link>
+              </li>
+            )}
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 10 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(10)}
+              >
+                <div className="icon">
+                  <i className="icon-user" />
+                </div>
+                 <div className="text">Хэрэглэгч</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 10 ? "block" : "none"}`,
                 }}
               >
                 <li className="sub-menu-item">
@@ -325,7 +406,7 @@ export default function Menu() {
                     href="/all-user"
                     className={isSubMenuItemActive("/all-user") ? "active" : ""}
                   >
-                    <div className="text">All user</div>
+                     <div className="text">Бүх хэрэглэгч</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -335,25 +416,34 @@ export default function Menu() {
                       isSubMenuItemActive("/add-new-user") ? "active" : ""
                     }
                   >
-                    <div className="text">Add new user</div>
+                     <div className="text">Шинэ хэрэглэгч нэмэх</div>
                   </Link>
                 </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/login"
-                    className={isSubMenuItemActive("/login") ? "active" : ""}
-                  >
-                    <div className="text">Login</div>
-                  </Link>
-                </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/sign-up"
-                    className={isSubMenuItemActive("/sign-up") ? "active" : ""}
-                  >
-                    <div className="text">Sign up</div>
-                  </Link>
-                </li>
+                {/** Removed from sidebar as requested
+                 *  Authentication
+                 *  - Login (/login)
+                 *  - Sign Up (/sign-up)
+                 */}
+                {false && (
+                  <>
+                    <li className="sub-menu-item">
+                      <Link
+                        href="/login"
+                        className={isSubMenuItemActive("/login") ? "active" : ""}
+                      >
+                        <div className="text">Login</div>
+                      </Link>
+                    </li>
+                    <li className="sub-menu-item">
+                      <Link
+                        href="/sign-up"
+                        className={isSubMenuItemActive("/sign-up") ? "active" : ""}
+                      >
+                        <div className="text">Sign up</div>
+                      </Link>
+                    </li>
+                  </>
+                )}
               </ul>
             </li>
             {/* <li
@@ -419,7 +509,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-pie-chart" />
                 </div>
-                <div className="text">Report</div>
+                 <div className="text">Тайлан</div>
               </Link>
             </li>
           </ul>
@@ -428,51 +518,7 @@ export default function Menu() {
       <div className="center-item">
         <div className="center-heading">Setting</div>
         <ul className="menu-list">
-          <li
-            className={`menu-item has-children ${
-              activeAccordion === 8 ? "active" : ""
-            }`}
-          >
-            <a
-              className="menu-item-button"
-              href="/cities"
-              onClick={() => handleAccordion(8)}
-            >
-              <div className="icon">
-                <i className="icon-map-pin" />
-              </div>
-              <div className="text">Location</div>
-            </a>
-            {/* <ul
-              className="sub-menu"
-              style={{ display: `${activeAccordion === 8 ? "block" : "none"}` }}
-            >
-              <li className="sub-menu-item">
-                <Link
-                  href="/countries"
-                  className={isSubMenuItemActive("/countries") ? "active" : ""}
-                >
-                  <div className="text">Countries</div>
-                </Link>
-              </li>
-              <li className="sub-menu-item">
-                <Link
-                  href="/states"
-                  className={isSubMenuItemActive("/states") ? "active" : ""}
-                >
-                  <div className="text">States</div>
-                </Link>
-              </li>
-              <li className="sub-menu-item">
-                <Link
-                  href="/cities"
-                  className={isSubMenuItemActive("/cities") ? "active" : ""}
-                >
-                  <div className="text">Cities</div>
-                </Link>
-              </li>
-            </ul> */}
-          </li>
+
           <li className={`menu-item ${router === "/setting" ? "active" : ""}`}>
             <Link
               href="/setting"
@@ -481,7 +527,7 @@ export default function Menu() {
               <div className="icon">
                 <i className="icon-settings" />
               </div>
-              <div className="text">Setting</div>
+               <div className="text">Тохиргоо</div>
             </Link>
           </li>
           {/* <li
@@ -528,9 +574,9 @@ export default function Menu() {
         </ul>
       </div>
       <div className="center-item">
-        <div className="center-heading">Components</div>
+         <div className="center-heading">Компонентууд</div>
         <ul className="menu-list">
-          <li
+          {/* <li
             className={`menu-item ${router === "/components" ? "active" : ""}`}
           >
             <Link
@@ -540,23 +586,23 @@ export default function Menu() {
               <div className="icon">
                 <i className="icon-database" />
               </div>
-              <div className="text">Components</div>
+               <div className="text">Компонентууд</div>
             </Link>
-          </li>
+          </li> */}
         </ul>
       </div>
       <div className="center-item">
-        <div className="center-heading">Support</div>
+         <div className="center-heading">Дэмжлэг</div>
         <ul className="menu-list">
           <li className={`menu-item`}>
             <Link href="#">
               <div className="icon">
                 <i className="icon-help-circle" />
               </div>
-              <div className="text">Help center</div>
+               <div className="text">Тусламжийн төв</div>
             </Link>
           </li>
-          <li className={`menu-item`}>
+          {/* <li className={`menu-item`}>
             <Link href="#">
               <div className="icon">
                 <svg
@@ -572,9 +618,9 @@ export default function Menu() {
                   />
                 </svg>
               </div>
-              <div className="text">FAQs</div>
+               <div className="text">Түгээмэл асуулт</div>
             </Link>
-          </li>
+          </li> */}
           {/* <li className={`menu-item`}>
             <Link href="#" >
               <div className="icon">
@@ -634,7 +680,7 @@ export default function Menu() {
       <div className="center-item">
         <div className="center-heading">Connect us</div>
         <ul className="wg-social">
-          <li>
+          {/* <li>
             <Link href="#">
               <i className="icon-facebook" />
             </Link>
@@ -653,7 +699,7 @@ export default function Menu() {
             <Link href="#">
               <i className="icon-instagram" />
             </Link>
-          </li>
+          </li> */}
         </ul>
       </div>
     </div>

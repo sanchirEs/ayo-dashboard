@@ -6,6 +6,7 @@ import FullScreenButton from "../elements/FullScreenButton";
 import Language from "../elements/Language";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
+import { getRoleDisplayName, getRoleBadgeColor } from "@/lib/auth-utils";
 const ThemeSwitch = dynamic(() => import("../elements/ThemeSwitch"), {
   ssr: false,
 });
@@ -422,7 +423,9 @@ export default function Header1({
                       <span className="body-title mb-2">
                         {user && user.firstName} {user && user.lastName}
                       </span>
-                      <span className="text-tiny">{user && user.role}</span>
+                      <span className={`text-tiny px-2 py-1 rounded-full text-xs font-medium ${user?.role ? getRoleBadgeColor(user.role) : 'bg-gray-100 text-gray-800'}`}>
+                        {user?.role ? getRoleDisplayName(user.role) : 'Unknown'}
+                      </span>
                     </span>
                   </span>
                 </Menu.Button>

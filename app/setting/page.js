@@ -605,7 +605,7 @@ export default function Setting() {
                 <input
                   className="flex-grow"
                   type="text"
-                  placeholder="Enter your Google tag ID"
+                placeholder="Enter your Google tag ID"
                   name="text"
                   tabIndex={0}
                   aria-required="true"

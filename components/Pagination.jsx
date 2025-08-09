@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+
 const Pagination = ({ currentPage, totalPages, limit }) => {
   const searchParams = useSearchParams();
   const limitRows = Number(searchParams.get("limit") || 10);
@@ -9,12 +9,10 @@ const Pagination = ({ currentPage, totalPages, limit }) => {
   const { replace } = useRouter();
 
   const handleClick = (page) => {
+    if (typeof page !== "number") return;
+    if (page < 1 || page > totalPages || page === currentPage) return;
     const params = new URLSearchParams(searchParams);
-    if (page) {
-      params.set("page", String(page));
-    } else {
-      params.delete("page");
-    }
+    params.set("page", String(page));
     replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -25,7 +23,7 @@ const Pagination = ({ currentPage, totalPages, limit }) => {
     replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const Pages = getPageNumbers(currentPage, totalPages);
+  const pageItems = getPageItems(currentPage, totalPages);
 
   return (
     <div className="">
@@ -38,31 +36,26 @@ const Pagination = ({ currentPage, totalPages, limit }) => {
               <button
                 className={` ${currentPage === 1 ? "btn-disabled" : ""}`}
                 onClick={() => handleClick(currentPage - 1)}
+                disabled={currentPage === 1}
               >
                 <span>«</span>
               </button>
             </li>
-            {Pages.map((page) => {
-              const isDisabled = page === -1;
+            {pageItems.map((item) => {
+              if (typeof item === "string") {
+                // Ellipsis items have stable unique keys
+                return (
+                  <li key={item}>
+                    <button className="btn-disabled" disabled>
+                      ...
+                    </button>
+                  </li>
+                );
+              }
+              const page = item;
               return (
-                <li
-                  key={page}
-                  className={`${currentPage === page && `active`}`}
-                >
-                  <button
-                    className={` ${
-                      ``
-                      //   currentPage === page
-                      //     ? "btn-primary"
-                      //     : isDisabled
-                      //     ? "btn-disabled"
-                      //     : "btn"
-                    }`}
-                    onClick={() => handleClick(page)}
-                    disabled={isDisabled}
-                  >
-                    {isDisabled ? "..." : page}
-                  </button>
+                <li key={page} className={`${currentPage === page && `active`}`}>
+                  <button onClick={() => handleClick(page)}>{page}</button>
                 </li>
               );
             })}
@@ -72,6 +65,7 @@ const Pagination = ({ currentPage, totalPages, limit }) => {
                   currentPage === totalPages ? "btn-disabled" : ""
                 }`}
                 onClick={() => handleClick(currentPage + 1)}
+                disabled={currentPage === totalPages}
               >
                 <span>»</span>
               </button>
@@ -96,37 +90,45 @@ const Pagination = ({ currentPage, totalPages, limit }) => {
   );
 };
 
-const getPageNumbers = (current, total) => {
-  const pages = [];
-  pages.push(1);
-  if (total > 1) pages.push(2);
-  if (total > 2) pages.push(3);
-  if (total > 3) pages.push(4);
-
-  if (current > 3) {
-    pages.push(current - 1); // Page before current
+// Returns an array of page items: numbers for actual pages and
+// unique string tokens for left/right ellipsis: "ellipsis-left", "ellipsis-right"
+const getPageItems = (current, total) => {
+  if (!Number.isFinite(current) || !Number.isFinite(total) || total <= 0) {
+    return [1];
   }
 
-  pages.push(current); // Current page
-
-  if (current < total - 2) {
-    pages.push(current + 1); // Page after current
+  if (total <= 7) {
+    return Array.from({ length: total }, (_, index) => index + 1);
   }
 
-  if (total > 2) pages.push(total - 1);
-  if (total > 1) pages.push(total);
+  const items = [];
+  items.push(1);
 
-  const uniquePages = Array.from(new Set(pages));
-  if (current !== 1 && current !== total) {
-    if (uniquePages[2] !== 3) uniquePages.splice(2, 0, -1);
+  // Determine main range around current
+  let start = Math.max(2, current - 1);
+  let end = Math.min(total - 1, current + 1);
+
+  // Widen window near the edges
+  if (current <= 4) {
+    start = 2;
+    end = 5;
+  } else if (current >= total - 3) {
+    start = total - 4;
+    end = total - 1;
   }
 
-  if (uniquePages[uniquePages.length - 3] !== total - 2)
-    uniquePages.splice(uniquePages.length - 2, 0, -1);
-  if (uniquePages[0] !== 1) {
-    uniquePages.shift();
+  // Left ellipsis
+  if (start > 2) items.push("ellipsis-left");
+
+  for (let page = start; page <= end; page += 1) {
+    items.push(page);
   }
-  return uniquePages;
+
+  // Right ellipsis
+  if (end < total - 1) items.push("ellipsis-right");
+
+  items.push(total);
+  return items;
 };
 
 export default Pagination;

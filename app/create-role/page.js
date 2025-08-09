@@ -157,7 +157,7 @@ export default function CreateRole() {
                   </div>
                 </li>
                 <li className="item gap20 wrap-checkbox">
-                  <div className="body-text">Attributes</div>
+                  <div className="body-text">Tags</div>
                   <div className="flex items-center gap10">
                     <input className="total-checkbox" type="checkbox" />
                     <label>

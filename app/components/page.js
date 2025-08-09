@@ -1379,12 +1379,12 @@ export default function Components() {
             </div>
             <div className="col-12 mb-20">
               <div className="wg-box h-full">
-                <h3>Attribute item</h3>
+                <h3>Tag item</h3>
                 <div className="row">
                   <div className="col-12 mb-20">
                     <div className="attribute-item flex items-center justify-between gap20 mb-10">
                       <div className="name">
-                        <Link href="/add-attributes" className="body-title-2">
+                        <Link href="/add-tags" className="body-title-2">
                           Color
                         </Link>
                       </div>
@@ -1403,7 +1403,7 @@ export default function Components() {
                     </div>
                     <div className="attribute-item flex items-center justify-between gap20">
                       <div className="name">
-                        <Link href="/add-attributes" className="body-title-2">
+                        <Link href="/add-tags" className="body-title-2">
                           Size
                         </Link>
                       </div>
