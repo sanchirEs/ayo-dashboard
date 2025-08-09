@@ -37,8 +37,8 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
     
     startTransition(async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/`,
+      const response = await fetch(
+        `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/`,
           {
             method: "POST",
             headers: {

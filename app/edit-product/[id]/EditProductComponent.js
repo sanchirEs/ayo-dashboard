@@ -185,7 +185,7 @@ export default function EditProductComponent({ id }) {
         // Replace tags if changed
         if (tagList) {
           try {
-            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/${id}` ,{
+            await fetch(`${require("@/lib/api/env").getBackendUrl()}/api/v1/tags/${id}` ,{
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ export default function EditCategoryForm({ categoryId }) {
     async function load() {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${categoryId}/detail`,
+          `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/${categoryId}/detail`,
           { cache: "no-store" }
         );
         const data = await res.json();
@@ -57,7 +57,7 @@ export default function EditCategoryForm({ categoryId }) {
     startTransition(async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${categoryId}`,
+          `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/${categoryId}`,
           {
             method: "PUT",
             headers: {

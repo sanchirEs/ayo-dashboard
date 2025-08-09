@@ -11,7 +11,7 @@ export interface CategoryNode {
 export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/tree/all`,
+      `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/tree/all`,
       { cache: "no-store" }
     );
     if (!response.ok) {

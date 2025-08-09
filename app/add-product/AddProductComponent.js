@@ -160,7 +160,7 @@ export default function AddProductComponent() {
         formData.append(`images[${index}]`, image); // Append images to FormData
       });
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/createproduct`,
+        `${require("@/lib/api/env").getBackendUrl()}/api/v1/products/createproduct`,
         {
           method: "POST",
           headers: {

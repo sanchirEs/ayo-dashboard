@@ -57,10 +57,8 @@ export default function Login() {
   }
   const handleGoogleLogin = () => {
     if (typeof window !== 'undefined') {
-      window.open(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google`,
-        "_self"
-      );
+      const base = require("@/lib/api/env").getBackendUrl();
+      window.open(`${base}/api/v1/auth/google`, "_self");
     }
   };
 

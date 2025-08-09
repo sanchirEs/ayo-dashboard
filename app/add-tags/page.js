@@ -26,7 +26,7 @@ export default function AddTags() {
     }
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/${productId}`
+        `${require("@/lib/api/env").getBackendUrl()}/api/v1/tags/${productId}`
       );
       const json = await res.json();
       if (!res.ok) {
@@ -73,7 +73,7 @@ export default function AddTags() {
     startTransition(async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/tags/${productId}`,
+          `${require("@/lib/api/env").getBackendUrl()}/api/v1/tags/${productId}`,
           {
             method: "POST",
             headers: {

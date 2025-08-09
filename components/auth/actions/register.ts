@@ -14,7 +14,7 @@ export const register = async (values) => {
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/register`,
+      `${require("@/lib/api/env").getBackendUrl()}/api/v1/auth/register`,
       {
         method: "POST",
         headers: {

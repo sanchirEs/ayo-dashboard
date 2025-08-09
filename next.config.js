@@ -2,7 +2,8 @@
 const nextConfig = {
   images: { remotePatterns: [{ hostname: "lh3.googleusercontent.com" }] },
   env: {
-    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000",
+    // Avoid hardcoded localhost in production; prefer server-side BACKEND_URL
+    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
 };
 

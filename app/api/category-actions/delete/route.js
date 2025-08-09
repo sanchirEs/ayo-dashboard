@@ -12,7 +12,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, message: "Missing id" }, { status: 400 });
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/categories/${id}`, {
+    const res = await fetch(`${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: token,

@@ -8,9 +8,7 @@ export default async function DataTable({ searchParams }) {
   console.log("spa", searchParams);
   const params = new URLSearchParams(searchParams);
   const response = await fetch(
-    `${
-      process.env.NEXT_PUBLIC_BACKEND_URL
-    }/api/v1/users/getusers?${params.toString()}`,
+    `${require("@/lib/api/env").getBackendUrl()}/api/v1/users/getusers?${params.toString()}`,
     {
       cache: "no-store",
       headers: {
