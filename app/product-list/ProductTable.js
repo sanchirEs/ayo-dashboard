@@ -43,7 +43,7 @@ export default async function ProductTable({ searchParams }) {
                 <div className="flex items-center" style={{ gap: 16, minWidth: 0 }}>
                   <ProductImage product={product} size={56} />
                   <div className="name" style={{ minWidth: 0 }}>
-                    <Link href={`/product-detail/${product.id}`} className="body-title-2" style={{ display: 'inline-block', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Link href={`/edit-product/${product.id}`} className="body-title-2" style={{ display: 'inline-block', maxWidth: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {product.name}
                     </Link>
                   </div>
