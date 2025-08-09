@@ -8,7 +8,12 @@ import {
   apiAuthPrefix,
 } from "@/routes";
 import { isAdmin, isVendor } from "@/lib/auth-utils";
-const { auth } = NextAuth(authConfig);
+// Ensure middleware also trusts the host and uses the same secret in production
+const { auth } = NextAuth({
+  ...authConfig,
+  trustHost: true,
+  secret: process.env.AUTH_SECRET,
+});
 
 export default auth((req) => {
   const { nextUrl } = req;
