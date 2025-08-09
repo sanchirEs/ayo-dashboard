@@ -73,9 +73,16 @@ export async function getProductById(productId: number, tokenOverride?: string |
   }
 }
 
+export type UpdateProductPayload = Omit<Partial<Product>, 'images'> & {
+  quantity?: number;
+  removeImageIds?: number[];
+  tags?: string[];
+  images?: (File | Blob)[];
+};
+
 export async function updateProduct(
   productId: number,
-  payload: Partial<Product> & { quantity?: number; removeImageIds?: number[]; tags?: string[]; images?: File[] },
+  payload: UpdateProductPayload,
   tokenOverride?: string | null
 ): Promise<{ success: boolean; message?: string }> {
   try {
@@ -90,7 +97,14 @@ export async function updateProduct(
     if (typeof payload.sku !== 'undefined') formData.append('sku', String(payload.sku));
     if (typeof payload.quantity !== 'undefined') formData.append('quantity', String(payload.quantity));
     if (Array.isArray(payload.removeImageIds)) formData.append('removeImageIds', JSON.stringify(payload.removeImageIds));
-    if (Array.isArray(payload.images)) payload.images.forEach((file, idx) => formData.append(`images[${idx}]`, file));
+    if (Array.isArray(payload.images)) {
+      payload.images.forEach((file, idx) => {
+        // File extends Blob in browsers; accept any Blob-compatible object
+        if (file instanceof Blob) {
+          formData.append(`images[${idx}]`, file);
+        }
+      });
+    }
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/products/${productId}`,
       {
