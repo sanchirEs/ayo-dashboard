@@ -50,9 +50,11 @@ export default function Login() {
   async function onSubmit(values) {
     setError(undefined);
     startTransition(async () => {
-      const error = await login(values);
-      // console.log(error);
-      if (error) setError(error.error);
+      const result = await login(values);
+      if (result?.error) {
+        setError(result.error);
+      }
+      // Do not manually navigate; allow server redirect to carry through
     });
   }
   const handleGoogleLogin = () => {

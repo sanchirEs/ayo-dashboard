@@ -20,6 +20,16 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
   const userRole = req.auth?.user?.role;
   
+  // Bypass middleware for Server Actions and RSC/Flight requests to avoid
+  // breaking action calls with unexpected redirects in production
+  const acceptHeader = req.headers.get("accept") || "";
+  const hasNextActionHeader =
+    !!req.headers.get("next-action") || !!req.headers.get("Next-Action");
+  const isRSCFlight = acceptHeader.includes("text/x-component");
+  if (hasNextActionHeader || isRSCFlight) {
+    return null;
+  }
+
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
   const isAdminRoute = adminRoutes.includes(nextUrl.pathname);

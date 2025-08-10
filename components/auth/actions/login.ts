@@ -12,11 +12,12 @@ export const login = async (values) => {
   const { identifier, password } = validatedFields.data;
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Important: do not force a client-side redirect target here; allow
+    // NextAuth + middleware to handle routing to avoid RSC/action mismatch
     await signIn("credentials", {
       identifier: values.identifier,
       password: values.password,
-      redirectTo: "/",
-      // redirectTo: callbackUrl || "/",
+      // redirectTo intentionally omitted for stability across environments
     });
   } catch (error) {
     if (error instanceof AuthError) {
