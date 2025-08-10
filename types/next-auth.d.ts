@@ -1,5 +1,7 @@
 import "next-auth";
 
+export type UserRole = "CUSTOMER" | "VENDOR" | "ADMIN" | "SUPERADMIN";
+
 declare module "next-auth" {
   interface Session {
     user: {

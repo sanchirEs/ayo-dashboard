@@ -25,28 +25,27 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { Input } from "@/components/customui/Input"; //input-iig customui дотроос нь аваарай. энэ нь bootstrap-д зохицсон.
+import { Input } from "@/components/customui/Input"; 
 import LoadingButton from "@/components/customui/LoadingButton";
 import Layout from "@/components/layout/Layout";
-import GetToken from "@/lib/GetTokenClient";
+import { useSession } from "next-auth/react";
 
 export default function AddProductComponent() {
-  const [error, setError] = useState(""); //Aldaa barih
-  const [success, setSuccess] = useState(""); //Ur dun barih
-  const [isPending, startTransition] = useTransition(); //Form submit transition process
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isPending, startTransition] = useTransition();
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
-  const TOKEN = GetToken();
+  const { data: session } = useSession();
+  const TOKEN = session?.user?.accessToken || null;
 
   const form = useForm({
-    // Form
     resolver: zodResolver(addProductsSchema),
     defaultValues: {
-      // vendorId will be set dynamically based on current user
       name: "",
       description: "",
       price: "",
@@ -59,7 +58,6 @@ export default function AddProductComponent() {
     },
   });
 
-  // Load categories on component mount
   useEffect(() => {
     async function loadCategories() {
       if (TOKEN) {
@@ -68,7 +66,6 @@ export default function AddProductComponent() {
           setCategories(categoriesData);
           const presets = await getTagPresets();
           setTagPresets(presets);
-          // Initialize selections from form if present
           const existingCsv = form.getValues("tagsCsv") || "";
           const initial = existingCsv
             .split(",")
@@ -81,13 +78,13 @@ export default function AddProductComponent() {
         } finally {
           setLoadingCategories(false);
         }
+      } else {
+        setLoadingCategories(false);
       }
     }
-    
     loadCategories();
   }, [TOKEN]);
 
-  // Helpers for tag types (Mongolian labels)
   const TYPE_LABELS = {
     Color: "Өнгө",
     Size: "Хэмжээ",
@@ -97,9 +94,7 @@ export default function AddProductComponent() {
   };
   const typeLabel = (t) => TYPE_LABELS[t] || t || "Бусад";
   const typeOrder = ["Color", "Size", "Material", "Season", "Style"];
-  const typesFromData = Array.from(
-    new Set((tagPresets || []).map((p) => String(p.type || "")).filter(Boolean))
-  );
+  const typesFromData = Array.from(new Set((tagPresets || []).map((p) => String(p.type || "")).filter(Boolean)));
   const sortedTypes = [
     ...typeOrder.filter((t) => typesFromData.includes(t)),
     ...typesFromData.filter((t) => !typeOrder.includes(t)),
@@ -113,19 +108,14 @@ export default function AddProductComponent() {
     });
   }
 
-  // Sync selected tags into the RHF form AFTER render commit to avoid setState during render
   useEffect(() => {
     const csv = Array.from(new Set(selectedTags)).join(",");
     form.setValue("tagsCsv", csv, { shouldDirty: true, shouldTouch: true });
   }, [selectedTags, form]);
   
   async function onSubmit(values) {
-    console.log("TOKEN", TOKEN);
     setError(undefined);
     startTransition(async () => {
-      //File, JSON zereg ilgeehiin tuld formdata ashiglana.
-      //Uuniig body dotor ilgeene
-      // console.log("submitted", values);
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (typeof FormData === 'undefined') {
@@ -133,7 +123,6 @@ export default function AddProductComponent() {
         return;
       }
 
-      // Always use static vendor id 1
       const vendorId = 1;
 
       const formData = new FormData();
@@ -142,10 +131,8 @@ export default function AddProductComponent() {
       formData.append("name", values.name);
       formData.append("price", values.price);
       formData.append("quantity", values.quantity);
-      console.log("Final vendorId being sent:", vendorId);
       formData.append("vendorId", String(vendorId));
       formData.append("sku", values.sku);
-      // Include tags in the same request (backend supports tags or tagsCsv)
       const tagsCsv = form.getValues("tagsCsv");
       const tagList = (tagsCsv || "")
         .split(",")
@@ -153,11 +140,9 @@ export default function AddProductComponent() {
         .filter((s) => s.length > 0);
       if (tagList.length) {
         formData.append("tags", JSON.stringify(tagList));
-        // Also send tagsCsv for convenience/compat
         formData.append("tagsCsv", tagsCsv);
       }
       values.images.forEach((image) => {
-        // Backend expects 'images' field repeatedly with files
         formData.append('images', image);
       });
       const response = await fetch(
@@ -171,10 +156,8 @@ export default function AddProductComponent() {
         }
       );
       const responseData = await response.json();
-      console.log(responseData);
       if (response.ok) {
         setSuccess(responseData.message);
-        // Reset form and previews after successful creation
         setPreviewImages([]);
         setSelectedTags([]);
         form.reset({
@@ -190,7 +173,6 @@ export default function AddProductComponent() {
         });
       } else {
         setError(responseData.message || "Алдаа гарлаа");
-        // console.log("error");
       }
     });
   }
@@ -198,13 +180,8 @@ export default function AddProductComponent() {
   return (
     <>
       <Layout breadcrumbTitleParent="Бараа" breadcrumbTitle="Бараа нэмэх" pageTitle="Бараа нэмэх">
-        {/* Shadcn Form, React hook form, Zod, this projects own css classes used together  */}
-        {/* Formfield dotor name gesen attribute l ylgana. bas tusdaa shadcn component bish bol input element dotor  {...field} duudna*/}
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="tf-section-2 form-add-product"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="tf-section-2 form-add-product">
             <div className="wg-box">
               <FormField
                 control={form.control}
@@ -224,7 +201,6 @@ export default function AddProductComponent() {
                     </FormControl>
                     <FormMessage />
                     <FormDescription>
-                      {/* Tailbar */}
                       Do not exceed 20 characters when entering the product
                       name.
                     </FormDescription>
@@ -245,7 +221,7 @@ export default function AddProductComponent() {
                         </FormLabel>
                         <FormControl>
                           <select
-                            {...field} // Spread field props to bind the select with react-hook-form
+                            {...field}
                             disabled={loadingCategories}
                           >
                             <option value="">
@@ -307,7 +283,6 @@ export default function AddProductComponent() {
                 )}
               />
 
-              {/* Product Tags */}
               <FormField
                 control={form.control}
                 name="tagsCsv"
@@ -367,7 +342,6 @@ export default function AddProductComponent() {
                     </FormControl>
                     <FormMessage />
 
-                    {/* Searchable dialog for large lists */}
                     <CommandDialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
                       <CommandInput placeholder="Шошго хайх..." />
                       <CommandList>
@@ -409,7 +383,6 @@ export default function AddProductComponent() {
                       console.warn('Required APIs not supported in this environment');
                       return;
                     }
-                    
                     try {
                       const files = Array.from(event.target.files || []);
                       const imagePreviews = files.map((file) => {
@@ -420,7 +393,7 @@ export default function AddProductComponent() {
                         reader.readAsDataURL(file);
                         return file;
                       });
-                      field.onChange(imagePreviews); // Update react-hook-form state if necessary
+                      field.onChange(imagePreviews);
                     } catch (error) {
                       console.warn('Error processing files:', error);
                     }
@@ -453,8 +426,8 @@ export default function AddProductComponent() {
                                 id="myFile"
                                 name="filename"
                                 onChange={handleFileChange}
-                                multiple // Allow multiple file selection
-                                accept="image/*" // Only allow image files
+                                multiple
+                                accept="image/*"
                               />
                             </FormControl>
                           </label>
@@ -506,7 +479,6 @@ export default function AddProductComponent() {
                   </FormItem>
                 )}
               />
-              {/* Vendor ID input hidden - vendor is statically set to 1 on submit */}
               <div className="cols gap10">
                  <LoadingButton
                   loading={isPending}

@@ -1,30 +1,27 @@
 "use server";
 import Link from "next/link";
-import getToken from "@/lib/GetTokenServer";
+import { auth } from "@/auth";
 import Pagination from "@/components/Pagination";
 import { notFound } from "next/navigation";
+
 export default async function DataTable({ searchParams }) {
-  const TOKEN = await getToken();
-  console.log("spa", searchParams);
+  const session = await auth();
+  const TOKEN = session?.user?.accessToken || null;
   const params = new URLSearchParams(searchParams);
   const response = await fetch(
     `${require("@/lib/api/env").getBackendUrl()}/api/v1/users/getusers?${params.toString()}`,
     {
       cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${TOKEN}`,
-      },
+      headers: TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {},
     }
   ).catch((err) => notFound());
   const data = await response.json();
   if (!response.ok) {
-    const message =
-      data.message || "An error has occured. Please try again later";
+    const message = data.message || "An error has occured. Please try again later";
     return <div>{message}</div>;
   }
   const users = data.data;
   const pagination = data.pagination;
-  console.log(users);
 
   return (
     <>
@@ -53,42 +50,27 @@ export default async function DataTable({ searchParams }) {
           {users.map((user) => (
             <li className="user-item gap14" key={user.id}>
               <div className="image">
-                <img
-                  src={user.image ? user.image : "/images/avatar/user-6.png"}
-                  alt=""
-                />
+                <img src={user.image ? user.image : "/images/avatar/user-6.png"} alt="" />
               </div>
               <div className="flex items-center justify-between gap20 flex-grow">
                 <div className="name">
-                  <Link href="#" className="body-title-2">
-                    {user.username}
-                  </Link>
+                  <Link href="#" className="body-title-2">{user.username}</Link>
                   <div className="text-tiny mt-3">{user.role}</div>
                 </div>
                 <div className="body-text">{user.email}</div>
-                <div className="body-text">
-                  {user.firstName} {user.lastName}
-                </div>
+                <div className="body-text">{user.firstName} {user.lastName}</div>
                 <div className="body-text">{user.telephone}</div>
                 <div className="body-text">{user.createdAt}</div>
                 <div className="list-icon-function">
-                  <div className="item edit">
-                    <i className="icon-edit-3" />
-                  </div>
-                  <div className="item trash">
-                    <i className="icon-trash-2" />
-                  </div>
+                  <div className="item edit"><i className="icon-edit-3" /></div>
+                  <div className="item trash"><i className="icon-trash-2" /></div>
                 </div>
               </div>
             </li>
           ))}
         </ul>
       </div>
-      <Pagination
-        currentPage={pagination.currentPage}
-        limit={pagination.limit}
-        totalPages={pagination.totalPages}
-      />
+      <Pagination currentPage={pagination.currentPage} limit={pagination.limit} totalPages={pagination.totalPages} />
     </>
   );
 }

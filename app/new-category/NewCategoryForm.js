@@ -3,10 +3,9 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import useSWR from "swr";
-import { useEffect } from "react";
 import { getCategoryTreePublic } from "@/lib/api/categories";
+import { useSession } from "next-auth/react";
 
 // Category validation schema
 const categorySchema = z.object({
@@ -19,8 +18,8 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
-  const TOKEN = GetToken();
-  const session = GetSession();
+  const { data: session } = useSession();
+  const TOKEN = session?.user?.accessToken || null;
 
   const form = useForm({
     resolver: zodResolver(categorySchema),
@@ -37,8 +36,8 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
     
     startTransition(async () => {
       try {
-      const response = await fetch(
-        `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/`,
+        const response = await fetch(
+          `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/`,
           {
             method: "POST",
             headers: {
@@ -68,7 +67,6 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
     });
   }
 
-  // Check if user has permission to create categories
   const canCreateCategory = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERADMIN';
 
   if (!canCreateCategory) {

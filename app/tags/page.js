@@ -2,7 +2,7 @@
 import Layout from "@/components/layout/Layout";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import GetToken from "@/lib/GetTokenClient";
+import { useSession } from "next-auth/react";
 import {
   getTagPresets,
   createTagPreset,
@@ -11,7 +11,8 @@ import {
 } from "@/lib/api/tags";
 
 export default function TagsPage() {
-  const token = GetToken();
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken || null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [presets, setPresets] = useState([]);

@@ -43,17 +43,16 @@ const config: NextAuthConfig = {
     Credentials({
       name: "Credentials",
       credentials: { 
-        identifier: { label: "Email/Username" }, 
+        identifier: { label: "Email/Username", type: "text" }, 
         password: { label: "Password", type: "password" } 
       },
       async authorize(credentials) {
-        if (!credentials?.identifier || !credentials?.password) {
-          return null;
-        }
+        const identifierStr = typeof (credentials as any)?.identifier === "string" ? (credentials as any).identifier : "";
+        const passwordStr = typeof (credentials as any)?.password === "string" ? (credentials as any).password : "";
+        if (!identifierStr || !passwordStr) return null;
 
         try {
-          const { data } = await backendLogin(credentials.identifier, credentials.password);
-          
+          const { data } = await backendLogin(identifierStr, passwordStr);
           return {
             id: String(data.id),
             email: data.email,
@@ -64,7 +63,7 @@ const config: NextAuthConfig = {
             image: data.image || "",
             emailVerified: data.emailVerified || false,
             accessToken: data.accessToken,
-          };
+          } as any;
         } catch (error) {
           console.error("Login error:", error);
           return null;
@@ -77,14 +76,14 @@ const config: NextAuthConfig = {
       if (user) {
         return {
           ...token,
-          role: user.role,
-          accessToken: user.accessToken,
-          userId: user.id,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-          image: user.image,
-          emailVerified: user.emailVerified,
+          role: (user as any).role,
+          accessToken: (user as any).accessToken,
+          userId: (user as any).id,
+          firstName: (user as any).firstName,
+          lastName: (user as any).lastName,
+          username: (user as any).username,
+          image: (user as any).image,
+          emailVerified: (user as any).emailVerified,
         };
       }
       return token;
@@ -101,7 +100,7 @@ const config: NextAuthConfig = {
           username: token.username as string,
           image: token.image as string,
           emailVerified: token.emailVerified as boolean,
-        };
+        } as any;
       }
       return session;
     },

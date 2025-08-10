@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { editProductsSchema } from "@/schemas/productSchema";
+import Layout from "@/components/layout/Layout";
+import { useSession } from "next-auth/react";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getProductById, updateProduct } from "@/lib/api/products";
 import { getTagPresets, getTags } from "@/lib/api/tags";
-import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,7 +30,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/customui/Input";
 import LoadingButton from "@/components/customui/LoadingButton";
-import GetToken from "@/lib/GetTokenClient";
 
 export default function EditProductComponent({ id }) {
   const [error, setError] = useState("");
@@ -43,7 +43,8 @@ export default function EditProductComponent({ id }) {
   const [previewImages, setPreviewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]); // {id, url}
   const [removeImageIds, setRemoveImageIds] = useState([]);
-  const TOKEN = GetToken();
+  const { data: session } = useSession();
+  const TOKEN = session?.user?.accessToken || null;
 
   const form = useForm({
     resolver: zodResolver(editProductsSchema),
@@ -63,7 +64,7 @@ export default function EditProductComponent({ id }) {
     async function loadAll() {
       try {
         const [product, categoriesData, presets, tagResp] = await Promise.all([
-          getProductById(id, TOKEN),
+          getProductById(id),
           TOKEN ? getCategoriesClient(TOKEN) : Promise.resolve([]),
           getTagPresets(),
           getTags(id),
