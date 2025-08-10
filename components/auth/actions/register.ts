@@ -34,10 +34,11 @@ export const register = async (values) => {
       // throw new InvalidLoginError(errorMessage.message);
       return { error: errorMessage.message };
     }
-    // Avoid forcing redirect target here; let NextAuth decide
     await signIn("credentials", {
       identifier: values.email,
       password: values.password,
+      redirectTo: "/",
+      // redirectTo: callbackUrl || "/",
     });
   } catch (error) {
     if (error instanceof AuthError) {

@@ -1,6 +1,5 @@
 "use server";
 import Link from "next/link";
-import getToken from "@/lib/GetTokenServer";
 import Pagination from "@/components/Pagination";
 import { notFound } from "next/navigation";
 import { getProducts } from "@/lib/api/products";
