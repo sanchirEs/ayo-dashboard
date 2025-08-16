@@ -1,3 +1,4 @@
+import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
 
 export interface Product {
@@ -37,13 +38,21 @@ export interface ProductsResponse {
   };
 }
 
-export async function getProductById(productId: number): Promise<Product | null> {
+export async function getProductById(productId: number, tokenOverride?: string | null): Promise<Product | null> {
   try {
-    const response = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`, { cache: 'no-store' });
+    const token = tokenOverride ?? null;
+    const response = await fetch(
+      `${getBackendUrl()}/api/v1/products/${productId}`,
+      {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: 'no-store',
+      }
+    );
     if (!response.ok) throw new Error(`Failed to fetch product: ${response.status}`);
     const data = await response.json();
     const p = data.data;
     if (!p) return null;
+    // Normalize shape similar to list endpoint
     const images = (p.ProductImages || []).map((img: any) => ({ id: img.id, url: img.imageUrl, productId: p.id }));
     const stock = p.inventory?.quantity ?? 0;
     return {
@@ -75,9 +84,10 @@ export type UpdateProductPayload = Omit<Partial<Product>, 'images'> & {
 export async function updateProduct(
   productId: number,
   payload: UpdateProductPayload,
-  token: string
+  tokenOverride?: string | null
 ): Promise<{ success: boolean; message?: string }> {
   try {
+    const token = tokenOverride ?? (await getToken());
     if (!token) return { success: false, message: 'Not authenticated' };
 
     const formData = new FormData();
@@ -90,17 +100,20 @@ export async function updateProduct(
     if (Array.isArray(payload.removeImageIds)) formData.append('removeImageIds', JSON.stringify(payload.removeImageIds));
     if (Array.isArray(payload.images)) {
       payload.images.forEach((file) => {
+        // Backend expects field name "images" because we use upload.array('images')
         if (file instanceof Blob) {
           formData.append('images', file);
         }
       });
     }
 
-    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`,
+      {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
     const json = await res.json().catch(() => ({}));
     if (!res.ok) return { success: false, message: json.message || `Failed: ${res.status}` };
     return { success: true, message: json.message || 'Updated' };
@@ -112,14 +125,25 @@ export async function updateProduct(
 
 export async function getProducts(searchParams: Record<string, string> = {}): Promise<ProductsResponse> {
   try {
+    const token = await getToken();
     const params = new URLSearchParams(searchParams);
-    const response = await fetch(`${getBackendUrl()}/api/v1/products?${params.toString()}`, { cache: 'no-store' });
+    
+    const response = await fetch(
+      `${getBackendUrl()}/api/v1/products?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: 'no-store', // Always fetch fresh data for admin dashboard
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch products: ${response.status}`);
     }
 
     const data = await response.json();
+    // Ensure tags array exists
     const products = (data.data?.products || []).map((p: any) => ({
       ...p,
       tags: Array.isArray(p.tags) ? p.tags : [],
@@ -147,13 +171,20 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
   }
 }
 
-export async function deleteProduct(productId: number, token: string): Promise<boolean> {
+export async function deleteProduct(productId: number): Promise<boolean> {
   try {
-    if (!token) return false;
-    const response = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const token = await getToken();
+    
+    const response = await fetch(
+      `${getBackendUrl()}/api/v1/products/${productId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
     return response.ok;
   } catch (error) {
     console.error('Error deleting product:', error);

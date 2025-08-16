@@ -18,7 +18,7 @@ import Footer1 from "./Footer1";
 import Header1 from "./Header1";
 import Offcanvas from "./Offcanvas";
 import Sidebar from "./Sidebar";
-import ComingSoonBlock from "../ComingSoonBlock";
+ 
 
 export default function Layout({
   headerStyle,
@@ -79,8 +79,7 @@ export default function Layout({
                       />
                     )}
 
-                    {/* Block only the main content area while sidebar remains interactive */}
-                    <ComingSoonBlock>{children}</ComingSoonBlock>
+                    {children}
                   </div>
                 </div>
                 <Footer1 />

@@ -1,13 +1,12 @@
 "use client";
 import { useState, useTransition } from "react";
 import { deleteCoupon } from "@/lib/api/coupons";
-import { useSession } from "next-auth/react";
+import GetToken from "@/lib/GetTokenClient";
 
 export default function CouponActions({ couponId }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const { data: session } = useSession();
-  const TOKEN = session?.user?.accessToken || "";
+  const TOKEN = GetToken();
 
   const handleDelete = () => {
     if (!confirm('Are you sure you want to delete this coupon? This action cannot be undone.')) {
@@ -18,9 +17,10 @@ export default function CouponActions({ couponId }) {
     startTransition(async () => {
       try {
         await deleteCoupon(couponId, TOKEN);
+        // Refresh the page to show updated list
         window.location.reload();
       } catch (error) {
-        alert('Failed to delete coupon: ' + (error?.message || 'Unknown error'));
+        alert('Failed to delete coupon: ' + error.message);
         console.error('Delete error:', error);
       } finally {
         setIsDeleting(false);

@@ -3,9 +3,9 @@ import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import useSWR from "swr";
 import { getCategoryTreePublic } from "@/lib/api/categories";
-import { useSession } from "next-auth/react";
 
 const schema = z.object({
   name: z.string().min(1, "Category name is required"),
@@ -17,14 +17,15 @@ export default function EditCategoryForm({ categoryId }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
-  const { data: session } = useSession();
-  const TOKEN = session?.user?.accessToken || null;
+  const TOKEN = GetToken();
+  const session = GetSession();
 
   const form = useForm({
     resolver: zodResolver(schema),
     defaultValues: { name: "", description: "", parentId: null },
   });
 
+  // Load category details
   useEffect(() => {
     async function load() {
       try {
@@ -47,6 +48,7 @@ export default function EditCategoryForm({ categoryId }) {
       }
     }
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryId]);
 
   async function onSubmit(values) {
@@ -150,6 +152,7 @@ function ParentSelect({ value, onChange, currentId }) {
   const renderOptions = (nodes, prefix = "") => {
     const arr = [];
     for (const node of nodes || []) {
+      // prevent selecting itself or its descendants (best-effort on client; server already enforces)
       arr.push(
         <option key={node.id} value={node.id} disabled={node.id === currentId}>
           {prefix}

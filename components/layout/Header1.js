@@ -459,21 +459,18 @@ export default function Header1({
                     </Link>
                   </li>
                   <li>
-                    <Link href="/login" className="user-item">
+                    <button
+                      type="button"
+                      className="user-item w-full text-left"
+                      onClick={() => {
+                        signOut({ redirectTo: "/" });
+                      }}
+                    >
                       <div className="icon">
                         <i className="icon-log-out" />
                       </div>
-                      <div
-                        className="body-title-2"
-                        onClick={() => {
-                          // queryClient.clear();
-                          // logout();
-                          signOut({ redirectTo: "/" });
-                        }}
-                      >
-                        Гарах
-                      </div>
-                    </Link>
+                      <div className="body-title-2">Гарах</div>
+                    </button>
                   </li>
                 </Menu.Items>
               </Menu>

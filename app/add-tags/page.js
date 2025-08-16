@@ -1,12 +1,10 @@
 "use client";
-import Layout from "@/components/layout/Layout";
-import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { useSession } from "next-auth/react";
+import Layout from "@/components/layout/Layout";
+import GetToken from "@/lib/GetTokenClient";
 
 export default function AddTags() {
-  const { data: session } = useSession();
-  const token = session?.user?.accessToken || null;
+  const token = GetToken();
   const [isPending, startTransition] = useTransition();
   const [productIdInput, setProductIdInput] = useState("");
   const [tagsInput, setTagsInput] = useState("");
@@ -100,11 +98,13 @@ export default function AddTags() {
   }
 
   useEffect(() => {
+    // Auto-load when a valid product id is entered
     if (productId) {
       fetchTags();
     } else {
       setTags([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
   return (

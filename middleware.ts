@@ -1,87 +1,68 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { auth } from "@/auth";
-import { 
-  apiAuthPrefix, 
-  authRoutes, 
-  publicRoutes, 
+import NextAuth from "next-auth";
+import authConfig from "@/auth.config";
+import {
   DEFAULT_LOGIN_REDIRECT,
+  vendorRoutes,
   adminRoutes,
-  vendorRoutes 
-} from "./routes";
+  authRoutes,
+  apiAuthPrefix,
+} from "@/routes";
+import { isAdmin, isVendor } from "@/lib/auth-utils";
+// Ensure middleware also trusts the host and uses the same secret in production
+const { auth } = NextAuth({
+  ...authConfig,
+  trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+});
 
-function isRoute(pathname: string, routes: string[]) {
-  return routes.some((r) => pathname === r || pathname.startsWith(r + "/"));
-}
-
-export default async function middleware(req: NextRequest) {
-  const { pathname, search } = req.nextUrl;
-
-  // Always allow NextAuth internals
-  if (pathname.startsWith(apiAuthPrefix)) {
-    return NextResponse.next();
-  }
-
-  // Always allow Next.js internals and static assets
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/assets") ||
-    pathname === "/favicon.ico" ||
-    pathname.endsWith(".css") ||
-    pathname.endsWith(".js") ||
-    pathname.endsWith(".png") ||
-    pathname.endsWith(".jpg") ||
-    pathname.endsWith(".svg")
-  ) {
-    return NextResponse.next();
-  }
-
-  const session = await auth();
-
-  const isAuthPage = isRoute(pathname, authRoutes);
-  const isPublic = isRoute(pathname, publicRoutes);
-
-  // If on login and already authenticated, send away
-  if (isAuthPage && session?.user) {
-    const url = req.nextUrl.clone();
-    url.pathname = DEFAULT_LOGIN_REDIRECT;
-    url.search = "";
-    return NextResponse.redirect(url);
-  }
-
-  // If not authenticated and not public, require login
-  if (!session?.user && !isPublic) {
-    const url = req.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = search ? `?next=${encodeURIComponent(pathname + search)}` : `?next=${encodeURIComponent(pathname)}`;
-    return NextResponse.redirect(url);
-  }
-
-  // Role-based access control for authenticated users
-  if (session?.user) {
-    const userRole = session.user.role;
-    
-    // Check admin routes
-    if (isRoute(pathname, adminRoutes)) {
-      if (userRole !== "ADMIN" && userRole !== "SUPERADMIN") {
-        const url = req.nextUrl.clone();
-        url.pathname = "/unauthorized";
-        return NextResponse.redirect(url);
-      }
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
+  const userRole = req.auth?.user?.role;
+  
+  const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+  const isAdminRoute = adminRoutes.includes(nextUrl.pathname);
+  const isVendorRoute = vendorRoutes.includes(nextUrl.pathname);
+  
+  // Allow API auth routes to pass through
+  if (isApiAuthRoute) return null;
+  
+  // Handle authentication routes
+  if (isAuthRoute) {
+    if (isLoggedIn) {
+      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
-
-    // Check vendor routes
-    if (isRoute(pathname, vendorRoutes)) {
-      if (userRole !== "VENDOR" && userRole !== "ADMIN" && userRole !== "SUPERADMIN") {
-        const url = req.nextUrl.clone();
-        url.pathname = "/unauthorized";
-        return NextResponse.redirect(url);
-      }
+    return null;
+  }
+  
+  // Redirect to login if not authenticated
+  if (!isLoggedIn) {
+    return Response.redirect(new URL("/login", nextUrl));
+  }
+  
+  // Role-based access control
+  if (isAdminRoute) {
+    if (!isAdmin(userRole)) {
+      return Response.redirect(new URL("/unauthorized", nextUrl));
     }
   }
-
-  return NextResponse.next();
-}
+  
+  if (isVendorRoute) {
+    if (!isVendor(userRole)) {
+      return Response.redirect(new URL("/unauthorized", nextUrl));
+    }
+  }
+  
+  return null;
+});
 
 export const config = {
-  matcher: ["/((?!api/auth|_next|assets|favicon.ico|.*\\.(?:css|js|png|jpg|svg)).*)"],
+  //Matcher таарвал дээд талын middleware код ажиллана.
+  matcher: [
+    // Skip Next.js internals and all static files, unless found in search params
+    "/((?!.+\\.[\\w]+$|_next).*)",
+    "/",
+    "/(api|trpc)(.*)",
+  ],
 };

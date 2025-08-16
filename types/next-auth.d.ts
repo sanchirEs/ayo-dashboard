@@ -1,45 +1,30 @@
-import "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 
 export type UserRole = "CUSTOMER" | "VENDOR" | "ADMIN" | "SUPERADMIN";
 
 declare module "next-auth" {
   interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string;
-      role: string;
-      accessToken: string;
-      firstName: string;
-      lastName: string;
-      username: string;
-      image: string;
-      emailVerified: boolean;
-    };
+    user: User & DefaultSession["user"];
   }
-
   interface User {
-    id: string;
-    email: string;
+    userId: number;
+    role: UserRole;
     firstName: string;
     lastName: string;
-    username: string;
-    role: string;
-    image: string;
-    emailVerified: boolean;
+    email_verified: boolean;
     accessToken: string;
+    username: string;
   }
 }
 
-declare module "next-auth/jwt" {
+declare module "@auth/core/jwt" {
   interface JWT {
-    role: string;
-    accessToken: string;
-    userId: string;
+    userId: number;
+    role: UserRole;
     firstName: string;
     lastName: string;
+    email: string;
+    accessToken: string;
     username: string;
-    image: string;
-    emailVerified: boolean;
   }
 }

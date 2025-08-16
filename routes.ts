@@ -1,25 +1,3 @@
-export const apiAuthPrefix = "/api/auth";
-
-// Routes that should never be behind auth
-export const publicRoutes = ["/", "/coming-soon"];
-
-// Routes used for authentication
-export const authRoutes = ["/login", "/sign-up"];
-
-// Where to send users post-login
-export const DEFAULT_LOGIN_REDIRECT = "/";
-
-// Role-based route protection
-export const adminRoutes = [
-  "/all-user",
-  "/add-new-user", 
-  "/category-list",
-  "/new-category",
-  "/report",
-  "/setting",
-  "/create-role"
-];
-
 export const vendorRoutes = [
   "/add-product",
   "/product-list", 
@@ -28,3 +6,21 @@ export const vendorRoutes = [
   "/oder-tracking",
   "/add-tags"
 ];
+
+export const authRoutes = ["/login", "/sign-up"];
+
+export const adminRoutes = [
+  "/all-user",
+  "/add-new-user", 
+  "/category-list",
+  "/new-category",
+  "/attributes",
+  "/attributes/new",
+  // Tags list is accessible to all logged-in users; Add Tags allowed for vendors via vendorRoutes
+  "/report",
+  "/setting",
+  "/create-role"
+];
+
+export const apiAuthPrefix = "/api/auth";
+export const DEFAULT_LOGIN_REDIRECT = "/";

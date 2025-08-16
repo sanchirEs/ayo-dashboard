@@ -11,7 +11,8 @@ export async function GET(req) {
   const myCookie = cookie?.value;
   let decodedToken;
   try {
-    decodedToken = jwt.verify(myCookie, process.env.AUTH_SECRET);
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    decodedToken = jwt.verify(myCookie, secret);
   } catch (error) {
     console.error("Token verification failed", error);
     return Response.redirect(`${baseUrl}/login?err_msg=${"oauthlogin"}`, 302);

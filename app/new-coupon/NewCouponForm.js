@@ -3,7 +3,7 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSession } from "next-auth/react";
+import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import { createCoupon } from "@/lib/api/coupons";
 import { useRouter } from "next/navigation";
 
@@ -32,8 +32,8 @@ export default function NewCouponForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
-  const { data: session } = useSession();
-  const TOKEN = session?.user?.accessToken || "";
+  const TOKEN = GetToken();
+  const session = GetSession();
   const router = useRouter();
 
   const form = useForm({
@@ -74,7 +74,7 @@ export default function NewCouponForm() {
           router.push('/coupons');
         }, 2000);
       } catch (error) {
-        setError(error?.message || "Failed to create coupon");
+        setError(error.message || "Failed to create coupon");
         console.error("Coupon creation error:", error);
       }
     });

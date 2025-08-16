@@ -24,8 +24,10 @@ export default function Menu() {
       // '/product-detail-3': 2,
       "/category-list": 3,
       "/new-category": 3,
-      "/tags": 4,
-      "/add-tags": 4,
+      "/attributes": 4,
+      "/attributes/new": 4,
+      "/tags": 6,
+      "/add-tags": 6,
       "/oder-list": 5,
       "/oder-detail": 5,
       "/oder-tracking": 5,
@@ -220,6 +222,48 @@ export default function Menu() {
                 onClick={() => handleAccordion(4)}
               >
                 <div className="icon">
+                  <i className="icon-sliders" />
+                </div>
+                 <div className="text">Аттрибут</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 4 ? "block" : "none"}`,
+                }}
+              >
+                <li className="sub-menu-item">
+                  <Link
+                    href="/attributes"
+                    className={
+                      isSubMenuItemActive("/attributes") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Аттрибутууд</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/attributes/new"
+                    className={
+                      isSubMenuItemActive("/attributes/new") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Шинэ аттрибут</div>
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 6 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(6)}
+              >
+                <div className="icon">
                   <i className="icon-box" />
                 </div>
                  <div className="text">Таг</div>
@@ -227,7 +271,7 @@ export default function Menu() {
               <ul
                 className="sub-menu"
                 style={{
-                  display: `${activeAccordion === 4 ? "block" : "none"}`,
+                  display: `${activeAccordion === 6 ? "block" : "none"}`,
                 }}
               >
                 <li className="sub-menu-item">
