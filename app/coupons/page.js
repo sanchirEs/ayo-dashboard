@@ -9,18 +9,18 @@ export default async function Coupons(props) {
   
   return (
     <>
-      <Layout breadcrumbTitleParent="Marketing" breadcrumbTitle="Coupons">
+      <Layout breadcrumbTitleParent="Маркетинг" breadcrumbTitle="Купон">
         <div className="wg-box">
           <div className="flex items-center justify-between gap10 flex-wrap">
             <div className="wg-filter flex-grow">
               <SearchQuery
                 query="search"
-                placeholder="Search coupons by code..."
+                placeholder="Купон кодын дугаараар хайх..."
               />
             </div>
             <Link className="tf-button style-1 w208" href="/new-coupon">
               <i className="icon-plus" />
-              Add new
+              Шинээр нэмэх
             </Link>
           </div>
           <CouponsTable searchParams={searchParams} />

@@ -26,14 +26,13 @@ export default function Sidebar({ handleSidebar }) {
               <img src="/images/menu-left/img-bot.png" alt="" />
             </div>
             <div className="mb-20">
-              <h6>Hi, how can we help?</h6>
+              <h6>Сайн байна уу, бид танд хэрхэн тусалж чадах вэ?</h6>
               <div className="text">
-                Contact us if you have any assistance, we will contact you as
-                soon as possible
+                Хэрэв танд тусламж хэрэгтэй бол бидэнтэй холбогдоно уу, бид танд хамгийн түрүүнд холбогдох болно
               </div>
             </div>
             <Link href="#" className="tf-button w-full">
-              Contact
+              Холбогдох
             </Link>
           </div>
         </div>

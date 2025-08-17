@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Setting() {
   return (
     <>
-      <Layout breadcrumbTitleParent="Page" breadcrumbTitle="Setting">
+      <Layout breadcrumbTitleParent="Хуудас" breadcrumbTitle="Тохиргоо">
         <form className="form-setting form-style-2">
           <div className="wg-box">
             <div className="left">

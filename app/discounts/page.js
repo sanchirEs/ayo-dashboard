@@ -9,7 +9,7 @@ export default async function Discounts(props) {
   
   return (
     <>
-      <Layout breadcrumbTitleParent="Marketing" breadcrumbTitle="Discounts & Flash Sales">
+      <Layout breadcrumbTitleParent="Маркетинг" breadcrumbTitle="Хөнгөлөлт & Flash худалдаа">
         <div className="flex flex-column gap20">
           {/* Discounts Overview */}
           <DiscountsOverview />

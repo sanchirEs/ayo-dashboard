@@ -9,18 +9,18 @@ export default async function CategoryList(props) {
   
   return (
     <>
-      <Layout breadcrumbTitleParent="Category" breadcrumbTitle="All categories">
+      <Layout breadcrumbTitleParent="Ангилал" breadcrumbTitle="Бүх ангиллууд">
         <div className="wg-box">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="wg-filter flex-grow">
               <SearchQuery
                 query="search"
-                placeholder="Search categories..."
+                placeholder="Ангилал хайх..."
               />
             </div>
             <Link className="tf-button style-1 w208" href="/new-category">
               <i className="icon-plus" />
-              Add new
+              Шинээр нэмэх
             </Link>
           </div>
           <CategoryTable searchParams={searchParams} />

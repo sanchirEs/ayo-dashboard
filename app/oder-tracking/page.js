@@ -6,7 +6,7 @@ export default function OderTracking() {
     return (
         <>
 
-            <Layout breadcrumbTitleParent="Order" breadcrumbTitle="Track Order">
+            <Layout breadcrumbTitleParent="Захиалга" breadcrumbTitle="Захиалга хянах">
                 <div>
                     <div className="wg-box mb-20">
                         <div className="order-track">

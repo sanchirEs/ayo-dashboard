@@ -7,7 +7,7 @@ export default function OderDetail() {
     return (
         <>
 
-            <Layout breadcrumbTitleParent="Order" breadcrumbTitle="Order detail">
+            <Layout breadcrumbTitleParent="Захиалга" breadcrumbTitle="Захиалгын дэлгэрэнгүй">
                 <div className="wg-order-detail">
                     <div className="left flex-grow">
                         <div className="wg-box mb-20">

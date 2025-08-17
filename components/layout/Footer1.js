@@ -5,9 +5,9 @@ export default function Footer1() {
         <>
 
             <div className="bottom-page">
-                <div className="body-text">Copyright © {new Date().getFullYear()} Remos. Design with</div>
+                <div className="body-text">Зохиогчийн эрх © {new Date().getFullYear()} AIM TRENDSETT LLC. Дизайныг хийсэн</div>
                 <i className="icon-heart" />
-                <div className="body-text">All rights reserved.</div>
+                <div className="body-text">AYOCOSMETICS-ийн бүх эрх хуулиар хамгаалагдсан.</div>
             </div>
 
         </>

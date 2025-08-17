@@ -12,7 +12,6 @@ export const register = async (values) => {
   const { firstName, lastName, email, username, password } =
     validatedFields.data;
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
     const res = await fetch(
       `${require("@/lib/api/env").getBackendUrl()}/api/v1/auth/register`,
       {
@@ -31,15 +30,21 @@ export const register = async (values) => {
     );
     if (!res.ok) {
       const errorMessage = await res.json();
-      // throw new InvalidLoginError(errorMessage.message);
       return { error: errorMessage.message };
     }
-    await signIn("credentials", {
+    
+    const signInResult = await signIn("credentials", {
       identifier: values.email,
       password: values.password,
-      redirectTo: "/",
-      // redirectTo: callbackUrl || "/",
+      redirect: false,
     });
+    
+    if (signInResult?.error) {
+      return { error: "Бүртгэл амжилттай боловч нэвтрэх үед алдаа гарлаа" };
+    }
+    
+    return { success: true, redirectTo: "/" };
+    
   } catch (error) {
     if (error instanceof AuthError) {
         // console.log("aldaanii torol", error.type);

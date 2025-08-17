@@ -1,3 +1,4 @@
+// Simple route definitions
 export const vendorRoutes = [
   "/add-product",
   "/product-list", 
@@ -15,8 +16,6 @@ export const adminRoutes = [
   "/category-list",
   "/new-category",
   "/attributes",
-  "/attributes/new",
-  // Tags list is accessible to all logged-in users; Add Tags allowed for vendors via vendorRoutes
   "/report",
   "/setting",
   "/create-role"

@@ -6,7 +6,7 @@ export default function OderList() {
     return (
         <>
 
-            <Layout breadcrumbTitleParent="Order" breadcrumbTitle="Order List">
+            <Layout breadcrumbTitleParent="Захиалга" breadcrumbTitle="Захиалгын жагсаалт">
                 <div className="wg-box">
                     <div className="flex items-center justify-between gap10 flex-wrap">
                         <div className="wg-filter flex-grow">

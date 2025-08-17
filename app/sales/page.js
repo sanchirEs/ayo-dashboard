@@ -8,7 +8,7 @@ export default async function Sales(props) {
   
   return (
     <>
-      <Layout breadcrumbTitleParent="Analytics" breadcrumbTitle="Sales Overview">
+      <Layout breadcrumbTitleParent="Аналитик" breadcrumbTitle="Борлуулалтын тойм">
         <div className="flex flex-column gap20">
           {/* Sales Overview Cards */}
           <SalesOverview searchParams={searchParams} />

@@ -25,7 +25,7 @@ export default function ProductRowClient({ product, gridTemplate }) {
         </div>
       </div>
       <div className="body-text">{product.sku}</div>
-      <div className="body-text">MNT {product.price}</div>
+      <div className="body-text">{product.price}₮</div>
       <div className="body-text">{product.stock || 0}</div>
       <div className="body-text">{product.category?.name || 'N/A'}</div>
       <div className="body-text" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

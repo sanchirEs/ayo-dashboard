@@ -4,7 +4,7 @@ import Link from "next/link";
 export default function Report() {
   return (
     <>
-      <Layout breadcrumbTitleParent="Page" breadcrumbTitle="Report">
+      <Layout breadcrumbTitleParent="Хуудас" breadcrumbTitle="Тайлан">
         <div>
           <div className="tf-section-3 mb-30">
             {/* chart-default */}

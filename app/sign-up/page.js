@@ -197,7 +197,7 @@ export default function SignUp() {
               </div>
             </div>
             <div className="text-tiny">
-              Copyright © 2024 Remos, All rights reserved.
+              Зохиогчийн эрх © 2024 AIM TRENDSETT LLC, AYOCOSMETICS-ийн бүх эрх хуулиар хамгаалагдсан.
             </div>
           </div>
         </div>

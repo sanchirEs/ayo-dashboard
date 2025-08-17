@@ -18,7 +18,7 @@ export async function GET(req) {
     return Response.redirect(`${baseUrl}/login?err_msg=${"oauthlogin"}`, 302);
   }
   try {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Remove the artificial delay that was causing race conditions
     await signIn("credentials", {
       decodedToken: {
         accessToken: myCookie,
@@ -33,8 +33,12 @@ export async function GET(req) {
       email_verified: decodedToken.email_verified,
       accessToken: myCookie,
       credentialsMethod: "oauth",
-      //   redirect:false
+      redirect: false, // Don't redirect immediately
     });
+    
+    // If successful, redirect to home page
+    return Response.redirect(`${baseUrl}/`, 302);
+    
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

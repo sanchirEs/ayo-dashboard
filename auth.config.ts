@@ -42,8 +42,15 @@ export default {
           }
         );
         if (!res.ok) {
-          const errorMessage = await res.json();
-          throw new InvalidLoginError(errorMessage.message);
+          let errorMessage = "Нэвтрэх үед алдаа гарлаа";
+          try {
+            const errorData = await res.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch (e) {
+            // If JSON parsing fails, use status text
+            errorMessage = res.statusText || errorMessage;
+          }
+          throw new InvalidLoginError(errorMessage);
         }
         const data = await res.json();
         if (data.data) {

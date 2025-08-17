@@ -10,7 +10,7 @@ export default function Menu() {
 
   useEffect(() => {
     const accordionRoutes = {
-      // '/': 1,
+      "/": 1,
       // '/home-2': 1,
       "/home-3": 1,
       // '/home-4': 1,
@@ -77,20 +77,17 @@ export default function Menu() {
          <div className="center-heading">Админ Самбар</div>
         <ul className="menu-list">
           <li
-            className={`menu-item has-children ${
-              activeAccordion === 1 ? "active" : ""
-            }`}
+            className={`menu-item ${router === "/" ? "active" : ""}`}
           >
-            <a
-              className="menu-item-button"
-              href="/product-list"
-              onClick={() => handleAccordion(1)}
+            <Link
+              href="/"
+              className={isSubMenuItemActive("/") ? "active" : ""}
             >
               <div className="icon">
                 <i className="icon-grid" />
               </div>
               <div className="text">Хяналтын самбар</div>
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

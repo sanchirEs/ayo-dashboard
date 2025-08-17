@@ -107,7 +107,7 @@ export default function TagsPage() {
 
   return (
     <>
-      <Layout breadcrumbTitleParent="Tags" breadcrumbTitle="Tag Presets">
+              <Layout breadcrumbTitleParent="Таг" breadcrumbTitle="Тагны загвар">
         <div className="wg-box">
           <div className="flex items-center justify-between gap10 flex-wrap">
             <div className="wg-filter flex-grow">

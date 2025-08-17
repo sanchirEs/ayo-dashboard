@@ -1,7 +1,7 @@
 "use client";
 import Layout from "@/components/layout/Layout";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import GetToken from "@/lib/GetTokenClient";
 import {
   getAttributes,
@@ -15,20 +15,20 @@ export default function AttributesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [items, setItems] = useState([]);
-  const [filter, setFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ name: "", type: "select", description: "" });
+  const [form, setForm] = useState({
+    name: "",
+    type: "select",
+    description: "",
+  });
 
-  const TYPE_BADGES = {
-    select: { label: "select", className: "badge-success" },
-    text: { label: "text", className: "badge-warning" },
-  };
+
 
   async function load() {
     setLoading(true);
     setError("");
     const data = await getAttributes();
+    console.log("Attributes data:", data); // Temporary debug log
     setItems(Array.isArray(data) ? data : []);
     setLoading(false);
   }
@@ -36,16 +36,6 @@ export default function AttributesPage() {
   useEffect(() => {
     load();
   }, []);
-
-  const filtered = useMemo(() => {
-    const f = filter.trim().toLowerCase();
-    const t = typeFilter.trim().toLowerCase();
-    return (items || []).filter((a) => {
-      const byName = !f || a.name.toLowerCase().includes(f);
-      const byType = !t || String(a.type || "").toLowerCase() === t;
-      return byName && byType;
-    });
-  }, [items, filter, typeFilter]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -57,16 +47,26 @@ export default function AttributesPage() {
       setError("Name is required");
       return;
     }
-    if (!form.type || !["select", "text"].includes(String(form.type).toLowerCase())) {
+    if (
+      !form.type ||
+      !["select", "text"].includes(String(form.type).toLowerCase())
+    ) {
       setError("Type must be select or text");
       return;
     }
     setError("");
     if (editing) {
-      const ok = await updateAttribute(editing.id, { name: form.name, type: form.type }, token);
+      const ok = await updateAttribute(
+        editing.id,
+        { name: form.name, type: form.type },
+        token
+      );
       if (!ok) setError("Failed to update attribute");
     } else {
-      const created = await createAttribute({ name: form.name, type: form.type }, token);
+      const created = await createAttribute(
+        { name: form.name, type: form.type },
+        token
+      );
       if (!created) setError("Failed to create attribute");
     }
     setForm({ name: "", type: "select", description: "" });
@@ -86,53 +86,19 @@ export default function AttributesPage() {
 
   function startEdit(a) {
     setEditing(a);
-    setForm({ name: a.name, type: String(a.type || "select").toLowerCase(), description: "" });
+    setForm({
+      name: a.name,
+      type: String(a.type || "select").toLowerCase(),
+      description: "",
+    });
   }
 
-  function badge(a) {
-    const key = String(a.type || "").toLowerCase();
-    const meta = TYPE_BADGES[key] || { label: a.type, className: "badge" };
-    return <span className={`badge ${meta.className}`}>{meta.label}</span>;
-  }
+
 
   return (
     <>
-      <Layout breadcrumbTitleParent="Products" breadcrumbTitle="Attributes">
+      <Layout breadcrumbTitleParent="Бараа" breadcrumbTitle="Атрибут">
         <div className="wg-box">
-          <div className="flex items-center justify-between gap10 flex-wrap">
-            <div className="wg-filter flex-grow">
-              <form className="form-search" onSubmit={(e) => e.preventDefault()}>
-                <fieldset className="name">
-                  <input
-                    type="text"
-                    placeholder="Search attributes..."
-                    name="name"
-                    tabIndex={2}
-                    aria-required="true"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  />
-                </fieldset>
-                <fieldset className="name">
-                  <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-                    <option value="">All types</option>
-                    <option value="select">select</option>
-                    <option value="text">text</option>
-                  </select>
-                </fieldset>
-                <div className="button-submit">
-                  <button type="button" onClick={() => { setFilter(""); setTypeFilter(""); }}>
-                    <i className="icon-x" />
-                  </button>
-                </div>
-              </form>
-            </div>
-            <Link className="tf-button style-1 w208" href="/attributes/new">
-              <i className="icon-plus" />
-              Add Attribute
-            </Link>
-          </div>
-
           <div className="wg-box" style={{ marginTop: 16 }}>
             <form className="form-new-product form-style-1" onSubmit={onSubmit}>
               <fieldset className="name">
@@ -143,7 +109,9 @@ export default function AttributesPage() {
                   placeholder="e.g., Color, Size, Storage"
                   name="name"
                   value={form.name}
-                  onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((s) => ({ ...s, name: e.target.value }))
+                  }
                 />
               </fieldset>
               <fieldset className="name">
@@ -151,7 +119,9 @@ export default function AttributesPage() {
                 <select
                   className="flex-grow"
                   value={form.type}
-                  onChange={(e) => setForm((s) => ({ ...s, type: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((s) => ({ ...s, type: e.target.value }))
+                  }
                 >
                   <option value="select">select</option>
                   <option value="text">text</option>
@@ -165,27 +135,32 @@ export default function AttributesPage() {
               </div>
             </form>
             {error && (
-              <div className="alert alert-danger mb-4" style={{ color: "red", padding: 10, border: "1px solid red", borderRadius: 4 }}>
+              <div
+                className="alert alert-danger mb-4"
+                style={{
+                  color: "red",
+                  padding: 10,
+                  border: "1px solid red",
+                  borderRadius: 4,
+                }}
+              >
                 {error}
               </div>
             )}
           </div>
 
-          <div className="wg-table table-all-attribute" style={{ marginTop: 16 }}>
+          <div
+            className="wg-table table-all-attribute"
+            style={{ marginTop: 16 }}
+          >
             <ul className="table-title flex gap20 mb-14">
-              <li>
+              <li className="flex-1">
                 <div className="body-title">Attribute Name</div>
               </li>
-              <li>
-                <div className="body-title">Type</div>
-              </li>
-              <li>
+              <li className="flex-1">
                 <div className="body-title">Options</div>
               </li>
-              <li>
-                <div className="body-title">Usage</div>
-              </li>
-              <li>
+              <li className="w-20">
                 <div className="body-title">Action</div>
               </li>
             </ul>
@@ -194,25 +169,55 @@ export default function AttributesPage() {
                 <li className="attribute-item flex items-center justify-between gap20">
                   <div className="body-text">Loading...</div>
                 </li>
-              ) : filtered.length ? (
-                filtered.map((a) => (
-                  <li key={a.id} className="attribute-item flex items-center justify-between gap20">
-                    <div className="name">
-                      <div className="body-title-2">{a.name}</div>
-                    </div>
-                    <div className="body-text">{badge(a)}</div>
-                    <div className="body-text">
-                      <Link href={`/attributes/${a.id}/options`} className="underline">
-                        {(a.options || []).length}
+              ) : items.length ? (
+                items.map((a) => (
+                  <li
+                    key={a.id}
+                    className="attribute-item flex items-center justify-between gap20"
+                    style={{ cursor: "pointer" }}
+                  >
+                    <div className="flex items-center gap20 flex-1">
+                      <Link
+                        href={`/attributes/${a.id}/options`}
+                        className="flex items-center gap20 flex-1"
+                        style={{ textDecoration: "none", color: "inherit" }}
+                        onClick={(e) => {
+                          // Prevent navigation if clicking on action buttons
+                          if (e.target.closest('.list-icon-function')) {
+                            e.preventDefault();
+                          }
+                        }}
+                      >
+                        <div className="name">
+                          <div className="body-title-2">{a.name}</div>
+                        </div>
                       </Link>
                     </div>
-                    <div className="body-text">-</div>
-                    <div className="list-icon-function">
-                      <Link href={`/attributes/${a.id}/edit`} className="item edit" title="Edit">
-                        <i className="icon-edit-3" />
-                      </Link>
-                      <div className="item trash" onClick={() => onDelete(a.id)} title="Delete">
-                        <i className="icon-trash-2" />
+                    <div className="flex-1">
+                      <div className="body-text" style={{ 
+                        overflow: "hidden", 
+                        textOverflow: "ellipsis", 
+                        whiteSpace: "nowrap",
+                        maxWidth: "100%"
+                      }}>{(a.options || []).map(option => option.value || option.label || option.title || option.name || JSON.stringify(option)).join(", ")}
+                      </div>
+                    </div>
+                    <div className="w-20">
+                      <div className="list-icon-function">
+                        <Link
+                          href={`/attributes/${a.id}/edit`}
+                          className="item edit"
+                          title="Edit"
+                        >
+                          <i className="icon-edit-3" />
+                        </Link>
+                        <div
+                          className="item trash"
+                          onClick={() => onDelete(a.id)}
+                          title="Delete"
+                        >
+                          <i className="icon-trash-2" />
+                        </div>
                       </div>
                     </div>
                   </li>

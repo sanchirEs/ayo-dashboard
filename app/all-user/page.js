@@ -10,8 +10,8 @@ export default async function AllUser(props) {
   return (
     <>
       <Layout
-        breadcrumbTitleParent="User"
-        breadcrumbTitle="All User"
+        breadcrumbTitleParent="Хэрэглэгч"
+        breadcrumbTitle="Бүх хэрэглэгчид"
         pageTitle="Бүх хэрэглэгчид"
       >
         <div className="wg-box">
