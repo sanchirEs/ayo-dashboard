@@ -1,4 +1,3 @@
-"use server";
 export const dynamic = "force-dynamic";
 import Layout from "@/components/layout/Layout";
 import Link from "next/link";
