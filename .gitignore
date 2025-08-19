@@ -17,6 +17,13 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+# Also ignore common non-.local variants
+.env.development
+.env.test
+.env.staging
+.env.production
+.env.*
+!env.example
 
 # Vercel
 .vercel
