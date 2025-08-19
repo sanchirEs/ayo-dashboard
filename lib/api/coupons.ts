@@ -1,5 +1,4 @@
 import { getBackendUrl } from "@/lib/api/env";
-const BACKEND_URL = getBackendUrl();
 
 export interface Coupon {
   id: number;
@@ -34,6 +33,7 @@ export interface CouponResponse {
 
 export async function getCoupons(token: string): Promise<Coupon[]> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/coupons/`, {
       method: 'GET',
       headers: {
@@ -65,6 +65,7 @@ export async function getCoupons(token: string): Promise<Coupon[]> {
 
 export async function createCoupon(data: CreateCouponData, token: string): Promise<Coupon> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/coupons/`, {
       method: 'POST',
       headers: {
@@ -94,6 +95,7 @@ export async function createCoupon(data: CreateCouponData, token: string): Promi
 
 export async function updateCoupon(id: number, data: Partial<CreateCouponData>, token: string): Promise<Coupon> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/coupons/${id}`, {
       method: 'PUT',
       headers: {
@@ -123,6 +125,7 @@ export async function updateCoupon(id: number, data: Partial<CreateCouponData>, 
 
 export async function deleteCoupon(id: number, token: string): Promise<void> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/coupons/${id}`, {
       method: 'DELETE',
       headers: {

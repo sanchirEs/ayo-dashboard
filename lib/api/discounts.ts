@@ -1,5 +1,4 @@
 import { getBackendUrl } from "@/lib/api/env";
-const BACKEND_URL = getBackendUrl();
 
 // Discount interfaces (extending existing product model)
 export interface ProductDiscount {
@@ -35,6 +34,7 @@ export interface DiscountResponse {
 // Get products that are currently on sale or can be put on sale
 export async function getDiscountableProducts(token: string): Promise<ProductDiscount[]> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/products/`, {
       method: 'GET',
       headers: {
@@ -90,6 +90,7 @@ export async function updateProductFlashSale(
   token: string
 ): Promise<ProductDiscount> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const response = await fetch(`${BACKEND_URL}/api/v1/products/${productId}`, {
       method: 'PUT',
       headers: {

@@ -1,5 +1,4 @@
 import { getBackendUrl } from "@/lib/api/env";
-const BACKEND_URL = getBackendUrl();
 
 // Analytics interfaces based on backend API
 export interface AnalyticsData {
@@ -36,6 +35,7 @@ export async function getAnalytics(
   token: string
 ): Promise<AnalyticsData> {
   try {
+    const BACKEND_URL = getBackendUrl();
     const searchParams = new URLSearchParams();
     
     if (params.startDate) searchParams.append('startDate', params.startDate);
