@@ -16,7 +16,10 @@ export interface Attribute {
 
 export async function getAttributes(): Promise<Attribute[]> {
   try {
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes`, { cache: "no-store" });
+    // Use server proxy when running in the browser to avoid build-time env inlining
+    const isBrowser = typeof window !== 'undefined';
+    const url = isBrowser ? `/api/attributes/list` : `${getBackendUrl()}/api/v1/attributes`;
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const json = await res.json();
     return json.data || [];
