@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { ChevronDown, ChevronRight, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CategoryRowActions from "./CategoryRowActions";
@@ -66,9 +65,9 @@ export default function CategoryRowsClient({ nodes, query }) {
               </span>
             )}
             <div className="min-w-0">
-              <Link href={`/category-detail/${c.id}`} className="body-title-2 block truncate" title={c.name}>
+              <span className="body-title-2 block truncate" title={c.name}>
                 {c.name}
-              </Link>
+              </span>
               {depth > 0 ? (
                 <span className="text-xs text-muted-foreground ml-2">(level {depth})</span>
               ) : null}
@@ -78,7 +77,7 @@ export default function CategoryRowsClient({ nodes, query }) {
             {c.description || "No description"}
           </div>
           <div className="body-text whitespace-nowrap">{c._count?.products || 0} products</div>
-          <CategoryRowActions id={c.id} />
+          <CategoryRowActions id={c.id} productCount={c._count?.products || 0} />
         </li>
       );
 

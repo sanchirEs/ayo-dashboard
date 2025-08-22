@@ -494,7 +494,7 @@ export default function AddProductComponent() {
         breadcrumbTitle="Бараа нэмэх"
         pageTitle="Бараа нэмэх"
       >
-        {/* Hero Section with Premium Gradient */}
+        {/* Modern Hero Section */}
         <div className="premium-hero-section">
           <div className="hero-gradient-bg">
             <div className="hero-content">
@@ -503,14 +503,20 @@ export default function AddProductComponent() {
                   <i className="icon-package" />
                 </div>
               </div>
-              <h1 className="hero-title">Шинэ бүтээгдэхүүн нэмэх</h1>
-              <p className="hero-subtitle">Таны онлайн дэлгүүрийг баяжуулах шинэ бүтээгдэхүүн бүртгэх</p>
-              <div className="hero-breadcrumb">
-                <span>Бараа</span>
-                <div className="breadcrumb-separator">
-                  <i className="icon-chevron-right" />
+              <div className="hero-text-content">
+                <h1 className="hero-title">Шинэ бүтээгдэхүүн нэмэх</h1>
+                <p className="hero-subtitle">
+                  Таны онлайн дэлгүүрийг баяжуулах шинэ бүтээгдэхүүн бүртгэх. 
+                  Зураг, тайлбар, үнэ болон бусад мэдээллийг оруулж, 
+                  худалдан авагчдад таны бүтээгдэхүүнийг танилцуулаарай.
+                </p>
+                <div className="hero-breadcrumb">
+                  <span>Бараа</span>
+                  <div className="breadcrumb-separator">
+                    <i className="icon-chevron-right" />
+                  </div>
+                  <span className="breadcrumb-active">Нэмэх</span>
                 </div>
-                <span className="breadcrumb-active">Нэмэх</span>
               </div>
             </div>
             <div className="hero-pattern"></div>

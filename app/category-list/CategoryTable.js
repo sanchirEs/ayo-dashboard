@@ -1,5 +1,4 @@
 "use server";
-import Link from "next/link";
 import { getCategoryTreePublic } from "@/lib/api/categories";
 import CategoryRowsClient from "./CategoryRowsClient.jsx";
 
