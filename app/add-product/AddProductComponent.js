@@ -915,10 +915,10 @@ export default function AddProductComponent() {
                       onOpenChange={setTagDialogOpen}
                       className="premium-dialog"
                     >
-                      <div className="dialog-header">
+                      {/* <div className="dialog-header">
                         <h3>Шошго сонгох</h3>
                         <p>Бүтээгдэхүүндээ тохирох шошгуудыг сонгоно уу</p>
-                      </div>
+                      </div> */}
                       <CommandInput 
                         placeholder="Шошго хайж олох..." 
                         className="premium-search"
@@ -1057,7 +1057,7 @@ export default function AddProductComponent() {
                   </div>
                 </div>
                 
-                <div className="premium-pricing-grid">
+                <div className="premium-pricing-grid pt-4 px-10">
                     <FormField
                       control={form.control}
                       name="price"
@@ -1276,12 +1276,8 @@ export default function AddProductComponent() {
                           >
                             <div className="btn-content">
                               <i className="icon-zap" />
-                              <span>Вариантууд үүсгэх</span>
-                              <div className="combination-count">
-                                {Object.values(selectedAttributeOptions).reduce((acc, options) => acc * (options.length || 1), 1)} комбинаци
-                              </div>
+                              <span>Үүсгэх</span>
                             </div>
-                            <div className="btn-pulse"></div>
                           </Button>
                         </div>
                       )}
