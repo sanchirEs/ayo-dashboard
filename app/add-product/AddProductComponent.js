@@ -38,6 +38,8 @@ import LoadingButton from "@/components/customui/LoadingButton";
 import Layout from "@/components/layout/Layout";
 import GetToken from "@/lib/GetTokenClient";
 import { getBackendUrl } from "@/lib/api/env";
+import ImageUploadField from "@/components/upload/ImageUploadField";
+import toastManager from "@/lib/toast";
 
 /**
  * AddProductComponent - Simplified with file uploads and optional advanced features
@@ -60,6 +62,11 @@ export default function AddProductComponent() {
   
   // Image preview handling
   const [previewImages, setPreviewImages] = useState([]);
+  
+  // Enhanced image upload state
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [imageUploadErrors, setImageUploadErrors] = useState([]);
   
   // Variant management
   const [variants, setVariants] = useState([]);
@@ -158,7 +165,45 @@ export default function AddProductComponent() {
     form.setValue("tagsCsv", csv, { shouldDirty: true, shouldTouch: true });
   }, [selectedTags, form]);
 
-  // File upload handling
+  // Enhanced image upload handlers
+  const handleImagesChange = useCallback((images) => {
+    // Update form with files (for manual upload mode)
+    const files = images.filter(img => img.file).map(img => img.file);
+    form.setValue("images", files, { shouldDirty: true, shouldTouch: true });
+    
+    // Update preview state
+    setPreviewImages(images.map(img => img.src || img.preview));
+  }, [form]);
+
+  const handleUploadComplete = useCallback((uploadedImages) => {
+    console.log("Images uploaded successfully:", uploadedImages);
+    setUploadedImages(prev => [...prev, ...uploadedImages]);
+    setImageUploadErrors([]);
+    
+    // Show success notification
+    toastManager?.success(
+      `${uploadedImages.length} зураг амжилттай байршуулагдлаа`,
+      { title: 'Зураг байршуулалт' }
+    );
+    
+    // For auto-upload mode, we might want to store URLs instead of files
+    // This depends on how the backend expects to receive the data
+  }, []);
+
+  const handleUploadError = useCallback((error) => {
+    console.error("Image upload error:", error);
+    setImageUploadErrors([error]);
+    setError(error);
+    
+    // Show error notification
+    toastManager?.error(error, { title: 'Зураг байршуулалтын алдаа' });
+  }, []);
+
+  const handleUploadProgress = useCallback((progress) => {
+    setImageUploadProgress(progress);
+  }, []);
+
+  // Legacy file upload handling (keeping for backward compatibility)
   const handleImageFilesSelected = useCallback((event, onChange) => {
     try {
       const files = Array.from(event.target.files || []);
@@ -245,13 +290,29 @@ export default function AddProductComponent() {
       const files = Array.from(event.target.files || []);
       if (files.length === 0) return;
 
-      const imageUrls = [];
+      const imageObjects = [];
+      let processedCount = 0;
+      
       files.forEach((file) => {
         const reader = new FileReader();
         reader.onload = () => {
-          imageUrls.push(reader.result);
-          if (imageUrls.length === files.length) {
-            updateVariant(variantIndex, 'images', [...(variants[variantIndex].images || []), ...imageUrls]);
+          // Create proper image object structure that matches backend schema
+          const imageObject = {
+            imageUrl: reader.result, // base64 data URL for preview
+            altText: file.name || "",
+            isPrimary: false,
+            // Store file reference for potential upload
+            _file: file,
+            _isPreview: true // Flag to indicate this is preview data
+          };
+          
+          imageObjects.push(imageObject);
+          processedCount++;
+          
+          if (processedCount === files.length) {
+            // Update variant with proper image objects
+            const currentImages = variants[variantIndex].images || [];
+            updateVariant(variantIndex, 'images', [...currentImages, ...imageObjects]);
           }
         };
         reader.readAsDataURL(file);
@@ -289,6 +350,8 @@ export default function AddProductComponent() {
   // Build payload for submission
   const buildProductPayload = (formValues) => {
     console.log("Building payload with form values:", formValues);
+    console.log("Uploaded images from main form:", uploadedImages);
+    console.log("Preview images:", previewImages);
     
     // Build base payload matching backend structure
     const payload = {
@@ -345,18 +408,59 @@ export default function AddProductComponent() {
       }
     }
 
+    // Prepare images for variants
+    // Priority: 1) Uploaded images from main form, 2) Variant-specific uploaded images, 3) Empty array
+    const getVariantImages = (variant, variantIndex) => {
+      // First, check if this variant has its own uploaded images (from variant-specific upload)
+      const variantUploadedImages = (variant.images || []).filter(img => 
+        img.imageUrl && 
+        (img.imageUrl.startsWith('http://') || img.imageUrl.startsWith('https://')) &&
+        !img._isPreview
+      );
+      
+      if (variantUploadedImages.length > 0) {
+        console.log(`✅ Variant ${variantIndex}: Using variant-specific images (${variantUploadedImages.length})`);
+        return variantUploadedImages;
+      }
+      
+      // If no variant-specific images, use main form uploaded images
+      if (uploadedImages.length > 0) {
+        console.log(`✅ Variant ${variantIndex}: Using main form images (${uploadedImages.length})`);
+        return uploadedImages.map(img => ({
+          imageUrl: img.url || img.secure_url || img,
+          altText: `${formValues.name} - Variant ${variantIndex + 1}`,
+          isPrimary: variantIndex === 0 // First variant gets primary image
+        }));
+      }
+      
+      console.log(`⚠️ Variant ${variantIndex}: No images available`);
+      return [];
+    };
+
     // Handle variants based on mode
     if (productMode === "variants" && variants.length > 0) {
-      payload.variants = variants.map(variant => ({
-        sku: variant.sku,
-        price: Number(variant.price),
-        isDefault: variant.isDefault,
-        attributes: variant.attributes,
-        inventory: variant.inventory,
-        images: variant.images,
-      }));
+      payload.variants = variants.map((variant, index) => {
+        const variantImages = getVariantImages(variant, index);
+        
+        return {
+          sku: variant.sku,
+          price: Number(variant.price),
+          isDefault: variant.isDefault,
+          attributes: variant.attributes,
+          inventory: variant.inventory,
+          images: variantImages,
+        };
+      });
+      console.log("✅ Variants created with images:", payload.variants.map((v, i) => `Variant ${i}: ${v.images.length} images`));
     } else if (productMode === "simple") {
-      // For simple products, create explicit single variant
+      // For simple products, create explicit single variant with main form images
+      const simpleProductImages = uploadedImages.length > 0 ? 
+        uploadedImages.map((img, index) => ({
+          imageUrl: img.url || img.secure_url || img,
+          altText: `${formValues.name}`,
+          isPrimary: index === 0
+        })) : [];
+      
       if (formValues.price && formValues.quantity) {
         payload.variants = [{
           sku: `${formValues.sku}-DEFAULT`,
@@ -364,8 +468,9 @@ export default function AddProductComponent() {
           isDefault: true,
           attributes: [],
           inventory: { quantity: Number(formValues.quantity) },
-          images: [],
+          images: simpleProductImages,
         }];
+        console.log(`✅ Simple product created with ${simpleProductImages.length} images`);
       }
     }
 
@@ -374,6 +479,7 @@ export default function AddProductComponent() {
     console.log("- Has price field:", 'price' in payload);
     console.log("- Has variants:", 'variants' in payload);
     console.log("- Variants count:", payload.variants?.length || 0);
+    console.log("- Total images across all variants:", payload.variants?.reduce((sum, v) => sum + v.images.length, 0) || 0);
     return payload;
   };
 
@@ -421,46 +527,21 @@ export default function AddProductComponent() {
       try {
         const payload = buildProductPayload(values);
         
-        // Prepare request with file upload handling
-        let finalPayload;
-        let headers = {
+        // Since we're using auto-upload, images are already uploaded to Cloudinary
+        // and their URLs are included in the payload. Send as JSON.
+        const headers = {
           Authorization: `Bearer ${TOKEN}`,
+          "Content-Type": "application/json",
         };
 
-        // Handle file uploads with FormData
-        if (values.images && values.images.length > 0) {
-          const formData = new FormData();
-          
-          // Add JSON payload
-          Object.keys(payload).forEach(key => {
-            const value = payload[key];
-            if (Array.isArray(value)) {
-              formData.append(key, JSON.stringify(value));
-            } else {
-              formData.append(key, String(value));
-            }
-          });
-          
-          // Add image files
-          values.images.forEach((image) => {
-            formData.append("images", image);
-          });
-          
-          finalPayload = formData;
-        } else {
-          // JSON payload without files
-          finalPayload = JSON.stringify(payload);
-          headers["Content-Type"] = "application/json";
-        }
-
-        console.log("Sending request...");
+        console.log("Sending request with payload:", payload);
 
         const response = await fetch(
           `${getBackendUrl()}/api/v1/products/createproduct`,
           {
             method: "POST",
             headers: headers,
-            body: finalPayload,
+            body: JSON.stringify(payload),
           }
         );
         
@@ -474,6 +555,9 @@ export default function AddProductComponent() {
           form.reset();
           setSelectedTags([]);
           setPreviewImages([]);
+          setUploadedImages([]);
+          setImageUploadErrors([]);
+          setImageUploadProgress(0);
           setVariants([]);
           setSelectedAttributeOptions({});
           setProductMode("simple");
@@ -711,102 +795,28 @@ export default function AddProductComponent() {
                 name="images"
                 render={({ field }) => (
                   <FormItem className="premium-form-item">
-                    <div className="premium-upload-area">
-                      {/* Image Preview Gallery */}
-                      {previewImages.length > 0 && (
-                        <div className="image-gallery">
-                          <div className="gallery-grid">
-                            {previewImages.map((imageSrc, index) => (
-                              <div className="gallery-item" key={index}>
-                                <div className="image-wrapper">
-                                  <img
-                                    src={imageSrc}
-                                    alt={`Upload preview ${index + 1}`}
-                                    className="gallery-image"
-                                  />
-                                  <div className="image-overlay">
-                                    <div className="overlay-actions">
-                                      <button
-                                        type="button"
-                                        className="overlay-btn view-btn"
-                                        title="Харах"
-                                      >
-                                        <i className="icon-eye" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="overlay-btn delete-btn"
-                                        title="Устгах"
-                                      >
-                                        <i className="icon-trash" />
-                                      </button>
-                                    </div>
-                                    <div className="image-info">
-                                      <span className="image-number">{index + 1}</span>
-                                    </div>
-                                  </div>
-                                  <div className="image-border-glow"></div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Revolutionary Upload Zone */}
-                      <div className="upload-zone">
-                        <FormControl>
-                          <label className="upload-dropzone" htmlFor="imageFiles">
-                            <div className="dropzone-content">
-                              <div className="upload-animation">
-                                <div className="upload-icon-wrapper">
-                                  <div className="upload-icon">
-                                    <i className="icon-upload-cloud" />
-                                  </div>
-                                  <div className="upload-pulse"></div>
-                                </div>
-                              </div>
-                              
-                              <div className="upload-text-content">
-                                <h4 className="upload-title">Зураг байршуулах</h4>
-                                <p className="upload-description">
-                                  Зургуудыг энд чирж оруулна уу эсвэл 
-                                  <span className="upload-link"> дарж файл сонгоно уу</span>
-                                </p>
-                                <div className="upload-specs">
-                                  <span className="spec-item">
-                                    <i className="icon-image" />
-                                    PNG, JPG, WEBP
-                                  </span>
-                                  <span className="spec-item">
-                                    <i className="icon-maximize" />
-                                    Хамгийн их 10MB
-                                  </span>
-                                  <span className="spec-item">
-                                    <i className="icon-layers" />
-                                    Олон зураг
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <input
-                              type="file"
-                              id="imageFiles"
-                              className="upload-input"
-                              onChange={(e) => handleImageFilesSelected(e, field.onChange)}
-                              multiple
-                              accept="image/*"
-                            />
-                            
-                            <div className="dropzone-border-animation"></div>
-                          </label>
-                        </FormControl>
-                      </div>
-                    </div>
+                    <FormControl>
+                      <ImageUploadField
+                        value={field.value || []}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        disabled={isPending}
+                        maxFiles={10}
+                        maxFileSize={5 * 1024 * 1024} // 5MB
+                        acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+                        folder="products"
+                        type="products"
+                        autoUpload={true} // Enable auto-upload to Cloudinary
+                        showProgress={true}
+                        onUploadComplete={handleUploadComplete}
+                        onUploadError={handleUploadError}
+                        className="premium-image-upload"
+                      />
+                    </FormControl>
                     
                     <FormMessage className="premium-error" />
                     
+                    {/* Enhanced Upload Tips */}
                     <div className="upload-tips">
                       <div className="tips-content">
                         <i className="icon-lightbulb" />
@@ -814,6 +824,36 @@ export default function AddProductComponent() {
                           <strong>Зөвлөмж:</strong> Эхний зураг нь үндсэн зураг болно. Зургийн чанар сайн байх тусам илүү олон худалдан авагчийг татна.
                         </div>
                       </div>
+                      
+                      {/* Upload Progress Indicator */}
+                      {imageUploadProgress > 0 && (
+                        <div className="upload-progress-info">
+                          <div className="progress-bar-wrapper">
+                            <div className="progress-label">
+                              <i className="icon-upload" />
+                              <span>Зураг байршуулж байна... {imageUploadProgress}%</span>
+                            </div>
+                            <div className="progress-bar">
+                              <div 
+                                className="progress-fill"
+                                style={{ width: `${imageUploadProgress}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Upload Errors */}
+                      {imageUploadErrors.length > 0 && (
+                        <div className="upload-errors">
+                          {imageUploadErrors.map((error, index) => (
+                            <div key={index} className="error-item">
+                              <i className="icon-alert-triangle" />
+                              <span>{error}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </FormItem>
                 )}
@@ -1405,10 +1445,10 @@ export default function AddProductComponent() {
                                   {/* Existing Images */}
                                   {variant.images && variant.images.length > 0 && (
                                     <div className="variant-images-preview">
-                                      {variant.images.map((imageSrc, imgIndex) => (
+                                      {variant.images.map((imageObj, imgIndex) => (
                                         <div key={imgIndex} className="variant-image-item">
                                           <img
-                                            src={imageSrc}
+                                            src={imageObj.imageUrl || imageObj}
                                             alt={`Variant ${index + 1} image ${imgIndex + 1}`}
                                             className="variant-image"
                                           />
