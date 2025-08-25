@@ -24,7 +24,8 @@ export default function ImageUploadField({
   showProgress = true,
   autoUpload = false, // If true, uploads to Cloudinary immediately
   onUploadComplete,
-  onUploadError
+  onUploadError,
+  onPrimaryChange // Callback when primary image changes
 }) {
   const [previewImages, setPreviewImages] = useState([]);
   const [dragActive, setDragActive] = useState(false);
@@ -32,6 +33,7 @@ export default function ImageUploadField({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadErrors, setUploadErrors] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [primaryImageId, setPrimaryImageId] = useState(null); // Track primary image
   const fileInputRef = useRef(null);
   const TOKEN = GetToken();
 
@@ -96,30 +98,53 @@ export default function ImageUploadField({
     }
   }, [value, maxFiles, validateFile, autoUpload, TOKEN, onChange]);
 
+  // Set primary image
+  const setPrimaryImage = useCallback((imageId) => {
+    setPrimaryImageId(imageId);
+    
+    // Update the previewImages to mark primary status
+    setPreviewImages(prev => {
+      const updated = prev.map(img => ({
+        ...img,
+        isPrimary: img.id === imageId
+      }));
+      
+      // Call the callback with updated images
+      onPrimaryChange?.(updated);
+      
+      return updated;
+    });
+  }, [onPrimaryChange]);
+
   // Generate preview images
   const generatePreviews = useCallback((files) => {
-    setPreviewImages(prev => {
-      const newPreviews = [...prev];
-      
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setPreviewImages(current => [...current, {
-            id: `${file.name}_${Date.now()}_${Math.random()}`,
-            src: reader.result,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            file: file,
-            uploaded: false
-          }]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const newImage = {
+          id: `${file.name}_${Date.now()}_${Math.random()}`,
+          src: reader.result,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          file: file,
+          uploaded: false,
+          isPrimary: false
         };
-        reader.readAsDataURL(file);
-      });
-      
-      return newPreviews;
+        
+        setPreviewImages(current => {
+          const updated = [...current, newImage];
+          // Set first image as primary if none selected
+          if (!primaryImageId && updated.length === 1) {
+            setPrimaryImageId(newImage.id);
+            newImage.isPrimary = true;
+          }
+          return updated;
+        });
+      };
+      reader.readAsDataURL(file);
     });
-  }, []);
+  }, [primaryImageId]);
 
   // Upload to Cloudinary with progress tracking
   const uploadToCloudinary = useCallback(async (files) => {
@@ -159,20 +184,36 @@ export default function ImageUploadField({
             const response = JSON.parse(xhr.responseText);
             
             if (xhr.status === 201 && response.success) {
-              const cloudinaryImages = response.data.images.map(img => ({
+              const cloudinaryImages = response.data.images.map((img, index) => ({
                 id: img.id,
-                src: img.optimized_url,
+                src: img.optimized_url || img.url, // Use optimized URL or fallback to regular URL
                 name: img.original_filename,
                 size: img.size,
                 type: img.format,
                 uploaded: true,
                 cloudinary_public_id: img.id,
                 url: img.url,
-                thumbnail_url: img.thumbnail_url
+                thumbnail_url: img.thumbnail_url,
+                isPrimary: false // Will be set later if needed
               }));
 
               setUploadedImages(prev => [...prev, ...cloudinaryImages]);
-              setPreviewImages(prev => [...prev, ...cloudinaryImages]);
+              
+              // Update preview images
+              setPreviewImages(prev => {
+                const updated = [...prev, ...cloudinaryImages];
+                // Set first uploaded image as primary if no primary selected yet
+                if (!primaryImageId && updated.length > 0) {
+                  const firstImage = updated[0];
+                  setPrimaryImageId(firstImage.id);
+                  firstImage.isPrimary = true;
+                }
+                
+                // Call the callback with updated images
+                onPrimaryChange?.(updated);
+                
+                return updated;
+              });
               
               // Show success toast
               toastManager?.success(
@@ -220,7 +261,7 @@ export default function ImageUploadField({
       setUploading(false);
       setUploadProgress(0);
     }
-  }, [TOKEN, folder, type, onUploadComplete, onUploadError]);
+  }, [TOKEN, folder, type, onUploadComplete, onUploadError, onPrimaryChange, primaryImageId]);
 
   // Remove image
   const removeImage = useCallback(async (imageId) => {
@@ -255,12 +296,24 @@ export default function ImageUploadField({
     const updatedPreviews = previewImages.filter(img => img.id !== imageId);
     setPreviewImages(updatedPreviews);
 
+    // If this was the primary image, set a new primary
+    if (primaryImageId === imageId && updatedPreviews.length > 0) {
+      const newPrimary = updatedPreviews[0];
+      setPrimaryImageId(newPrimary.id);
+      setPreviewImages(prev => prev.map(img => ({
+        ...img,
+        isPrimary: img.id === newPrimary.id
+      })));
+    } else if (updatedPreviews.length === 0) {
+      setPrimaryImageId(null);
+    }
+
     // Update form value (remove file from form)
     if (!autoUpload && imageToRemove?.file) {
       const updatedFiles = value.filter(file => file !== imageToRemove.file);
       onChange(updatedFiles);
     }
-  }, [previewImages, value, onChange, autoUpload, TOKEN]);
+  }, [previewImages, value, onChange, autoUpload, TOKEN, primaryImageId]);
 
   // Drag and drop handlers
   const handleDrag = useCallback((e) => {
@@ -301,6 +354,7 @@ export default function ImageUploadField({
     setPreviewImages([]);
     setUploadedImages([]);
     setUploadErrors([]);
+    setPrimaryImageId(null);
     onChange([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -415,7 +469,15 @@ export default function ImageUploadField({
 
           <div className="image-grid">
             {previewImages.map((image, index) => (
-              <div key={image.id} className="image-item">
+              <div key={image.id} className={`image-item ${image.isPrimary ? 'primary-image' : ''}`}>
+                {/* Primary Badge */}
+                {image.isPrimary && (
+                  <div className="primary-badge">
+                    <i className="icon-star" />
+                    <span>Primary</span>
+                  </div>
+                )}
+                
                 <div className="image-wrapper">
                   <img
                     src={image.src}
@@ -458,6 +520,20 @@ export default function ImageUploadField({
                       >
                         <i className="icon-eye" />
                       </button>
+                      
+                      {!image.isPrimary && (
+                        <button
+                          type="button"
+                          className="action-btn primary-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPrimaryImage(image.id);
+                          }}
+                          title="Set as primary image"
+                        >
+                          <i className="icon-star" />
+                        </button>
+                      )}
                       
                       <button
                         type="button"
@@ -754,6 +830,32 @@ export default function ImageUploadField({
           box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
 
+        .image-item.primary-image {
+          border: 2px solid #f59e0b;
+          box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .image-item.primary-image:hover {
+          box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .primary-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
         .image-wrapper {
           position: relative;
           aspect-ratio: 1;
@@ -845,6 +947,11 @@ export default function ImageUploadField({
         .remove-btn:hover:not(:disabled) {
           background: rgba(239, 68, 68, 0.8);
           border-color: rgba(239, 68, 68, 0.9);
+        }
+
+        .primary-btn:hover:not(:disabled) {
+          background: rgba(245, 158, 11, 0.8);
+          border-color: rgba(245, 158, 11, 0.9);
         }
 
         .image-info {

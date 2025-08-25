@@ -177,7 +177,21 @@ export default function AddProductComponent() {
 
   const handleUploadComplete = useCallback((uploadedImages) => {
     console.log("Images uploaded successfully:", uploadedImages);
-    setUploadedImages(prev => [...prev, ...uploadedImages]);
+    setUploadedImages(prev => {
+      const allImages = [...prev, ...uploadedImages];
+      
+      // Format images for backend submission (include primary status)
+      const formattedImages = allImages.map(img => ({
+        imageUrl: img.url || img.optimized_url || img.src,
+        altText: img.name || img.alt || '',
+        isPrimary: img.isPrimary || false
+      }));
+      
+      // Update form with formatted images for backend
+      form.setValue("images", formattedImages, { shouldDirty: true });
+      
+      return allImages;
+    });
     setImageUploadErrors([]);
     
     // Show success notification
@@ -185,10 +199,7 @@ export default function AddProductComponent() {
       `${uploadedImages.length} зураг амжилттай байршуулагдлаа`,
       { title: 'Зураг байршуулалт' }
     );
-    
-    // For auto-upload mode, we might want to store URLs instead of files
-    // This depends on how the backend expects to receive the data
-  }, []);
+  }, [form]);
 
   const handleUploadError = useCallback((error) => {
     console.error("Image upload error:", error);
@@ -202,6 +213,21 @@ export default function AddProductComponent() {
   const handleUploadProgress = useCallback((progress) => {
     setImageUploadProgress(progress);
   }, []);
+
+  const handlePrimaryImageChange = useCallback((images) => {
+    // Update uploadedImages state to reflect primary changes
+    setUploadedImages(images);
+    
+    // Format images for backend submission (include primary status)
+    const formattedImages = images.map(img => ({
+      imageUrl: img.url || img.optimized_url || img.src,
+      altText: img.name || img.alt || '',
+      isPrimary: img.isPrimary || false
+    }));
+    
+    // Update form with formatted images for backend
+    form.setValue("images", formattedImages, { shouldDirty: true });
+  }, [form]);
 
   // Legacy file upload handling (keeping for backward compatibility)
   const handleImageFilesSelected = useCallback((event, onChange) => {
@@ -810,6 +836,7 @@ export default function AddProductComponent() {
                         showProgress={true}
                         onUploadComplete={handleUploadComplete}
                         onUploadError={handleUploadError}
+                        onPrimaryChange={handlePrimaryImageChange}
                         className="premium-image-upload"
                       />
                     </FormControl>
