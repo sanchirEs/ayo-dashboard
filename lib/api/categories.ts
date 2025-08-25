@@ -18,18 +18,20 @@ export interface CategoryNode {
   children?: CategoryNode[];
 }
 
-export async function getCategories(): Promise<Category[]> {
+export async function getCategories(all: boolean = false): Promise<Category[]> {
   try {
     const token = await getToken();
-    const response = await fetch(
-      `${getBackendUrl()}/api/v1/categories/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: 'no-store', // Always fetch fresh data
-      }
-    );
+    const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
+    if (all) {
+      url.searchParams.set('all', 'true');
+    }
+    
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: 'no-store', // Always fetch fresh data
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);
@@ -83,16 +85,18 @@ export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
   }
 }
 
-export async function getCategoriesClient(token: string): Promise<Category[]> {
+export async function getCategoriesClient(token: string, all: boolean = false): Promise<Category[]> {
   try {
-    const response = await fetch(
-      `${getBackendUrl()}/api/v1/categories/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
+    if (all) {
+      url.searchParams.set('all', 'true');
+    }
+    
+    const response = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);

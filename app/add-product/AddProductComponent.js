@@ -108,7 +108,7 @@ export default function AddProductComponent() {
       
       try {
         const [categoriesData, tagPresetsData, attributesData] = await Promise.all([
-          getCategoriesClient(TOKEN),
+          getCategoriesClient(TOKEN, true), // Get ALL categories for product creation
           getTagPresets(),
           getAttributes(),
         ]);

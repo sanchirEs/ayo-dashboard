@@ -64,7 +64,7 @@ export default function EditProductComponent({ id }) {
       try {
         const [product, categoriesData, presets, tagResp] = await Promise.all([
           getProductById(id, TOKEN),
-          TOKEN ? getCategoriesClient(TOKEN) : Promise.resolve([]),
+          TOKEN ? getCategoriesClient(TOKEN, true) : Promise.resolve([]), // Get ALL categories for product editing
           getTagPresets(),
           getTags(id),
         ]);
