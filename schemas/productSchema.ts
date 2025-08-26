@@ -25,6 +25,12 @@ const inventorySchema = z.object({
   quantity: z.number().min(0, { message: "Тоо ширхэг 0-с дээш байх ёстой" }),
 });
 
+// Product specification schema
+const productSpecSchema = z.object({
+  type: z.string().min(1, { message: "Тодорхойлолтын төрөл оруулна уу" }),
+  value: z.string().min(1, { message: "Тодорхойлолтын утга оруулна уу" }),
+});
+
 // Variant schema
 const variantSchema = z.object({
   sku: z.string().min(1, { message: "Вариант SKU оруулна уу" }),
@@ -39,6 +45,9 @@ export const addProductsSchema = z.object({
   name: requiredString,
   sku: requiredString,
   description: requiredString,
+  howToUse: z.string().optional(),
+  ingredients: z.string().optional(),
+  specs: z.array(productSpecSchema).optional(),
   categoryId: z.union([
     z.string().refine((v) => {
       let n = Number(v);
@@ -107,6 +116,9 @@ export const editProductsSchema = z.object({
   name: requiredString,
   sku: requiredString,
   description: requiredString,
+  howToUse: z.string().optional(),
+  ingredients: z.string().optional(),
+  specs: z.array(productSpecSchema).optional(),
   price: z.union([
     z.string().refine((v) => {
       const n = Number(v);
@@ -131,3 +143,8 @@ export const editProductsSchema = z.object({
   tagsCsv: optionalString,
   images: z.array(z.instanceof(File)).optional(),
 });
+
+// Export types for use in components
+export type ProductSpec = z.infer<typeof productSpecSchema>;
+export type AddProductForm = z.infer<typeof addProductsSchema>;
+export type EditProductForm = z.infer<typeof editProductsSchema>;

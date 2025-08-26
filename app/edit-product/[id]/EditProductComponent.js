@@ -43,6 +43,7 @@ export default function EditProductComponent({ id }) {
   const [previewImages, setPreviewImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]); // {id, url}
   const [removeImageIds, setRemoveImageIds] = useState([]);
+  const [productSpecs, setProductSpecs] = useState([]);
   const TOKEN = GetToken();
 
   const form = useForm({
@@ -50,6 +51,8 @@ export default function EditProductComponent({ id }) {
     defaultValues: {
       name: "",
       description: "",
+      howToUse: "",
+      ingredients: "",
       price: "",
       categoryId: "",
       quantity: "",
@@ -75,6 +78,8 @@ export default function EditProductComponent({ id }) {
         form.reset({
           name: product.name || "",
           description: product.description || "",
+          howToUse: product.howToUse || "",
+          ingredients: product.ingredients || "",
           price: String(product.price ?? ""),
           categoryId: String(product.categoryId || ""),
           quantity: String(product.stock ?? ""),
@@ -84,6 +89,7 @@ export default function EditProductComponent({ id }) {
         });
 
         setExistingImages(product.images || []);
+        setProductSpecs(product.specs || []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setTagPresets(presets || []);
         setSelectedTags((tagResp?.tags || []).map((t) => t.tag));
@@ -105,6 +111,21 @@ export default function EditProductComponent({ id }) {
       return next;
     });
   }
+
+  // Product specifications functions
+  const addProductSpec = () => {
+    setProductSpecs([...productSpecs, { type: "", value: "" }]);
+  };
+
+  const removeProductSpec = (index) => {
+    setProductSpecs(productSpecs.filter((_, i) => i !== index));
+  };
+
+  const updateProductSpec = (index, field, value) => {
+    const updatedSpecs = [...productSpecs];
+    updatedSpecs[index][field] = value;
+    setProductSpecs(updatedSpecs);
+  };
 
   useEffect(() => {
     const csv = Array.from(new Set(selectedTags)).join(",");
@@ -167,6 +188,9 @@ export default function EditProductComponent({ id }) {
           {
             name: values.name,
             description: values.description,
+            howToUse: values.howToUse || "",
+            ingredients: values.ingredients || "",
+            specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
             price: Number(values.price),
             categoryId: Number(values.categoryId),
             sku: values.sku,
@@ -301,6 +325,82 @@ export default function EditProductComponent({ id }) {
                 </FormItem>
               )}
             />
+
+            {/* How to Use Field */}
+            <FormField
+              control={form.control}
+              name="howToUse"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="body-title mb-5">Хэрэглэх арга</FormLabel>
+                  <FormControl>
+                    <textarea {...field} className="mb-10" placeholder="Хэрэглэх арга талаар тайлбар..." rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Ingredients Field */}
+            <FormField
+              control={form.control}
+              name="ingredients"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="body-title mb-5">Найрлага</FormLabel>
+                  <FormControl>
+                    <textarea {...field} className="mb-10" placeholder="Бүтээгдэхүүний найрлага..." rows={3} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Product Specifications */}
+            <div className="mb-24">
+              <FormLabel className="body-title mb-5">Техникийн тодорхойлолт</FormLabel>
+              <div className="specs-container">
+                {productSpecs.map((spec, index) => (
+                  <div key={index} className="flex gap-4 items-end mb-4 p-4 border rounded-lg">
+                    <div className="flex-1">
+                      <FormLabel className="mb-2">Төрөл</FormLabel>
+                      <Input
+                        placeholder="жишээ: Үнэр"
+                        value={spec.type}
+                        onChange={(e) => updateProductSpec(index, 'type', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <FormLabel className="mb-2">Утга</FormLabel>
+                      <Input
+                        placeholder="жишээ: Лаванда"
+                        value={spec.value}
+                        onChange={(e) => updateProductSpec(index, 'value', e.target.value)}
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeProductSpec(index)}
+                      className="mb-0"
+                    >
+                      <i className="icon-trash-2" />
+                    </Button>
+                  </div>
+                ))}
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addProductSpec}
+                  className="w-full"
+                >
+                  <i className="icon-plus mr-2" />
+                  Тодорхойлолт нэмэх
+                </Button>
+              </div>
+            </div>
 
             {/* Tags */}
             <FormField

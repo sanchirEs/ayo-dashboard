@@ -1,10 +1,20 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
 
+export interface ProductSpec {
+  id?: number;
+  type: string;
+  value: string;
+  productId?: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string;
+  howToUse?: string;
+  ingredients?: string;
+  specs?: ProductSpec[];
   sku: string;
   price: number;
   categoryId: number;
@@ -59,6 +69,9 @@ export async function getProductById(productId: number, tokenOverride?: string |
       id: p.id,
       name: p.name,
       description: p.description,
+      howToUse: p.howToUse,
+      ingredients: p.ingredients,
+      specs: p.specs || [],
       sku: p.sku,
       price: Number(p.price),
       categoryId: p.categoryId,
@@ -77,6 +90,7 @@ export async function getProductById(productId: number, tokenOverride?: string |
 export type UpdateProductPayload = Omit<Partial<Product>, 'images'> & {
   quantity?: number;
   removeImageIds?: number[];
+  specs?: ProductSpec[];
   tags?: string[];
   images?: (File | Blob)[];
 };
@@ -93,6 +107,9 @@ export async function updateProduct(
     const formData = new FormData();
     if (typeof payload.name !== 'undefined') formData.append('name', String(payload.name));
     if (typeof payload.description !== 'undefined') formData.append('description', String(payload.description));
+    if (typeof payload.howToUse !== 'undefined') formData.append('howToUse', String(payload.howToUse));
+    if (typeof payload.ingredients !== 'undefined') formData.append('ingredients', String(payload.ingredients));
+    if (Array.isArray(payload.specs)) formData.append('specs', JSON.stringify(payload.specs));
     if (typeof payload.price !== 'undefined') formData.append('price', String(payload.price));
     if (typeof payload.categoryId !== 'undefined') formData.append('categoryId', String(payload.categoryId));
     if (typeof payload.sku !== 'undefined') formData.append('sku', String(payload.sku));

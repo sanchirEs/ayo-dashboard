@@ -72,6 +72,9 @@ export default function AddProductComponent() {
   const [variants, setVariants] = useState([]);
   const [selectedAttributeOptions, setSelectedAttributeOptions] = useState({});
   
+  // Product specifications state
+  const [productSpecs, setProductSpecs] = useState([]);
+  
   // Advanced features toggle
   const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
   
@@ -84,6 +87,8 @@ export default function AddProductComponent() {
     defaultValues: {
       name: "",
       description: "",
+      howToUse: "",
+      ingredients: "",
       sku: "",
       categoryId: "",
       vendorId: "",
@@ -354,6 +359,21 @@ export default function AddProductComponent() {
     updateVariant(variantIndex, 'images', newImages);
   };
 
+  // Product specifications functions
+  const addProductSpec = () => {
+    setProductSpecs([...productSpecs, { type: "", value: "" }]);
+  };
+
+  const removeProductSpec = (index) => {
+    setProductSpecs(productSpecs.filter((_, i) => i !== index));
+  };
+
+  const updateProductSpec = (index, field, value) => {
+    const updatedSpecs = [...productSpecs];
+    updatedSpecs[index][field] = value;
+    setProductSpecs(updatedSpecs);
+  };
+
   const setDefaultVariant = (index) => {
     setVariants(prev => prev.map((variant, i) => ({
       ...variant,
@@ -384,6 +404,9 @@ export default function AddProductComponent() {
       sku: formValues.sku,
       name: formValues.name,
       description: formValues.description,
+      howToUse: formValues.howToUse || "",
+      ingredients: formValues.ingredients || "",
+      specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
       categoryId: Number(formValues.categoryId),
       vendorId: Number(formValues.vendorId || VENDOR_ID_STATIC),
       tags: selectedTags,
@@ -796,6 +819,145 @@ export default function AddProductComponent() {
                     </FormItem>
                   )}
                 />
+
+                {/* How to Use Field */}
+                <FormField
+                  control={form.control}
+                  name="howToUse"
+                  render={({ field }) => (
+                    <FormItem className="premium-form-item">
+                      <FormLabel className="premium-label">
+                        <span className="label-text">Хэрэглэх арга</span>
+                        <div className="label-underline"></div>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="premium-textarea-wrapper">
+                          <div className="textarea-icon">
+                            <i className="icon-help-circle" />
+                          </div>
+                          <textarea
+                            {...field}
+                            className="premium-textarea"
+                            placeholder="Энэ бүтээгдэхүүнийг хэрхэн ашиглах талаарх зааварчилгааг бичнэ үү..."
+                            rows={3}
+                          />
+                          <div className="input-border-animation"></div>
+                          <div className="textarea-resize-indicator">
+                            <i className="icon-corner-down-right" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="premium-error" />
+                      <FormDescription className="premium-description">
+                        <i className="icon-info-circle" />
+                        Хэрэглэгчдэд бүтээгдэхүүнийг хэрхэн ашиглах талаар зааварчилгаа өгнө үү
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Ingredients Field */}
+                <FormField
+                  control={form.control}
+                  name="ingredients"
+                  render={({ field }) => (
+                    <FormItem className="premium-form-item">
+                      <FormLabel className="premium-label">
+                        <span className="label-text">Найрлага</span>
+                        <div className="label-underline"></div>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="premium-textarea-wrapper">
+                          <div className="textarea-icon">
+                            <i className="icon-layers" />
+                          </div>
+                          <textarea
+                            {...field}
+                            className="premium-textarea"
+                            placeholder="Бүтээгдэхүүний найрлага, тус бүрийн орцыг жагсаана уу..."
+                            rows={3}
+                          />
+                          <div className="input-border-animation"></div>
+                          <div className="textarea-resize-indicator">
+                            <i className="icon-corner-down-right" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="premium-error" />
+                      <FormDescription className="premium-description">
+                        <i className="icon-info-circle" />
+                        Бүтээгдэхүүнд орсон бүрэлдэхүүн хэсгүүдийг тайлбарлана уу
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Product Specifications Section */}
+                <div className="premium-form-item">
+                  <div className="premium-label">
+                    <span className="label-text">Техникийн тодорхойлолт</span>
+                    <div className="label-underline"></div>
+                  </div>
+                  <div className="specs-container">
+                    {productSpecs.map((spec, index) => (
+                      <div key={index} className="spec-row premium-form-row">
+                        <div className="premium-form-col">
+                          <div className="premium-input-wrapper">
+                            <div className="input-icon">
+                              <i className="icon-tag" />
+                            </div>
+                            <Input
+                              className="premium-input"
+                              placeholder="Төрөл (жишээ: Үнэр)"
+                              value={spec.type}
+                              onChange={(e) => updateProductSpec(index, 'type', e.target.value)}
+                            />
+                            <div className="input-border-animation"></div>
+                          </div>
+                        </div>
+                        <div className="premium-form-col">
+                          <div className="premium-input-wrapper">
+                            <div className="input-icon">
+                              <i className="icon-type" />
+                            </div>
+                            <Input
+                              className="premium-input"
+                              placeholder="Утга (жишээ: Лаванда)"
+                              value={spec.value}
+                              onChange={(e) => updateProductSpec(index, 'value', e.target.value)}
+                            />
+                            <div className="input-border-animation"></div>
+                          </div>
+                        </div>
+                        <div className="spec-actions">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeProductSpec(index)}
+                            className="premium-button-secondary"
+                          >
+                            <i className="icon-trash-2" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addProductSpec}
+                      className="premium-button-outline add-spec-button"
+                    >
+                      <i className="icon-plus" />
+                      Тодорхойлолт нэмэх
+                    </Button>
+                  </div>
+                  <div className="premium-description">
+                    <i className="icon-info-circle" />
+                    Бүтээгдэхүүний техникийн тодорхойлолт (үнэр, хэмжээ, өнгө гэх мэт)
+                  </div>
+                </div>
                 </div>
             </div>
 
