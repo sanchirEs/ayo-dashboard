@@ -109,8 +109,10 @@ export default function ImageUploadField({
         isPrimary: img.id === imageId
       }));
       
-      // Call the callback with updated images
-      onPrimaryChange?.(updated);
+      // Defer callback to avoid setState during render
+      setTimeout(() => {
+        onPrimaryChange?.(updated);
+      }, 0);
       
       return updated;
     });
@@ -136,8 +138,11 @@ export default function ImageUploadField({
           const updated = [...current, newImage];
           // Set first image as primary if none selected
           if (!primaryImageId && updated.length === 1) {
-            setPrimaryImageId(newImage.id);
             newImage.isPrimary = true;
+            // Defer setState to avoid render cycle issues
+            setTimeout(() => {
+              setPrimaryImageId(newImage.id);
+            }, 0);
           }
           return updated;
         });
@@ -197,23 +202,29 @@ export default function ImageUploadField({
                 isPrimary: false // Will be set later if needed
               }));
 
+              // Update uploaded images state
               setUploadedImages(prev => [...prev, ...cloudinaryImages]);
               
               // Update preview images
-              setPreviewImages(prev => {
-                const updated = [...prev, ...cloudinaryImages];
-                // Set first uploaded image as primary if no primary selected yet
-                if (!primaryImageId && updated.length > 0) {
-                  const firstImage = updated[0];
+              const updatedImages = [...previewImages, ...cloudinaryImages];
+              
+              // Handle primary image logic separately to avoid setState during render
+              let finalImages = updatedImages;
+              if (!primaryImageId && updatedImages.length > 0) {
+                const firstImage = updatedImages[0];
+                firstImage.isPrimary = true;
+                // Use setTimeout to defer setState calls
+                setTimeout(() => {
                   setPrimaryImageId(firstImage.id);
-                  firstImage.isPrimary = true;
-                }
-                
-                // Call the callback with updated images
-                onPrimaryChange?.(updated);
-                
-                return updated;
-              });
+                }, 0);
+              }
+              
+              setPreviewImages(finalImages);
+              
+              // Defer callback to avoid setState during render
+              setTimeout(() => {
+                onPrimaryChange?.(finalImages);
+              }, 0);
               
               // Show success toast
               toastManager?.success(

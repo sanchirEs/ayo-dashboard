@@ -64,8 +64,11 @@ export const addProductsSchema = z.object({
     z.number().min(1, { message: "Vendor ID оруулна уу" })
   ]).optional(),
   
-  // File uploads for images
-  images: z.array(z.instanceof(File)).optional(),
+  // File uploads for images - can be File objects or processed image data
+  images: z.union([
+    z.array(z.instanceof(File)),
+    z.array(imageSchema)
+  ]).optional(),
   
   // Tags as CSV for form handling
   tagsCsv: z.string().optional(),
@@ -141,7 +144,10 @@ export const editProductsSchema = z.object({
     z.number().min(0, { message: "Тоо оруулна уу" })
   ], { required_error: "Заавал оруулна уу" }),
   tagsCsv: optionalString,
-  images: z.array(z.instanceof(File)).optional(),
+  images: z.union([
+    z.array(z.instanceof(File)),
+    z.array(imageSchema)
+  ]).optional(),
 });
 
 // Export types for use in components

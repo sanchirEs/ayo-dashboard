@@ -91,7 +91,7 @@ export default function AddProductComponent() {
       ingredients: "",
       sku: "",
       categoryId: "",
-      vendorId: "",
+      vendorId: VENDOR_ID_STATIC?.toString() || "1", // Set default vendor ID
       images: [],
       tagsCsv: "",
       // Simple product fields
@@ -170,6 +170,19 @@ export default function AddProductComponent() {
     form.setValue("tagsCsv", csv, { shouldDirty: true, shouldTouch: true });
   }, [selectedTags, form]);
 
+  // Sync uploaded images with form - separate effect to prevent render cycle issues
+  useEffect(() => {
+    if (uploadedImages.length > 0) {
+      const formattedImages = uploadedImages.map(img => ({
+        imageUrl: img.url || img.optimized_url || img.src,
+        altText: img.name || img.alt || '',
+        isPrimary: img.isPrimary || false
+      }));
+      
+      form.setValue("images", formattedImages, { shouldDirty: true });
+    }
+  }, [uploadedImages, form]);
+
   // Enhanced image upload handlers
   const handleImagesChange = useCallback((images) => {
     // Update form with files (for manual upload mode)
@@ -182,21 +195,9 @@ export default function AddProductComponent() {
 
   const handleUploadComplete = useCallback((uploadedImages) => {
     console.log("Images uploaded successfully:", uploadedImages);
-    setUploadedImages(prev => {
-      const allImages = [...prev, ...uploadedImages];
-      
-      // Format images for backend submission (include primary status)
-      const formattedImages = allImages.map(img => ({
-        imageUrl: img.url || img.optimized_url || img.src,
-        altText: img.name || img.alt || '',
-        isPrimary: img.isPrimary || false
-      }));
-      
-      // Update form with formatted images for backend
-      form.setValue("images", formattedImages, { shouldDirty: true });
-      
-      return allImages;
-    });
+    
+    // Update uploaded images state first
+    setUploadedImages(prev => [...prev, ...uploadedImages]);
     setImageUploadErrors([]);
     
     // Show success notification
@@ -204,7 +205,7 @@ export default function AddProductComponent() {
       `${uploadedImages.length} зураг амжилттай байршуулагдлаа`,
       { title: 'Зураг байршуулалт' }
     );
-  }, [form]);
+  }, []);
 
   const handleUploadError = useCallback((error) => {
     console.error("Image upload error:", error);
@@ -221,18 +222,9 @@ export default function AddProductComponent() {
 
   const handlePrimaryImageChange = useCallback((images) => {
     // Update uploadedImages state to reflect primary changes
+    // The useEffect above will handle form updates
     setUploadedImages(images);
-    
-    // Format images for backend submission (include primary status)
-    const formattedImages = images.map(img => ({
-      imageUrl: img.url || img.optimized_url || img.src,
-      altText: img.name || img.alt || '',
-      isPrimary: img.isPrimary || false
-    }));
-    
-    // Update form with formatted images for backend
-    form.setValue("images", formattedImages, { shouldDirty: true });
-  }, [form]);
+  }, []);
 
   // Legacy file upload handling (keeping for backward compatibility)
   const handleImageFilesSelected = useCallback((event, onChange) => {
@@ -537,36 +529,56 @@ export default function AddProductComponent() {
     console.log("=== FORM SUBMISSION STARTED ===");
     console.log("Form values:", values);
     console.log("Product mode:", productMode);
-    console.log("Selected tags:", selectedTags);
-    console.log("Variants:", variants);
     
     if (!TOKEN) {
       setError("Та нэвтрэх хэрэгтэй");
       return;
     }
+    
+    console.log("✅ TOKEN validated, continuing...");
 
     // Validation
+    console.log("🔍 Starting validation...");
+    console.log("Product mode:", productMode);
+    
     if (productMode === "variants") {
+      console.log("📋 Validating variants mode...");
+      console.log("Variants count:", variants.length);
+      
       if (variants.length === 0) {
+        console.log("❌ No variants found");
         setError("Вариант үүсгэнэ үү");
-          return;
-        }
+        return;
+      }
 
       const defaultCount = variants.filter(v => v.isDefault).length;
-          if (defaultCount !== 1) {
-            setError("Нэг үндсэн вариант сонгоно уу");
-            return;
-          }
+      console.log("Default variants count:", defaultCount);
       
-      if (variants.some(v => !v.sku || !v.price)) {
+      if (defaultCount !== 1) {
+        console.log("❌ Invalid default count:", defaultCount);
+        setError("Нэг үндсэн вариант сонгоно уу");
+        return;
+      }
+      
+      const invalidVariants = variants.filter(v => !v.sku || !v.price);
+      if (invalidVariants.length > 0) {
+        console.log("❌ Invalid variants:", invalidVariants);
         setError("Бүх вариантуудад SKU болон үнэ оруулна уу");
-            return;
-          }
+        return;
+      }
+      
+      console.log("✅ Variants validation passed");
     } else {
+      console.log("📋 Validating simple mode...");
+      console.log("Price:", values.price, "Quantity:", values.quantity);
+      
       if (!values.price || !values.quantity) {
+        console.log("❌ Missing price or quantity - Price:", values.price, "Quantity:", values.quantity);
         setError("Энгийн бараанд үнэ болон тоо ширхэг заавал оруулна уу");
-            return;
-          }
+        return;
+      }
+      
+      console.log("✅ Simple mode validation passed");
     }
 
     setError("");
@@ -1956,6 +1968,7 @@ export default function AddProductComponent() {
                   <button
                     type="submit"
                     disabled={isPending}
+
                     className={`premium-submit-btn ${isPending ? 'submitting' : ''} ${success ? 'success' : ''}`}
                   >
                     <div className="btn-background"></div>
