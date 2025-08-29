@@ -409,16 +409,6 @@ export default function Header1({
                   aria-expanded="false"
                 >
                   <span className="header-user wg-user">
-                    <span className="image">
-                      <img
-                        src={
-                          user && user.image
-                            ? user.image
-                            : "/images/avatar/user-1.png"
-                        }
-                        alt=""
-                      />
-                    </span>
                     <span className="flex flex-column">
                       <span className="body-title mb-2">
                         {user && user.firstName} {user && user.lastName}
