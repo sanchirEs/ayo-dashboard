@@ -1,6 +1,7 @@
 "use client";
 
 import "./premium-product-form.css";
+import "../../components/customui/CategorySelector.css";
 import { addProductsSchema } from "@/schemas/productSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -39,6 +40,7 @@ import Layout from "@/components/layout/Layout";
 import GetToken from "@/lib/GetTokenClient";
 import { getBackendUrl } from "@/lib/api/env";
 import ImageUploadField from "@/components/upload/ImageUploadField";
+import CategorySelector from "@/components/customui/CategorySelector";
 import toastManager from "@/lib/toast";
 
 /**
@@ -663,34 +665,7 @@ export default function AddProductComponent() {
         breadcrumbTitle="Бараа нэмэх"
         pageTitle="Бараа нэмэх"
       >
-        {/* Modern Hero Section */}
-        <div className="premium-hero-section">
-          <div className="hero-gradient-bg">
-            <div className="hero-content">
-              <div className="hero-icon-wrapper">
-                <div className="hero-icon">
-                  <i className="icon-package" />
-                </div>
-              </div>
-              <div className="hero-text-content">
-                <h1 className="hero-title">Шинэ бүтээгдэхүүн нэмэх</h1>
-                <p className="hero-subtitle">
-                  Таны онлайн дэлгүүрийг баяжуулах шинэ бүтээгдэхүүн бүртгэх. 
-                  Зураг, тайлбар, үнэ болон бусад мэдээллийг оруулж, 
-                  худалдан авагчдад таны бүтээгдэхүүнийг танилцуулаарай.
-                </p>
-                <div className="hero-breadcrumb">
-                  <span>Бараа</span>
-                  <div className="breadcrumb-separator">
-                    <i className="icon-chevron-right" />
-                  </div>
-                  <span className="breadcrumb-active">Нэмэх</span>
-                </div>
-              </div>
-            </div>
-            <div className="hero-pattern"></div>
-          </div>
-        </div>
+
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="premium-form-container">
