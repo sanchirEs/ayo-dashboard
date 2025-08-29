@@ -4159,3 +4159,103 @@
     gap: 8px;
   }
 }
+
+/* Enhanced Textarea Styling - Larger Text */
+.premium-textarea {
+  font-size: 16px !important; /* Increased from default */
+  line-height: 1.6 !important;
+  padding: 16px 20px !important; /* Increased padding */
+  min-height: 120px !important; /* Increased minimum height */
+  resize: vertical;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1a202c;
+  font-family: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.premium-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.premium-textarea::placeholder {
+  color: #9ca3af;
+  font-size: 16px !important; /* Larger placeholder text */
+  font-weight: 400;
+}
+
+/* Description field specific styling */
+.premium-form-item:has(.premium-textarea[name="description"]) .premium-textarea {
+  font-size: 18px !important; /* Even larger for description */
+  line-height: 1.7 !important;
+  min-height: 140px !important;
+}
+
+/* How to Use field specific styling */
+.premium-form-item:has(.premium-textarea[name="howToUse"]) .premium-textarea {
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+  min-height: 130px !important;
+}
+
+/* Ingredients field specific styling */
+.premium-form-item:has(.premium-textarea[name="ingredients"]) .premium-textarea {
+  font-size: 17px !important;
+  line-height: 1.65 !important;
+  min-height: 130px !important;
+}
+
+/* Enhanced textarea wrapper for better visual hierarchy */
+.premium-textarea-wrapper {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.premium-textarea-wrapper .textarea-icon {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  color: #6b7280;
+  z-index: 1;
+  font-size: 18px; /* Larger icon */
+}
+
+.premium-textarea-wrapper .premium-textarea {
+  padding-left: 48px !important; /* Space for icon */
+}
+
+/* Textarea resize indicator styling */
+.textarea-resize-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  color: #9ca3af;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .premium-textarea {
+    font-size: 16px !important;
+    padding: 14px 16px !important;
+    min-height: 100px !important;
+  }
+  
+  .premium-form-item:has(.premium-textarea[name="description"]) .premium-textarea {
+    font-size: 17px !important;
+    min-height: 120px !important;
+  }
+  
+  .premium-form-item:has(.premium-textarea[name="howToUse"]) .premium-textarea,
+  .premium-form-item:has(.premium-textarea[name="ingredients"]) .premium-textarea {
+    font-size: 16px !important;
+    min-height: 110px !important;
+  }
+}

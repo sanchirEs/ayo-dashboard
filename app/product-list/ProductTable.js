@@ -16,7 +16,7 @@ export default async function ProductTable({ searchParams }) {
 
     // Tags are now included in list API to avoid N+1 requests
 
-    const gridTemplate = 'minmax(280px,2fr) 140px 140px 100px 200px 240px 140px 120px';
+    const gridTemplate = 'minmax(280px,2fr) 140px 140px 100px 160px 200px 240px 140px 120px';
 
     return (
       <>
@@ -26,6 +26,7 @@ export default async function ProductTable({ searchParams }) {
             <li><div className="body-title">SKU</div></li>
             <li><div className="body-title">Price</div></li>
             <li><div className="body-title">Stock</div></li>
+            <li><div className="body-title">Brand</div></li>
             <li><div className="body-title">Category</div></li>
             <li><div className="body-title">Tags</div></li>
             <li><div className="body-title">Created Date</div></li>

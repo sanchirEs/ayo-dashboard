@@ -28,6 +28,22 @@ export default function ProductRowClient({ product, gridTemplate }) {
       <div className="body-text">{product.price}₮</div>
       <div className="body-text">{product.stock || 0}</div>
       <div className="body-text">
+        {product.brand ? (
+          <div className="brand-display flex items-center gap-2">
+            {product.brand.logoUrl && (
+              <img 
+                src={product.brand.logoUrl} 
+                alt={product.brand.name}
+                style={{ width: '20px', height: '20px', objectFit: 'cover', borderRadius: '4px' }}
+              />
+            )}
+            <span>{product.brand.name}</span>
+          </div>
+        ) : (
+          <span style={{ color: '#9ca3af' }}>-</span>
+        )}
+      </div>
+      <div className="body-text">
         {product.allCategories && product.allCategories.length > 0 ? (
           <div className="categories-display">
             {product.allCategories.map((category, index) => (

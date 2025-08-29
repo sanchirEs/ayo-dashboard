@@ -67,6 +67,15 @@ export const addProductsSchema = z.object({
     z.number().min(1, { message: "Vendor ID оруулна уу" })
   ]).optional(),
   
+  brandId: z.union([
+    z.string().refine((v) => {
+      if (!v) return true; // Allow empty
+      let n = Number(v);
+      return !isNaN(n) && v?.length > 0;
+    }, { message: "Брэнд сонгоно уу" }),
+    z.number().min(1, { message: "Брэнд сонгоно уу" })
+  ]).optional(),
+  
   // File uploads for images - can be File objects or processed image data
   images: z.union([
     z.array(z.instanceof(File)),
@@ -142,6 +151,14 @@ export const editProductsSchema = z.object({
     z.number().min(1, { message: "Сонгоно уу" })
   ]).optional(),
   categoryIds: z.array(z.number().min(1)).optional(),
+  brandId: z.union([
+    z.string().refine((v) => {
+      if (!v) return true; // Allow empty
+      let n = Number(v);
+      return !isNaN(n) && v?.length > 0;
+    }, { message: "Брэнд сонгоно уу" }),
+    z.number().min(1, { message: "Брэнд сонгоно уу" })
+  ]).optional(),
   quantity: z.union([
     z.string().refine((v) => {
       const n = Number(v);

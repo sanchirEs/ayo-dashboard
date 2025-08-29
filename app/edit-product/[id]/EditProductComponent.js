@@ -7,6 +7,7 @@ import { editProductsSchema } from "@/schemas/productSchema";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getProductById, updateProduct } from "@/lib/api/products";
 import { getTagPresets, getTags } from "@/lib/api/tags";
+import { getBrandsClient } from "@/lib/api/brands";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ export default function EditProductComponent({ id }) {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -56,6 +58,7 @@ export default function EditProductComponent({ id }) {
       ingredients: "",
       price: "",
       categoryId: "",
+      brandId: "",
       quantity: "",
       sku: "",
       images: [],
@@ -66,11 +69,12 @@ export default function EditProductComponent({ id }) {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [product, categoriesData, presets, tagResp] = await Promise.all([
+        const [product, categoriesData, presets, tagResp, brandsData] = await Promise.all([
           getProductById(id, TOKEN),
           TOKEN ? getCategoriesClient(TOKEN, true) : Promise.resolve([]), // Get ALL categories for product editing
           getTagPresets(),
           getTags(id),
+          getBrandsClient(TOKEN),
         ]);
 
         if (!product) throw new Error("Product not found");
@@ -84,6 +88,7 @@ export default function EditProductComponent({ id }) {
           price: String(product.price ?? ""),
           categoryId: String(product.categoryId || ""),
           categoryIds: product.categoryIds || [],
+          brandId: String(product.brandId || ""),
           quantity: String(product.stock ?? ""),
           sku: product.sku || "",
           images: [],
@@ -98,6 +103,7 @@ export default function EditProductComponent({ id }) {
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setTagPresets(presets || []);
         setSelectedTags((tagResp?.tags || []).map((t) => t.tag));
+        setBrands(brandsData || []);
       } catch (e) {
         console.error(e);
         setError("Өгөгдөл ачаалахад алдаа гарлаа");
@@ -213,6 +219,7 @@ export default function EditProductComponent({ id }) {
             specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
             price: Number(values.price),
             categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : (values.categoryId ? [Number(values.categoryId)] : []),
+            brandId: values.brandId ? Number(values.brandId) : null,
             sku: values.sku,
             quantity: Number(values.quantity),
             removeImageIds,
@@ -357,6 +364,34 @@ export default function EditProductComponent({ id }) {
                   )}
                 />
               </div>
+              <div className="w-1/2">
+                <FormField
+                  control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="body-title mb-5">Брэнд</FormLabel>
+                      <FormControl>
+                        <div className="select">
+                          <select {...field} className="tf-select">
+                            <option value="">Брэнд сонгох</option>
+                            {brands.map((brand) => (
+                              <option key={brand.id} value={brand.id}>
+                                {brand.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>
+                        Бүтээгдэхүүний брэнд (заавал биш)
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               <div className="w-1/2">
                 <FormField
                   control={form.control}
