@@ -51,6 +51,7 @@ export default function AddProductComponent() {
   const [isPending, startTransition] = useTransition();
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -91,6 +92,7 @@ export default function AddProductComponent() {
       ingredients: "",
       sku: "",
       categoryId: "",
+      categoryIds: [],
       vendorId: VENDOR_ID_STATIC?.toString() || "1", // Set default vendor ID
       images: [],
       tagsCsv: "",
@@ -385,6 +387,28 @@ export default function AddProductComponent() {
     });
   };
 
+  // Category management functions
+  const toggleCategory = (categoryId) => {
+    setSelectedCategoryIds(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  const clearAllCategories = () => {
+    setSelectedCategoryIds([]);
+  };
+
+  const getSelectedCategoriesDisplay = () => {
+    return selectedCategoryIds.map(id => {
+      const category = categories.find(cat => cat.id === id);
+      return category ? category.name : `Category ${id}`;
+    }).join(', ');
+  };
+
   // Build payload for submission
   const buildProductPayload = (formValues) => {
     console.log("Building payload with form values:", formValues);
@@ -399,7 +423,7 @@ export default function AddProductComponent() {
       howToUse: formValues.howToUse || "",
       ingredients: formValues.ingredients || "",
       specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
-      categoryId: Number(formValues.categoryId),
+      categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : (formValues.categoryId ? [Number(formValues.categoryId)] : []),
       vendorId: Number(formValues.vendorId || VENDOR_ID_STATIC),
       tags: selectedTags,
     };
@@ -721,40 +745,97 @@ export default function AddProductComponent() {
                   <div className="premium-form-col">
                     <FormField
                       control={form.control}
-                      name="categoryId"
+                      name="categoryIds"
                       render={({ field }) => (
                         <FormItem className="premium-form-item">
                           <FormLabel className="premium-label">
                             <span className="label-text">Бүтээгдэхүүний ангилал</span>
-                            <span className="label-required">*</span>
+                            <span className="label-optional">Олон ангилал сонгож болно</span>
                             <div className="label-underline"></div>
                           </FormLabel>
                           <FormControl>
-                            <div className="premium-select-wrapper">
-                              <div className="input-icon">
-                                <i className="icon-grid" />
+                            <div className="categories-selection-area">
+                              {/* Selected Categories Display */}
+                              <div className="selected-categories-display">
+                                {selectedCategoryIds.length > 0 ? (
+                                  <div className="selected-categories-grid">
+                                    {selectedCategoryIds.map(categoryId => {
+                                      const category = categories.find(cat => cat.id === categoryId);
+                                      return (
+                                        <div key={categoryId} className="selected-category-chip">
+                                          <span className="category-name">
+                                            {category ? category.name : `Category ${categoryId}`}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            className="category-remove-btn"
+                                            onClick={() => toggleCategory(categoryId)}
+                                          >
+                                            <i className="icon-x" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                    <button
+                                      type="button"
+                                      className="clear-all-categories-btn"
+                                      onClick={clearAllCategories}
+                                    >
+                                      <i className="icon-trash" />
+                                      Бүгдийг арилгах
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="empty-categories-state">
+                                    <i className="icon-grid" />
+                                    <span>Ангилал сонгогдоогүй</span>
+                                  </div>
+                                )}
                               </div>
-                              <select 
-                                {...field} 
-                                disabled={loadingCategories}
-                                className="premium-select"
-                              >
-                                <option value="">
-                                  {loadingCategories ? "Ачааллаж байна..." : "Ангилал сонгоно уу"}
-                                </option>
-                                {categories.map((category) => (
-                                  <option key={category.id} value={category.id}>
-                                    {category.name}
-                                  </option>
-                                ))}
-                              </select>
-                              <div className="select-chevron">
-                                <i className="icon-chevron-down" />
+                              
+                              {/* Available Categories */}
+                              <div className="available-categories-section">
+                                <div className="section-header">
+                                  <span className="section-title">Боломжтой ангиллууд</span>
+                                  <span className="selected-count">
+                                    {selectedCategoryIds.length} сонгогдсон
+                                  </span>
+                                </div>
+                                
+                                {loadingCategories ? (
+                                  <div className="loading-categories">
+                                    <div className="loading-spinner" />
+                                    <span>Ачааллаж байна...</span>
+                                  </div>
+                                ) : (
+                                  <div className="categories-grid">
+                                    {categories.map((category) => {
+                                      const isSelected = selectedCategoryIds.includes(category.id);
+                                      return (
+                                        <button
+                                          key={category.id}
+                                          type="button"
+                                          className={`category-option-chip ${isSelected ? 'selected' : ''}`}
+                                          onClick={() => toggleCategory(category.id)}
+                                        >
+                                          <span className="chip-text">{category.name}</span>
+                                          <div className="chip-indicator">
+                                            {isSelected && <i className="icon-check" />}
+                                          </div>
+                                          <div className="chip-glow"></div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
-                              <div className="input-border-animation"></div>
                             </div>
                           </FormControl>
                           <FormMessage className="premium-error" />
+                          <FormDescription className="premium-description">
+                            <i className="icon-info-circle" />
+                            Бүтээгдэхүүнд олон ангилал оноож болно
+                          </FormDescription>
                         </FormItem>
                       )}
                     />

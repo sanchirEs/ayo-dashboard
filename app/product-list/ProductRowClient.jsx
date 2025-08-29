@@ -27,7 +27,22 @@ export default function ProductRowClient({ product, gridTemplate }) {
       <div className="body-text">{product.sku}</div>
       <div className="body-text">{product.price}₮</div>
       <div className="body-text">{product.stock || 0}</div>
-      <div className="body-text">{product.category?.name || 'N/A'}</div>
+      <div className="body-text">
+        {product.allCategories && product.allCategories.length > 0 ? (
+          <div className="categories-display">
+            {product.allCategories.map((category, index) => (
+              <span key={category.id} className="category-badge">
+                {category.name}
+                {index < product.allCategories.length - 1 && ', '}
+              </span>
+            ))}
+          </div>
+        ) : product.category ? (
+          product.category.name
+        ) : (
+          'N/A'
+        )}
+      </div>
       <div className="body-text" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {(product.tags || []).join(', ') || '-'}
       </div>

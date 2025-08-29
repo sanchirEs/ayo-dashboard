@@ -48,13 +48,16 @@ export const addProductsSchema = z.object({
   howToUse: z.string().optional(),
   ingredients: z.string().optional(),
   specs: z.array(productSpecSchema).optional(),
+  // Support both single category (backward compatibility) and multiple categories
   categoryId: z.union([
     z.string().refine((v) => {
+      if (!v) return true; // Allow empty for multiple categories
       let n = Number(v);
       return !isNaN(n) && v?.length > 0;
     }, { message: "Сонгоно уу" }),
     z.number().min(1, { message: "Сонгоно уу" })
-  ], { required_error: "Сонгоно уу" }),
+  ]).optional(),
+  categoryIds: z.array(z.number().min(1)).optional(),
   vendorId: z.union([
     z.string().refine((v) => {
       if (!v) return true; // Allow empty for auto-assignment
@@ -129,13 +132,16 @@ export const editProductsSchema = z.object({
     }, { message: "Тоо оруулна уу" }),
     z.number().min(0, { message: "Тоо оруулна уу" })
   ], { required_error: "Заавал оруулна уу" }),
+  // Support both single category (backward compatibility) and multiple categories  
   categoryId: z.union([
     z.string().refine((v) => {
+      if (!v) return true; // Allow empty for multiple categories
       const n = Number(v);
       return !isNaN(n) && v?.length > 0;
     }, { message: "Сонгоно уу" }),
     z.number().min(1, { message: "Сонгоно уу" })
-  ], { required_error: "Сонгоно уу" }),
+  ]).optional(),
+  categoryIds: z.array(z.number().min(1)).optional(),
   quantity: z.union([
     z.string().refine((v) => {
       const n = Number(v);

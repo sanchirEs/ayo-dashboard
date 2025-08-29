@@ -64,3 +64,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom category display styles */
+.categories-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 200px;
+}
+
+.category-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.category-badge:hover {
+  background: rgba(79, 70, 229, 0.2);
+}
