@@ -78,12 +78,37 @@ export default function ProductQuickView({ open, onOpenChange, product }) {
             </div>
             <div className="grid grid-cols-2 gap-6">
               <div>
+                <div className="text-tiny text-muted-foreground">Brand</div>
+                <div className="body-text">
+                  {product?.brand ? (
+                    <div className="flex items-center gap-2">
+                      {product.brand.logoUrl && (
+                        <img 
+                          src={product.brand.logoUrl} 
+                          alt={product.brand.name}
+                          style={{ width: '16px', height: '16px', objectFit: 'cover', borderRadius: '2px' }}
+                        />
+                      )}
+                      <span>{product.brand.name}</span>
+                    </div>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+              <div>
                 <div className="text-tiny text-muted-foreground">Category</div>
                 <div className="body-text">{product?.category?.name || "-"}</div>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="text-tiny text-muted-foreground">Stock</div>
                 <div className="body-text">{product?.stock ?? 0}</div>
+              </div>
+              <div>
+                <div className="text-tiny text-muted-foreground">SKU</div>
+                <div className="body-text">{product?.sku || "-"}</div>
               </div>
             </div>
             <div>

@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getAttributes } from "@/lib/api/attributes";
 import { getTagPresets } from "@/lib/api/tags";
+import { getBrandsClient } from "@/lib/api/brands";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,6 +54,9 @@ export default function AddProductComponent() {
   const [isPending, startTransition] = useTransition();
   const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [loadingBrands, setLoadingBrands] = useState(true);
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -93,7 +97,9 @@ export default function AddProductComponent() {
       ingredients: "",
       sku: "",
       categoryId: "",
+      categoryIds: [],
       vendorId: VENDOR_ID_STATIC?.toString() || "1", // Set default vendor ID
+      brandId: "",
       images: [],
       tagsCsv: "",
       // Simple product fields
@@ -114,10 +120,11 @@ export default function AddProductComponent() {
       if (!TOKEN) return;
       
       try {
-        const [categoriesData, tagPresetsData, attributesData] = await Promise.all([
+        const [categoriesData, tagPresetsData, attributesData, brandsData] = await Promise.all([
           getCategoriesClient(TOKEN, true), // Get ALL categories for product creation
           getTagPresets(),
           getAttributes(),
+          getBrandsClient(TOKEN),
         ]);
         
           setCategories(categoriesData);
@@ -125,12 +132,14 @@ export default function AddProductComponent() {
         setAttributes(attributesData.filter(attr => 
           Array.isArray(attr.options) && attr.options.length > 0
         ));
+        setBrands(brandsData);
         } catch (error) {
         console.error("Failed to load initial data:", error);
         setError("Өгөгдөл ачаалахад алдаа гарлаа");
         } finally {
           setLoadingCategories(false);
         setLoadingAttributes(false);
+        setLoadingBrands(false);
       }
     }
 
@@ -387,6 +396,28 @@ export default function AddProductComponent() {
     });
   };
 
+  // Category management functions
+  const toggleCategory = (categoryId) => {
+    setSelectedCategoryIds(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  const clearAllCategories = () => {
+    setSelectedCategoryIds([]);
+  };
+
+  const getSelectedCategoriesDisplay = () => {
+    return selectedCategoryIds.map(id => {
+      const category = categories.find(cat => cat.id === id);
+      return category ? category.name : `Category ${id}`;
+    }).join(', ');
+  };
+
   // Build payload for submission
   const buildProductPayload = (formValues) => {
     console.log("Building payload with form values:", formValues);
@@ -401,8 +432,9 @@ export default function AddProductComponent() {
       howToUse: formValues.howToUse || "",
       ingredients: formValues.ingredients || "",
       specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
-      categoryId: Number(formValues.categoryId),
+      categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : (formValues.categoryId ? [Number(formValues.categoryId)] : []),
       vendorId: Number(formValues.vendorId || VENDOR_ID_STATIC),
+      ...(formValues.brandId && { brandId: Number(formValues.brandId) }),
       tags: selectedTags,
     };
 
@@ -696,27 +728,145 @@ export default function AddProductComponent() {
                   <div className="premium-form-col">
                     <FormField
                       control={form.control}
-                      name="categoryId"
+                      name="categoryIds"
                       render={({ field }) => (
                         <FormItem className="premium-form-item">
                           <FormLabel className="premium-label">
                             <span className="label-text">Бүтээгдэхүүний ангилал</span>
-                            <span className="label-required">*</span>
+                            <span className="label-optional">Олон ангилал сонгож болно</span>
                             <div className="label-underline"></div>
                           </FormLabel>
                           <FormControl>
-                            <CategorySelector
-                              value={field.value}
-                              onValueChange={field.onChange}
-                              placeholder={loadingCategories ? "Ачааллаж байна..." : "Ангилал сонгоно уу"}
-                              disabled={loadingCategories}
-                            />
+                            <div className="categories-selection-area">
+                              {/* Selected Categories Display */}
+                              <div className="selected-categories-display">
+                                {selectedCategoryIds.length > 0 ? (
+                                  <div className="selected-categories-grid">
+                                    {selectedCategoryIds.map(categoryId => {
+                                      const category = categories.find(cat => cat.id === categoryId);
+                                      return (
+                                        <div key={categoryId} className="selected-category-chip">
+                                          <span className="category-name">
+                                            {category ? category.name : `Category ${categoryId}`}
+                                          </span>
+                                          <button
+                                            type="button"
+                                            className="category-remove-btn"
+                                            onClick={() => toggleCategory(categoryId)}
+                                          >
+                                            <i className="icon-x" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                    <button
+                                      type="button"
+                                      className="clear-all-categories-btn"
+                                      onClick={clearAllCategories}
+                                    >
+                                      <i className="icon-trash" />
+                                      Бүгдийг арилгах
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="empty-categories-state">
+                                    <i className="icon-grid" />
+                                    <span>Ангилал сонгогдоогүй</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Available Categories */}
+                              <div className="available-categories-section">
+                                <div className="section-header">
+                                  <span className="section-title">Боломжтой ангиллууд</span>
+                                  <span className="selected-count">
+                                    {selectedCategoryIds.length} сонгогдсон
+                                  </span>
+                                </div>
+                                
+                                {loadingCategories ? (
+                                  <div className="loading-categories">
+                                    <div className="loading-spinner" />
+                                    <span>Ачааллаж байна...</span>
+                                  </div>
+                                ) : (
+                                  <div className="categories-grid">
+                                    {categories.map((category) => {
+                                      const isSelected = selectedCategoryIds.includes(category.id);
+                                      return (
+                                        <button
+                                          key={category.id}
+                                          type="button"
+                                          className={`category-option-chip ${isSelected ? 'selected' : ''}`}
+                                          onClick={() => toggleCategory(category.id)}
+                                        >
+                                          <span className="chip-text">{category.name}</span>
+                                          <div className="chip-indicator">
+                                            {isSelected && <i className="icon-check" />}
+                                          </div>
+                                          <div className="chip-glow"></div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </FormControl>
                           <FormMessage className="premium-error" />
+                          <FormDescription className="premium-description">
+                            <i className="icon-info-circle" />
+                            Бүтээгдэхүүнд олон ангилал оноож болно
+                          </FormDescription>
                         </FormItem>
                       )}
                     />
                   </div>
+
+                <div className="premium-form-col">
+                  <FormField
+                    control={form.control}
+                    name="brandId"
+                    render={({ field }) => (
+                      <FormItem className="premium-form-item">
+                        <FormLabel className="premium-label">
+                          <span className="label-text">Брэнд</span>
+                          <span className="label-optional">Заавал биш</span>
+                          <div className="label-underline"></div>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="premium-select-wrapper">
+                            <div className="input-icon">
+                              <i className="icon-tag" />
+                            </div>
+                            <select
+                              className="premium-select"
+                              {...field}
+                              disabled={loadingBrands}
+                            >
+                              <option value="">Брэнд сонгох</option>
+                              {brands.map((brand) => (
+                                <option key={brand.id} value={brand.id}>
+                                  {brand.name}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="select-chevron">
+                              <i className="icon-chevron-down" />
+                            </div>
+                            <div className="input-border-animation"></div>
+                          </div>
+                        </FormControl>
+                        <FormMessage className="premium-error" />
+                        <FormDescription className="premium-description">
+                          <i className="icon-info-circle" />
+                          Бүтээгдэхүүний брэнд сонгох
+                        </FormDescription>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <div className="premium-form-col">
                   <FormField

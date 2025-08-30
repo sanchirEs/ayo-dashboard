@@ -7,6 +7,7 @@ import { editProductsSchema } from "@/schemas/productSchema";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getProductById, updateProduct } from "@/lib/api/products";
 import { getTagPresets, getTags } from "@/lib/api/tags";
+import { getBrandsClient } from "@/lib/api/brands";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,8 @@ export default function EditProductComponent({ id }) {
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
@@ -55,6 +58,7 @@ export default function EditProductComponent({ id }) {
       ingredients: "",
       price: "",
       categoryId: "",
+      brandId: "",
       quantity: "",
       sku: "",
       images: [],
@@ -65,11 +69,12 @@ export default function EditProductComponent({ id }) {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [product, categoriesData, presets, tagResp] = await Promise.all([
+        const [product, categoriesData, presets, tagResp, brandsData] = await Promise.all([
           getProductById(id, TOKEN),
           TOKEN ? getCategoriesClient(TOKEN, true) : Promise.resolve([]), // Get ALL categories for product editing
           getTagPresets(),
           getTags(id),
+          getBrandsClient(TOKEN),
         ]);
 
         if (!product) throw new Error("Product not found");
@@ -82,17 +87,23 @@ export default function EditProductComponent({ id }) {
           ingredients: product.ingredients || "",
           price: String(product.price ?? ""),
           categoryId: String(product.categoryId || ""),
+          categoryIds: product.categoryIds || [],
+          brandId: String(product.brandId || ""),
           quantity: String(product.stock ?? ""),
           sku: product.sku || "",
           images: [],
           tagsCsv: (tagResp?.tags || []).map((t) => t.tag).join(","),
         });
 
+        // Set selected categories from product data
+        setSelectedCategoryIds(product.categoryIds || (product.categoryId ? [product.categoryId] : []));
+
         setExistingImages(product.images || []);
         setProductSpecs(product.specs || []);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setTagPresets(presets || []);
         setSelectedTags((tagResp?.tags || []).map((t) => t.tag));
+        setBrands(brandsData || []);
       } catch (e) {
         console.error(e);
         setError("Өгөгдөл ачаалахад алдаа гарлаа");
@@ -111,6 +122,21 @@ export default function EditProductComponent({ id }) {
       return next;
     });
   }
+
+  // Category management functions
+  const toggleCategory = (categoryId) => {
+    setSelectedCategoryIds(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  const clearAllCategories = () => {
+    setSelectedCategoryIds([]);
+  };
 
   // Product specifications functions
   const addProductSpec = () => {
@@ -192,7 +218,8 @@ export default function EditProductComponent({ id }) {
             ingredients: values.ingredients || "",
             specs: productSpecs.filter(spec => spec.type.trim() && spec.value.trim()),
             price: Number(values.price),
-            categoryId: Number(values.categoryId),
+            categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : (values.categoryId ? [Number(values.categoryId)] : []),
+            brandId: values.brandId ? Number(values.brandId) : null,
             sku: values.sku,
             quantity: Number(values.quantity),
             removeImageIds,
@@ -254,25 +281,117 @@ export default function EditProductComponent({ id }) {
               <div className="w-1/2">
                 <FormField
                   control={form.control}
-                  name="categoryId"
+                  name="categoryIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="body-title mb-5">Бүтээгдэхүүний ангилал <span className="tf-color-1">*</span></FormLabel>
+                      <FormLabel className="body-title mb-5">Бүтээгдэхүүний ангилал</FormLabel>
                       <FormControl>
-                        <select {...field}>
-                          <option value="">Ангилал сонгоно уу</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="categories-selection-area">
+                          {/* Selected Categories Display */}
+                          <div className="selected-categories-display">
+                            {selectedCategoryIds.length > 0 ? (
+                              <div className="selected-categories-grid">
+                                {selectedCategoryIds.map(categoryId => {
+                                  const category = categories.find(cat => cat.id === categoryId);
+                                  return (
+                                    <div key={categoryId} className="selected-category-chip">
+                                      <span className="category-name">
+                                        {category ? category.name : `Category ${categoryId}`}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        className="category-remove-btn"
+                                        onClick={() => toggleCategory(categoryId)}
+                                      >
+                                        <i className="icon-x" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                                <button
+                                  type="button"
+                                  className="clear-all-categories-btn"
+                                  onClick={clearAllCategories}
+                                >
+                                  <i className="icon-trash" />
+                                  Бүгдийг арилгах
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="empty-categories-state">
+                                <i className="icon-grid" />
+                                <span>Ангилал сонгогдоогүй</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Available Categories */}
+                          <div className="available-categories-section">
+                            <div className="section-header">
+                              <span className="section-title">Боломжтой ангиллууд</span>
+                              <span className="selected-count">
+                                {selectedCategoryIds.length} сонгогдсон
+                              </span>
+                            </div>
+                            
+                            <div className="categories-grid">
+                              {categories.map((category) => {
+                                const isSelected = selectedCategoryIds.includes(category.id);
+                                return (
+                                  <button
+                                    key={category.id}
+                                    type="button"
+                                    className={`category-option-chip ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => toggleCategory(category.id)}
+                                  >
+                                    <span className="chip-text">{category.name}</span>
+                                    <div className="chip-indicator">
+                                      {isSelected && <i className="icon-check" />}
+                                    </div>
+                                    <div className="chip-glow"></div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
                       </FormControl>
                       <FormMessage />
+                      <FormDescription>
+                        Бүтээгдэхүүнд олон ангилал оноож болно
+                      </FormDescription>
                     </FormItem>
                   )}
                 />
               </div>
+              <div className="w-1/2">
+                <FormField
+                  control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="body-title mb-5">Брэнд</FormLabel>
+                      <FormControl>
+                        <div className="select">
+                          <select {...field} className="tf-select">
+                            <option value="">Брэнд сонгох</option>
+                            {brands.map((brand) => (
+                              <option key={brand.id} value={brand.id}>
+                                {brand.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                      <FormDescription>
+                        Бүтээгдэхүүний брэнд (заавал биш)
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               <div className="w-1/2">
                 <FormField
                   control={form.control}
