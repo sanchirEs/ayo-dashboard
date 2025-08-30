@@ -15,6 +15,7 @@ import { useForm } from "react-hook-form";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getAttributes } from "@/lib/api/attributes";
 import { getTagPresets } from "@/lib/api/tags";
+import { getTagGroups, addProductHierarchicalTags } from "@/lib/api/hierarchicalTags";
 import { getBrandsClient } from "@/lib/api/brands";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,11 @@ export default function AddProductComponent() {
   const [tagPresets, setTagPresets] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  // Hierarchical tags state
+  const [tagGroups, setTagGroups] = useState([]);
+  const [selectedHierarchicalTags, setSelectedHierarchicalTags] = useState(new Set());
+  const [hierarchicalTagsDialogOpen, setHierarchicalTagsDialogOpen] = useState(false);
+  const [loadingTagGroups, setLoadingTagGroups] = useState(true);
   const [attributes, setAttributes] = useState([]);
   const [loadingAttributes, setLoadingAttributes] = useState(true);
   
@@ -120,15 +126,17 @@ export default function AddProductComponent() {
       if (!TOKEN) return;
       
       try {
-        const [categoriesData, tagPresetsData, attributesData, brandsData] = await Promise.all([
+        const [categoriesData, tagPresetsData, tagGroupsData, attributesData, brandsData] = await Promise.all([
           getCategoriesClient(TOKEN, true), // Get ALL categories for product creation
           getTagPresets(),
+          getTagGroups(),
           getAttributes(),
           getBrandsClient(TOKEN),
         ]);
         
           setCategories(categoriesData);
         setTagPresets(tagPresetsData);
+        setTagGroups(tagGroupsData);
         setAttributes(attributesData.filter(attr => 
           Array.isArray(attr.options) && attr.options.length > 0
         ));
@@ -140,6 +148,7 @@ export default function AddProductComponent() {
           setLoadingCategories(false);
         setLoadingAttributes(false);
         setLoadingBrands(false);
+        setLoadingTagGroups(false);
       }
     }
 
@@ -174,6 +183,36 @@ export default function AddProductComponent() {
       return exists ? prev.filter(t => t !== tagName) : [...prev, tagName];
     });
   }, []);
+
+  // Hierarchical tags management helpers
+  const toggleHierarchicalTag = useCallback((optionId) => {
+    setSelectedHierarchicalTags(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(optionId)) {
+        newSet.delete(optionId);
+      } else {
+        newSet.add(optionId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const getSelectedHierarchicalTagsDisplay = () => {
+    const selectedOptions = [];
+    tagGroups.forEach(group => {
+      if (group.options) {
+        group.options.forEach(option => {
+          if (selectedHierarchicalTags.has(option.id)) {
+            selectedOptions.push({
+              ...option,
+              groupName: group.name
+            });
+          }
+        });
+      }
+    });
+    return selectedOptions;
+  };
 
   // Sync selected tags with form
   useEffect(() => {
@@ -314,9 +353,20 @@ export default function AddProductComponent() {
   };
 
   const updateVariant = (index, field, value) => {
-    setVariants(prev => prev.map((variant, i) => 
-      i === index ? { ...variant, [field]: value } : variant
-    ));
+    setVariants(prev => prev.map((variant, i) => {
+      if (i === index) {
+        // Handle numeric fields properly to prevent 0 prefix issues
+        if (field === 'price') {
+          const numericValue = value === '' ? 0 : parseFloat(value);
+          return { ...variant, [field]: numericValue };
+        } else if (field === 'inventory') {
+          const quantity = value.quantity === '' ? 0 : parseInt(value.quantity);
+          return { ...variant, [field]: { ...value, quantity } };
+        }
+        return { ...variant, [field]: value };
+      }
+      return variant;
+    }));
   };
 
   const handleVariantImageUpload = (variantIndex, event) => {
@@ -375,6 +425,13 @@ export default function AddProductComponent() {
     const updatedSpecs = [...productSpecs];
     updatedSpecs[index][field] = value;
     setProductSpecs(updatedSpecs);
+  };
+
+  // Validate specifications for duplicates
+  const validateProductSpecs = () => {
+    const types = productSpecs.map(spec => spec.type.trim()).filter(type => type !== "");
+    const uniqueTypes = new Set(types);
+    return types.length === uniqueTypes.size;
   };
 
   const setDefaultVariant = (index) => {
@@ -575,6 +632,13 @@ export default function AddProductComponent() {
     console.log("🔍 Starting validation...");
     console.log("Product mode:", productMode);
     
+    // Validate product specifications for duplicates
+    if (!validateProductSpecs()) {
+      console.log("❌ Duplicate specification types found");
+      setError("Техникийн тодорхойлолтын төрлүүд давтагдаж болохгүй. Өөр өөр төрөл ашиглана уу.");
+      return;
+    }
+    
     if (productMode === "variants") {
       console.log("📋 Validating variants mode...");
       console.log("Variants count:", variants.length);
@@ -646,9 +710,30 @@ export default function AddProductComponent() {
         if (response.ok) {
           setSuccess(responseData.message || "Бараа амжилттай нэмэгдлээ");
           
+          // If hierarchical tags were selected, add them to the created product
+          if (selectedHierarchicalTags.size > 0 && responseData.data?.id) {
+            try {
+              const hierarchicalTagsSuccess = await addProductHierarchicalTags(
+                responseData.data.id,
+                { tagOptionIds: Array.from(selectedHierarchicalTags) },
+                TOKEN
+              );
+              
+              if (hierarchicalTagsSuccess) {
+                console.log("Hierarchical tags added successfully");
+              } else {
+                console.warn("Failed to add hierarchical tags, but product was created");
+              }
+            } catch (error) {
+              console.error("Error adding hierarchical tags:", error);
+              // Don't fail the whole process if hierarchical tags fail
+            }
+          }
+          
           // Reset form
           form.reset();
           setSelectedTags([]);
+          setSelectedHierarchicalTags(new Set());
           setPreviewImages([]);
           setUploadedImages([]);
           setImageUploadErrors([]);
@@ -1019,21 +1104,37 @@ export default function AddProductComponent() {
                     <div className="label-underline"></div>
                   </div>
                   <div className="specs-container">
-                    {productSpecs.map((spec, index) => (
+                    {productSpecs.map((spec, index) => {
+                      // Check if this type is duplicated
+                      const isDuplicate = productSpecs.filter((s, i) => 
+                        i !== index && s.type.trim() && s.type.trim() === spec.type.trim()
+                      ).length > 0;
+                      
+                      return (
                       <div key={index} className="spec-row premium-form-row">
                         <div className="premium-form-col">
-                          <div className="premium-input-wrapper">
+                          <div className={`premium-input-wrapper ${isDuplicate ? 'error' : ''}`}>
                             <div className="input-icon">
                               <i className="icon-tag" />
                             </div>
                             <Input
-                              className="premium-input"
+                              className={`premium-input ${isDuplicate ? 'error' : ''}`}
                               placeholder="Төрөл (жишээ: Үнэр)"
                               value={spec.type}
                               onChange={(e) => updateProductSpec(index, 'type', e.target.value)}
                             />
                             <div className="input-border-animation"></div>
+                            {isDuplicate && (
+                              <div className="input-error-indicator">
+                                <i className="icon-alert-triangle" />
+                              </div>
+                            )}
                           </div>
+                          {isDuplicate && (
+                            <div className="spec-error-message">
+                              Энэ төрөл давтагдаж байна
+                            </div>
+                          )}
                         </div>
                         <div className="premium-form-col">
                           <div className="premium-input-wrapper">
@@ -1061,7 +1162,8 @@ export default function AddProductComponent() {
                           </Button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                     
                     <Button
                       type="button"
@@ -1307,6 +1409,144 @@ export default function AddProductComponent() {
                   )}
                   />
                 </div>
+
+            {/* Hierarchical Tags Section - New Structured Tags */}
+            <div className="premium-card form-section-card hierarchical-tags-card" style={{ marginTop: 16 }}>
+              <div className="card-header">
+                <div className="card-icon">
+                  <i className="icon-layers" />
+                </div>
+                <div className="card-title-group">
+                  <h3 className="card-title">Бүтээгдэхүүний ангилал шошго</h3>
+                  <p className="card-subtitle">Уруул, Нүд, Арьс гэх мэт ангиллаар шошго нэмнэ үү</p>
+                </div>
+                <div className="tags-counter">
+                  <span className="counter-badge">{selectedHierarchicalTags.size}</span>
+                </div>
+              </div>
+              
+              <div className="hierarchical-tags-content">
+                {/* Selected Hierarchical Tags Display */}
+                <div className="selected-hierarchical-tags-area">
+                  <div className="selected-tags-header">
+                    <span className="tags-label">Сонгосон ангилал шошгууд</span>
+                    {selectedHierarchicalTags.size > 0 && (
+                      <button
+                        type="button"
+                        className="clear-all-btn"
+                        onClick={() => setSelectedHierarchicalTags(new Set())}
+                      >
+                        <i className="icon-x-circle" />
+                        Бүгдийг арилгах
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="hierarchical-tags-display">
+                    {selectedHierarchicalTags.size > 0 ? (
+                      <div className="hierarchical-tags-grid">
+                        {getSelectedHierarchicalTagsDisplay().map((tagOption, index) => (
+                          <div
+                            key={tagOption.id}
+                            className="premium-hierarchical-tag"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                          >
+                            <span className="tag-group">{tagOption.groupName}</span>
+                            <span className="tag-divider">:</span>
+                            <span className="tag-text">{tagOption.name}</span>
+                            <button
+                              type="button"
+                              className="tag-remove"
+                              onClick={() => toggleHierarchicalTag(tagOption.id)}
+                              title="Хасах"
+                            >
+                              <i className="icon-x" />
+                            </button>
+                            <div className="tag-glow"></div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-hierarchical-tags-state">
+                        <div className="empty-icon">
+                          <i className="icon-layers" />
+                        </div>
+                        <p className="empty-text">Одоогоор сонгосон ангилал шошго алга байна</p>
+                        <p className="empty-subtext">Доорх товчлуурыг дарж ангилал шошго нэмнэ үү</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Add Hierarchical Tags Actions */}
+                <div className="hierarchical-tags-actions">
+                  <Button
+                    type="button"
+                    className="add-hierarchical-tags-btn"
+                    onClick={() => setHierarchicalTagsDialogOpen(true)}
+                  >
+                    <div className="btn-content">
+                      <i className="icon-layers" />
+                      <span>Ангилал шошго нэмэх</span>
+                    </div>
+                    <div className="btn-glow"></div>
+                  </Button>
+                </div>
+
+                {/* Hierarchical Tags Selection Dialog */}
+                <CommandDialog 
+                  open={hierarchicalTagsDialogOpen} 
+                  onOpenChange={setHierarchicalTagsDialogOpen}
+                  className="premium-dialog hierarchical-tags-dialog"
+                >
+                  <CommandInput 
+                    placeholder="Ангилал шошго хайж олох..." 
+                    className="premium-search"
+                  />
+                  <CommandList className="premium-command-list">
+                    <CommandEmpty className="empty-state">
+                      <i className="icon-search" />
+                      <p>Таны хайлтанд тохирох ангилал шошго олдсонгүй</p>
+                    </CommandEmpty>
+                    {loadingTagGroups ? (
+                      <div className="loading-state">
+                        <i className="icon-loader" />
+                        <p>Ачааллаж байна...</p>
+                      </div>
+                    ) : (
+                      tagGroups.map((group) => (
+                        <CommandGroup key={group.id} heading={group.name} className="premium-command-group">
+                          {group.options && group.options.length > 0 ? (
+                            group.options.map((option) => {
+                              const active = selectedHierarchicalTags.has(option.id);
+                              return (
+                                <CommandItem
+                                  key={option.id}
+                                  onSelect={() => toggleHierarchicalTag(option.id)}
+                                  className={`premium-command-item ${active ? 'active' : ''}`}
+                                >
+                                  <div className="item-content">
+                                    <span className="item-text">{option.name}</span>
+                                    <div className="item-indicator">
+                                      {active && <i className="icon-check" />}
+                                    </div>
+                                  </div>
+                                  <div className="item-hover-effect"></div>
+                                </CommandItem>
+                              );
+                            })
+                          ) : (
+                            <div className="empty-group-state">
+                              <p>Энэ ангилалд сонголт алга байна</p>
+                            </div>
+                          )}
+                        </CommandGroup>
+                      ))
+                    )}
+                  </CommandList>
+                </CommandDialog>
+              </div>
+            </div>
 
             {/* Product Mode Selection - Premium Toggle */}
               <div className="premium-card form-section-card product-mode-card">
@@ -1684,7 +1924,7 @@ export default function AddProductComponent() {
                                   <label className="field-label">SKU</label>
                                   <div className="field-input-wrapper">
                                     <Input
-                                      className="variant-input"
+                                      className="variant-input text-black color-black"
                                       value={variant.sku}
                                       onChange={(e) => updateVariant(index, "sku", e.target.value)}
                                       placeholder="SKU кодыг оруулна уу"
@@ -1700,8 +1940,8 @@ export default function AddProductComponent() {
                                       type="number"
                                       step="0.01"
                                       min="0"
-                                      value={variant.price}
-                                      onChange={(e) => updateVariant(index, "price", Number(e.target.value))}
+                                      value={variant.price || ''}
+                                      onChange={(e) => updateVariant(index, "price", e.target.value)}
                                       placeholder="0.00"
                                     />
                                     <span className="currency-symbol">₮</span>
@@ -1715,8 +1955,8 @@ export default function AddProductComponent() {
                                       className="variant-input"
                                       type="number"
                                       min="0"
-                                      value={variant.inventory?.quantity || 0}
-                                      onChange={(e) => updateVariant(index, "inventory", { quantity: Number(e.target.value) })}
+                                      value={variant.inventory?.quantity || ''}
+                                      onChange={(e) => updateVariant(index, "inventory", { quantity: e.target.value })}
                                       placeholder="0"
                                     />
                                     <div className="quantity-controls">

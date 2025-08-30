@@ -98,6 +98,35 @@
   /* Line Heights */
   --premium-leading-tight: 1.25;
   --premium-leading-snug: 1.375;
+}
+
+/* ===== DARK THEME VARIABLES ===== */
+[data-theme="dark"], .dark {
+  /* Dark theme color overrides */
+  --premium-gray-25: #1f2937;
+  --premium-gray-50: #111827;
+  --premium-gray-100: #374151;
+  --premium-gray-200: #4b5563;
+  --premium-gray-300: #6b7280;
+  --premium-gray-400: #9ca3af;
+  --premium-gray-500: #d1d5db;
+  --premium-gray-600: #e5e7eb;
+  --premium-gray-700: #f3f4f6;
+  --premium-gray-800: #f9fafb;
+  --premium-gray-900: #ffffff;
+  
+  /* Dark theme specific gradients */
+  --premium-gradient-card: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  --premium-gradient-hero: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  
+  /* Upload variables for dark theme */
+  --upload-border-color: #4b5563;
+  --upload-bg-default: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  --upload-bg-hover: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  --upload-bg-active: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+}
+
+:root {
   --premium-leading-normal: 1.5;
   --premium-leading-relaxed: 1.625;
   --premium-leading-loose: 2;
@@ -4160,32 +4189,55 @@
   }
 }
 
-/* Enhanced Textarea Styling - Larger Text */
+/* Enhanced Textarea Styling - Larger Text with Scroll */
 .premium-textarea {
   font-size: 16px !important; /* Increased from default */
   line-height: 1.6 !important;
   padding: 16px 20px !important; /* Increased padding */
   min-height: 120px !important; /* Increased minimum height */
+  max-height: 200px; /* Add max height for scroll */
+  overflow-y: auto; /* Enable vertical scroll */
   resize: vertical;
-  border: 2px solid #e2e8f0;
+  border: 2px solid var(--premium-gray-300);
   border-radius: 12px;
-  background: #ffffff;
-  color: #1a202c;
+  background: var(--premium-gray-25);
+  color: var(--premium-gray-800);
   font-family: inherit;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--premium-primary-light) var(--premium-gray-100);
+}
+
+/* Custom scrollbar for webkit browsers */
+.premium-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.premium-textarea::-webkit-scrollbar-track {
+  background: var(--premium-gray-100);
+  border-radius: 3px;
+}
+
+.premium-textarea::-webkit-scrollbar-thumb {
+  background: var(--premium-primary-light);
+  border-radius: 3px;
+}
+
+.premium-textarea::-webkit-scrollbar-thumb:hover {
+  background: var(--premium-primary);
 }
 
 .premium-textarea:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--premium-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   transform: translateY(-1px);
 }
 
 .premium-textarea::placeholder {
-  color: #9ca3af;
+  color: var(--premium-gray-400);
   font-size: 16px !important; /* Larger placeholder text */
   font-weight: 400;
 }
@@ -4240,6 +4292,41 @@
   pointer-events: none;
 }
 
+/* Specification Error Styles */
+.premium-input-wrapper.error {
+  position: relative;
+}
+
+.premium-input.error {
+  border-color: var(--premium-error) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.input-error-indicator {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--premium-error);
+  font-size: 16px;
+  z-index: 10;
+}
+
+.spec-error-message {
+  font-size: 12px;
+  color: var(--premium-error);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.spec-error-message::before {
+  content: "⚠️";
+  font-size: 10px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .premium-textarea {
@@ -4257,5 +4344,240 @@
   .premium-form-item:has(.premium-textarea[name="ingredients"]) .premium-textarea {
     font-size: 16px !important;
     min-height: 110px !important;
+  }
+}
+
+/* ==================== HIERARCHICAL TAGS STYLES ==================== */
+
+.hierarchical-tags-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.hierarchical-tags-card .card-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hierarchical-tags-card .card-title {
+  color: white;
+}
+
+.hierarchical-tags-card .card-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.hierarchical-tags-content {
+  padding: 20px;
+}
+
+.selected-hierarchical-tags-area {
+  margin-bottom: 20px;
+}
+
+.hierarchical-tags-display {
+  min-height: 120px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.hierarchical-tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.premium-hierarchical-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  position: relative;
+  overflow: hidden;
+  animation: slideInTag 0.3s ease-out forwards;
+  transition: all 0.2s ease;
+}
+
+.premium-hierarchical-tag:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.premium-hierarchical-tag .tag-group {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.premium-hierarchical-tag .tag-divider {
+  color: #999;
+  margin: 0 2px;
+}
+
+.premium-hierarchical-tag .tag-text {
+  color: #333;
+}
+
+.premium-hierarchical-tag .tag-remove {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.premium-hierarchical-tag .tag-remove:hover {
+  background: #dc3545;
+  color: white;
+  transform: scale(1.1);
+}
+
+.premium-hierarchical-tag .tag-glow {
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, transparent, rgba(102, 126, 234, 0.3), transparent);
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.premium-hierarchical-tag:hover .tag-glow {
+  opacity: 1;
+}
+
+.empty-hierarchical-tags-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-hierarchical-tags-state .empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.empty-hierarchical-tags-state .empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.empty-hierarchical-tags-state .empty-subtext {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.hierarchical-tags-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.add-hierarchical-tags-btn {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.add-hierarchical-tags-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.add-hierarchical-tags-btn .btn-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.add-hierarchical-tags-btn .btn-glow {
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  border-radius: 25px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.add-hierarchical-tags-btn:hover .btn-glow {
+  opacity: 1;
+}
+
+/* Hierarchical tags dialog styles */
+.hierarchical-tags-dialog .premium-command-group {
+  border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.hierarchical-tags-dialog .premium-command-item {
+  padding: 12px 16px;
+}
+
+.hierarchical-tags-dialog .premium-command-item .item-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1;
+}
+
+.hierarchical-tags-dialog .premium-command-item .item-subtext {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.hierarchical-tags-dialog .premium-command-item.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.hierarchical-tags-dialog .premium-command-item.active .item-subtext {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.empty-group-state {
+  padding: 16px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+@keyframes slideInTag {
+  from {
+    opacity: 0;
+    transform: translateX(-20px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
   }
 }

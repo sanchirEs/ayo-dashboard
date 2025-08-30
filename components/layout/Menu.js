@@ -28,6 +28,7 @@ export default function Menu() {
       "/attributes/new": 4,
       "/tags": 6,
       "/add-tags": 6,
+      "/hierarchical-tags": 6,
       "/brand-list": 2,
       "/new-brand": 2,
       "/edit-brand": 2,
@@ -313,6 +314,16 @@ export default function Menu() {
                     }
                   >
                      <div className="text">Таг нэмэх</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/hierarchical-tags"
+                    className={
+                      isSubMenuItemActive("/hierarchical-tags") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Ангилал шошго</div>
                   </Link>
                 </li>
               </ul>
