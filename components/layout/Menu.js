@@ -28,6 +28,10 @@ export default function Menu() {
       "/attributes/new": 4,
       "/tags": 6,
       "/add-tags": 6,
+      "/brand-list": 2,
+      "/new-brand": 2,
+      "/edit-brand": 2,
+      "/brand-detail": 2,
       "/oder-list": 5,
       "/oder-detail": 5,
       "/oder-tracking": 5,
@@ -133,6 +137,26 @@ export default function Menu() {
                     }
                   >
                      <div className="text">Барааны жагсаалт</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/brand-list"
+                    className={
+                      isSubMenuItemActive("/brand-list") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Брэнд</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/new-brand"
+                    className={
+                      isSubMenuItemActive("/new-brand") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Брэнд нэмэх</div>
                   </Link>
                 </li>
                 {/* <li className="sub-menu-item">
