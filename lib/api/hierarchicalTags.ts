@@ -48,9 +48,7 @@ export interface ProductTagsResponse {
 
 export async function getTagGroups(): Promise<TagGroup[]> {
   try {
-    const isBrowser = typeof window !== 'undefined';
-    const url = isBrowser ? `/api/tag-groups/list` : `${getBackendUrl()}/api/v1/tag-groups`;
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups`, { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const json = await res.json();
     return json.data || [];
