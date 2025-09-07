@@ -145,6 +145,10 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     const token = await getToken();
     const params = new URLSearchParams(searchParams);
     
+    // Always include categories, brands, variants, and hierarchical tags for dashboard display
+    params.set('include', 'categories,brand,variants,inventory');
+    params.set('fields', 'detailed'); // Need detailed to get hierarchical tags
+    
     const response = await fetch(
       `${getBackendUrl()}/api/v1/products?${params.toString()}`,
       {

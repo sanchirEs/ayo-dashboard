@@ -1,3 +1,4 @@
+// This file has been replaced - see EditProductComponent_new.js for the new version
 "use client";
 
 import "./premium-product-form.css";
@@ -139,9 +140,14 @@ export default function EditProductComponent({ id }) {
         
         if (!product) throw new Error("Product not found");
 
+        console.log("Loaded product data:", product);
+
         // Determine product mode based on existing variants
-        const hasVariants = product.variants && product.variants.length > 0;
+        const hasVariants = product.variants && product.variants.length > 1; // Changed: Only consider it variants if more than 1 variant
         setProductMode(hasVariants ? "variants" : "simple");
+
+        console.log("Product mode:", hasVariants ? "variants" : "simple");
+        console.log("Product variants:", product.variants);
         
         // Set variants if they exist
         if (hasVariants) {
@@ -153,31 +159,68 @@ export default function EditProductComponent({ id }) {
           })));
         }
         
-        // Prefill form
-        form.reset({
+        // Extract category IDs from product categories array
+        const productCategoryIds = product.categories ? 
+          product.categories.map(cat => cat.id || cat.categoryId) : 
+          (product.categoryIds || (product.categoryId ? [product.categoryId] : []));
+
+        console.log("Product categories:", product.categories);
+        console.log("Product categoryIds:", product.categoryIds);
+        console.log("Product categoryId:", product.categoryId);
+        console.log("Extracted categoryIds:", productCategoryIds);
+
+        // Get price and quantity from first variant for simple products
+        const firstVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
+        const productPrice = hasVariants ? "" : String(
+          product.price ?? 
+          firstVariant?.price ?? 
+          ""
+        );
+        const productQuantity = hasVariants ? "" : String(
+          product.quantity ?? 
+          product.stock ?? 
+          firstVariant?.inventory?.quantity ?? 
+          firstVariant?.quantity ?? 
+          ""
+        );
+
+        console.log("Brand data - product.brandId:", product.brandId);
+        console.log("Brand data - product.brand:", product.brand);
+        console.log("Quantity data - product.quantity:", product.quantity);
+        console.log("Quantity data - product.stock:", product.stock);
+        console.log("Quantity data - firstVariant:", firstVariant);
+        console.log("Final quantity value:", productQuantity);
+
+        // Prepare form data
+        const formData = {
           name: product.name || "",
           description: product.description || "",
           howToUse: product.howToUse || "",
           ingredients: product.ingredients || "",
           sku: product.sku || "",
-          categoryId: String(product.categoryId || ""),
-          categoryIds: product.categoryIds || (product.categoryId ? [product.categoryId] : []),
+          categoryId: String(productCategoryIds[0] || ""),
+          categoryIds: productCategoryIds,
           vendorId: String(product.vendorId || VENDOR_ID_STATIC),
-          brandId: String(product.brandId || ""),
+          brandId: String(product.brandId || product.brand?.id || ""),
           images: [],
           tagsCsv: (tagResp?.tags || []).map((t) => t.tag).join(","),
           // Simple product fields - use first variant or product data
-          price: hasVariants ? "" : String(product.price ?? ""),
-          quantity: hasVariants ? "" : String(product.stock ?? ""),
+          price: productPrice,
+          quantity: productQuantity,
           // Advanced features
           flashSale: product.flashSale || false,
           flashSaleEndDate: product.flashSaleEndDate || "",
           discountId: String(product.discountId || ""),
           promotionId: String(product.promotionId || ""),
-        });
+        };
+
+        console.log("Form data being set:", formData);
+
+        // Prefill form
+        form.reset(formData);
 
         // Set selected categories from product data
-        setSelectedCategoryIds(product.categoryIds || (product.categoryId ? [product.categoryId] : []));
+        setSelectedCategoryIds(productCategoryIds);
         
         // Set hierarchical tags
         if (hierarchicalTagsResp?.tagGroups) {
@@ -337,11 +380,16 @@ export default function EditProductComponent({ id }) {
   // Category management functions
   const toggleCategory = (categoryId) => {
     setSelectedCategoryIds(prev => {
-      if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId);
-      } else {
-        return [...prev, categoryId];
-      }
+      console.log("Toggling category:", categoryId, "current categories:", prev);
+      
+      const newIds = prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId];
+      
+      console.log("New category selection:", newIds);
+      form.setValue("categoryIds", newIds);
+      
+      return newIds;
     });
   };
 
@@ -999,7 +1047,7 @@ export default function EditProductComponent({ id }) {
                 render={({ field }) => (
                   <FormItem className="premium-form-item">
                     <FormControl>
-                      <>
+                      <div>
                         {/* Existing Images Display */}
                         {existingImages.length > 0 && (
                           <div className="existing-images-section mb-6">
@@ -1042,7 +1090,7 @@ export default function EditProductComponent({ id }) {
                           onPrimaryChange={handlePrimaryImageChange}
                           className="premium-image-upload"
                         />
-                      </>
+                      </div>
                     </FormControl>
                     
                     <FormMessage className="premium-error" />

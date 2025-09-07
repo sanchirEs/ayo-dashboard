@@ -33,9 +33,9 @@ export default function Menu() {
       "/new-brand": 2,
       "/edit-brand": 2,
       "/brand-detail": 2,
-      "/oder-list": 5,
-      "/oder-detail": 5,
-      "/oder-tracking": 5,
+      "/order-list": 5,
+      "/order-detail": 5,
+      "/order-tracking": 5,
       "/coupons": 7,
       "/new-coupon": 7,
       "/discounts": 8,
@@ -350,9 +350,9 @@ export default function Menu() {
               >
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-list"
+                    href="/order-list"
                     className={
-                      isSubMenuItemActive("/oder-list") ? "active" : ""
+                      isSubMenuItemActive("/order-list") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын жагсаалт</div>
@@ -360,9 +360,9 @@ export default function Menu() {
                 </li>
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-detail"
+                    href="/order-detail"
                     className={
-                      isSubMenuItemActive("/oder-detail") ? "active" : ""
+                      isSubMenuItemActive("/order-detail") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын дэлгэрэнгүй</div>
@@ -370,9 +370,9 @@ export default function Menu() {
                 </li>
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-tracking"
+                    href="/order-tracking"
                     className={
-                      isSubMenuItemActive("/oder-tracking") ? "active" : ""
+                      isSubMenuItemActive("/order-tracking") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын хяналт</div>

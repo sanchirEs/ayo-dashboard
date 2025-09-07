@@ -75,15 +75,105 @@
 
 .category-badge {
   display: inline-block;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: #4f46e5;
   background: rgba(79, 70, 229, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
   white-space: nowrap;
+  margin: 1px;
 }
 
 .category-badge:hover {
   background: rgba(79, 70, 229, 0.2);
+}
+
+/* Enhanced Product Table Styles */
+.table-product-list {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.table-product-list .table-title {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table-product-list .table-title .body-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.025em;
+}
+
+.product-item {
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.product-item:hover {
+  background-color: #f8fafc !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+/* Tag Pills Enhancement */
+.tag-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tag-overflow {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: help;
+}
+
+/* Action Icons Enhancement */
+.list-icon-function .item {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  margin: 0 2px;
+}
+
+.list-icon-function .item:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .table-product-list .table-title,
+  .product-item {
+    font-size: 13px;
+  }
+  
+  .tag-pill {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
 }

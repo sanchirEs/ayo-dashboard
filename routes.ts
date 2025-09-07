@@ -2,9 +2,9 @@
 export const vendorRoutes = [
   "/add-product",
   "/product-list", 
-  "/oder-list",
-  "/oder-detail",
-  "/oder-tracking",
+  "/order-list",
+  "/order-detail",
+  "/order-tracking",
   "/add-tags"
 ];
 
