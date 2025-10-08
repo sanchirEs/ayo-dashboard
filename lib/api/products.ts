@@ -48,11 +48,16 @@ export interface ProductsResponse {
   };
 }
 
-export async function getProductById(productId: number, tokenOverride?: string | null): Promise<Product | null> {
+export async function getProductById(productId: number, tokenOverride?: string | null): Promise<any> {
   try {
     const token = tokenOverride ?? null;
+    // Include all necessary relations for editing
+    const params = new URLSearchParams();
+    params.set('include', 'categories,brand,variants,inventory,tags,specs');
+    params.set('fields', 'detailed');
+    
     const response = await fetch(
-      `${getBackendUrl()}/api/v1/products/${productId}`,
+      `${getBackendUrl()}/api/v1/products/${productId}?${params.toString()}`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: 'no-store',
@@ -62,25 +67,9 @@ export async function getProductById(productId: number, tokenOverride?: string |
     const data = await response.json();
     const p = data.data;
     if (!p) return null;
-    // Normalize shape similar to list endpoint
-    const images = (p.ProductImages || []).map((img: any) => ({ id: img.id, url: img.imageUrl, productId: p.id }));
-    const stock = p.inventory?.quantity ?? 0;
-    return {
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      howToUse: p.howToUse,
-      ingredients: p.ingredients,
-      specs: p.specs || [],
-      sku: p.sku,
-      price: Number(p.price),
-      categoryId: p.categoryId,
-      vendorId: p.vendorId,
-      stock,
-      images,
-      createdAt: p.createdAt,
-      modifiedAt: p.modifiedAt,
-    } as Product;
+    
+    // Return the full product data without normalization to preserve all fields
+    return p;
   } catch (e) {
     console.error('Error fetching product by id', e);
     return null;

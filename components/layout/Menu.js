@@ -38,6 +38,8 @@ export default function Menu() {
       "/order-tracking": 5,
       "/coupons": 7,
       "/new-coupon": 7,
+      "/campaigns": 11,
+      "/new-campaign": 11,
       "/discounts": 8,
       "/sales": 9,
       "/all-user": 10,
@@ -418,6 +420,48 @@ export default function Menu() {
                     }
                   >
                    <div className="text">Шинэ купон</div>
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 11 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(11)}
+              >
+                <div className="icon">
+                  <i className="icon-zap" />
+                </div>
+                 <div className="text">Урамшуулал</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 11 ? "block" : "none"}`,
+                }}
+              >
+                <li className="sub-menu-item">
+                  <Link
+                    href="/campaigns"
+                    className={
+                      isSubMenuItemActive("/campaigns") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Бүх урамшуулал</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/new-campaign"
+                    className={
+                      isSubMenuItemActive("/new-campaign") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Шинэ урамшуулал үүсгэх</div>
                   </Link>
                 </li>
               </ul>

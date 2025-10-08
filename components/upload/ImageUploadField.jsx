@@ -11,7 +11,7 @@ import toastManager from "@/lib/toast";
  * Provides drag-and-drop, progress tracking, and real-time upload capabilities
  */
 export default function ImageUploadField({
-  value = [], // Current form value (array of files)
+  value = [], // Current form value (array of files or image objects)
   onChange, // Form onChange handler
   onBlur, // Form onBlur handler
   disabled = false,
@@ -25,7 +25,8 @@ export default function ImageUploadField({
   autoUpload = false, // If true, uploads to Cloudinary immediately
   onUploadComplete,
   onUploadError,
-  onPrimaryChange // Callback when primary image changes
+  onPrimaryChange, // Callback when primary image changes
+  existingImages = [] // Pre-existing images for edit mode
 }) {
   const [previewImages, setPreviewImages] = useState([]);
   const [dragActive, setDragActive] = useState(false);
@@ -34,8 +35,38 @@ export default function ImageUploadField({
   const [uploadErrors, setUploadErrors] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
   const [primaryImageId, setPrimaryImageId] = useState(null); // Track primary image
+  const [initializedImages, setInitializedImages] = useState(false);
   const fileInputRef = useRef(null);
   const TOKEN = GetToken();
+
+  // Initialize preview images from existing images (for edit mode)
+  useEffect(() => {
+    if (existingImages && existingImages.length > 0 && !initializedImages) {
+      console.log("Initializing existing images:", existingImages);
+      
+      const formattedImages = existingImages.map((img, index) => ({
+        id: img.id || `existing_${index}_${Date.now()}`,
+        src: img.url || img.imageUrl || img.src,
+        name: img.name || img.altText || `Image ${index + 1}`,
+        uploaded: true,
+        url: img.url || img.imageUrl,
+        isPrimary: img.isPrimary || index === 0,
+        existing: true // Mark as existing to prevent deletion attempts
+      }));
+      
+      setPreviewImages(formattedImages);
+      setUploadedImages(formattedImages);
+      
+      // Set primary image
+      const primaryImg = formattedImages.find(img => img.isPrimary);
+      if (primaryImg) {
+        setPrimaryImageId(primaryImg.id);
+      }
+      
+      setInitializedImages(true);
+      console.log("Existing images initialized:", formattedImages);
+    }
+  }, [existingImages, initializedImages]);
 
   // File validation
   const validateFile = useCallback((file) => {
