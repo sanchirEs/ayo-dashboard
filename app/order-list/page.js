@@ -3,7 +3,9 @@ import { Suspense } from "react";
 import OrderTable from "./OrderTable";
 import OrderFilters from "./OrderFilters";
 
-export default async function OrderList({ searchParams }) {
+export default async function OrderList(props) {
+    const searchParams = await props.searchParams;
+    
     return (
         <>
             <Layout breadcrumbTitleParent="Orders" breadcrumbTitle="Order List">

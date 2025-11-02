@@ -138,6 +138,13 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     params.set('include', 'categories,brand,variants,inventory');
     params.set('fields', 'detailed'); // Need detailed to get hierarchical tags
     
+    // Set limit to maximum (100) if not already set, so we fetch all available products
+    // Dashboard needs to show all products, not just the default 20
+    if (!params.has('limit')) {
+      params.set('limit', '100'); // Backend max is 100
+    }
+    
+    // Fetch first page to get pagination info
     const response = await fetch(
       `${getBackendUrl()}/api/v1/products?${params.toString()}`,
       {
@@ -153,18 +160,60 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     }
 
     const data = await response.json();
-    // Ensure tags array exists
-    const products = (data.data?.products || []).map((p: any) => ({
+    let allProducts = (data.data?.products || []).map((p: any) => ({
       ...p,
       tags: Array.isArray(p.tags) ? p.tags : [],
     }));
+    
+    const pagination = data.data?.pagination || {
+      page: 1,
+      limit: 100,
+      total: 0,
+      pages: 1
+    };
+    
+    // If there are more pages, fetch them all
+    const totalPages = pagination.pages || 1;
+    
+    if (totalPages > 1) {
+      // Fetch remaining pages in parallel
+      const pagePromises = [];
+      for (let page = 2; page <= totalPages; page++) {
+        const pageParams = new URLSearchParams(params);
+        pageParams.set('page', page.toString());
+        
+        pagePromises.push(
+          fetch(
+            `${getBackendUrl()}/api/v1/products?${pageParams.toString()}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              cache: 'no-store',
+            }
+          ).then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch page ${page}: ${res.status}`);
+            return res.json();
+          }).then(data => 
+            (data.data?.products || []).map((p: any) => ({
+              ...p,
+              tags: Array.isArray(p.tags) ? p.tags : [],
+            }))
+          )
+        );
+      }
+      
+      // Wait for all pages to be fetched
+      const remainingProducts = await Promise.all(pagePromises);
+      allProducts = allProducts.concat(...remainingProducts);
+    }
+    
     return {
-      products,
-      pagination: data.data?.pagination || {
-        page: 1,
-        limit: 10,
-        total: 0,
-        pages: 0
+      products: allProducts,
+      pagination: {
+        ...pagination,
+        page: 1, // Reset to page 1 since we fetched all products
+        limit: allProducts.length, // Update limit to total fetched products
       }
     };
   } catch (error) {

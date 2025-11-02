@@ -95,14 +95,23 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
 
     const searchParams = new URLSearchParams();
     
-    if (params.page) searchParams.append('page', params.page.toString());
-    if (params.limit) searchParams.append('limit', params.limit.toString());
+    // Set default page if not provided
+    const page = params.page || 1;
+    const limit = params.limit || 20;
+    
+    searchParams.append('page', page.toString());
+    searchParams.append('limit', limit.toString());
+    
     if (params.status) searchParams.append('status', params.status);
     if (params.search) searchParams.append('search', params.search);
-    if (params.sortField) searchParams.append('sortField', params.sortField);
-    if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
+    // Ensure createdAt sorting is used for recent orders
+    searchParams.append('sortField', params.sortField || 'createdAt');
+    searchParams.append('sortOrder', params.sortOrder || 'desc');
 
-    const url = `${getBackendUrl()}/api/v1/orders${searchParams.toString() ? '?' + searchParams.toString() : ''}`;
+    // Fetch first page to get pagination info
+    const url = `${getBackendUrl()}/api/v1/orders?${searchParams.toString()}`;
+    
+    console.log('🔍 Frontend: Fetching orders from:', url.replace(/Bearer\s+\w+/, 'Bearer ***'));
 
     const response = await fetch(url, {
       method: 'GET',
@@ -120,20 +129,27 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
 
     const result = await response.json();
     
-    if (result.success) {
-      return {
-        success: true,
-        data: result.data || [],
-        pagination: result.pagination || {
-          total: 0,
-          totalPages: 0,
-          currentPage: 1,
-          limit: 10
-        }
-      };
+    console.log('📥 Frontend: First page response:', {
+      success: result.success,
+      ordersCount: result.data?.length || 0,
+      pagination: result.pagination
+    });
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Failed to fetch orders');
     }
     
-    throw new Error(result.message || 'Failed to fetch orders');
+    // ✅ Return only the current page data
+    return {
+      success: true,
+      data: result.data || [],
+      pagination: result.pagination || {
+        total: 0,
+        totalPages: 0,
+        currentPage: page,
+        limit: limit
+      }
+    };
   } catch (error) {
     console.error('Error fetching orders:', error);
     throw error;

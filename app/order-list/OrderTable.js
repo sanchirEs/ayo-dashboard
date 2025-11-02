@@ -4,10 +4,14 @@ import OrderRowActions from "./OrderRowActions";
 import OrderImage from "./OrderImage";
 
 export default async function OrderTable({ searchParams }) {
-  const page = parseInt(searchParams.page) || 1;
-  const limit = parseInt(searchParams.limit) || 10;
-  const status = searchParams.status || '';
-  const search = searchParams.search || '';
+  // In Next.js 15, searchParams might be a Promise - await if needed
+  const params = searchParams instanceof Promise ? await searchParams : searchParams;
+  
+  const page = parseInt(params.page) || 1;
+  // Increase default limit for dashboard - will fetch all pages anyway
+  const limit = parseInt(params.limit) || 100;
+  const status = params.status || '';
+  const search = params.search || '';
 
   try {
     const { data: orders, pagination } = await getOrders({
@@ -15,7 +19,7 @@ export default async function OrderTable({ searchParams }) {
       limit,
       status,
       search,
-      sortField: 'createdAt',
+      sortField: 'createdAt', // Sort by creation date to show recent orders first
       sortOrder: 'desc'
     });
 
@@ -107,8 +111,7 @@ export default async function OrderTable({ searchParams }) {
         <div className="divider" />
         <div className="flex items-center justify-between flex-wrap gap10">
           <div className="text-tiny">
-            Showing {Math.min((pagination.currentPage - 1) * pagination.limit + 1, pagination.total)} to{" "}
-            {Math.min(pagination.currentPage * pagination.limit, pagination.total)} of{" "}
+            Showing {orders.length > 0 ? 1 : 0} to {orders.length} of{" "}
             {pagination.total} entries
           </div>
           <ul className="wg-pagination">
