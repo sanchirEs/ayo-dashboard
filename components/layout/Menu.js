@@ -28,15 +28,18 @@ export default function Menu() {
       "/attributes/new": 4,
       "/tags": 6,
       "/add-tags": 6,
+      "/hierarchical-tags": 6,
       "/brand-list": 2,
       "/new-brand": 2,
       "/edit-brand": 2,
       "/brand-detail": 2,
-      "/oder-list": 5,
-      "/oder-detail": 5,
-      "/oder-tracking": 5,
+      "/order-list": 5,
+      "/order-detail": 5,
+      "/order-tracking": 5,
       "/coupons": 7,
       "/new-coupon": 7,
+      "/campaigns": 11,
+      "/new-campaign": 11,
       "/discounts": 8,
       "/sales": 9,
       "/all-user": 10,
@@ -315,6 +318,16 @@ export default function Menu() {
                      <div className="text">Таг нэмэх</div>
                   </Link>
                 </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/hierarchical-tags"
+                    className={
+                      isSubMenuItemActive("/hierarchical-tags") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Ангилал шошго</div>
+                  </Link>
+                </li>
               </ul>
             </li>
             <li
@@ -339,9 +352,9 @@ export default function Menu() {
               >
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-list"
+                    href="/order-list"
                     className={
-                      isSubMenuItemActive("/oder-list") ? "active" : ""
+                      isSubMenuItemActive("/order-list") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын жагсаалт</div>
@@ -349,9 +362,9 @@ export default function Menu() {
                 </li>
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-detail"
+                    href="/order-detail"
                     className={
-                      isSubMenuItemActive("/oder-detail") ? "active" : ""
+                      isSubMenuItemActive("/order-detail") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын дэлгэрэнгүй</div>
@@ -359,9 +372,9 @@ export default function Menu() {
                 </li>
                 <li className="sub-menu-item">
                   <Link
-                    href="/oder-tracking"
+                    href="/order-tracking"
                     className={
-                      isSubMenuItemActive("/oder-tracking") ? "active" : ""
+                      isSubMenuItemActive("/order-tracking") ? "active" : ""
                     }
                   >
                      <div className="text">Захиалгын хяналт</div>
@@ -407,6 +420,48 @@ export default function Menu() {
                     }
                   >
                    <div className="text">Шинэ купон</div>
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 11 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(11)}
+              >
+                <div className="icon">
+                  <i className="icon-zap" />
+                </div>
+                 <div className="text">Урамшуулал</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 11 ? "block" : "none"}`,
+                }}
+              >
+                <li className="sub-menu-item">
+                  <Link
+                    href="/campaigns"
+                    className={
+                      isSubMenuItemActive("/campaigns") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Бүх урамшуулал</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/new-campaign"
+                    className={
+                      isSubMenuItemActive("/new-campaign") ? "active" : ""
+                    }
+                  >
+                     <div className="text">Шинэ урамшуулал үүсгэх</div>
                   </Link>
                 </li>
               </ul>

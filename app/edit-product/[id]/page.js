@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { use } from 'react';
 
-const EditProductComponent = dynamic(() => import('./EditProductComponent'), {
+const EditProductComponent = dynamic(() => import('./EditProductComponent_Complete'), {
   ssr: false,
   loading: () => <div>Loading...</div>,
 });

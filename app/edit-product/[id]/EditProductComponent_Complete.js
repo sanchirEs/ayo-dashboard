@@ -1,7 +1,7 @@
 "use client";
 
 import "./premium-product-form.css";
-import "../../components/customui/CategorySelector.css";
+import "../../../components/customui/CategorySelector.css";
 import { addProductsSchema } from "@/schemas/productSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,9 +14,10 @@ import {
 import { useForm } from "react-hook-form";
 import { getCategoriesClient } from "@/lib/api/categories";
 import { getAttributes } from "@/lib/api/attributes";
-import { getTagPresets } from "@/lib/api/tags";
-import { getTagGroups, addProductHierarchicalTags } from "@/lib/api/hierarchicalTags";
+import { getTagPresets, getTags } from "@/lib/api/tags";
+import { getTagGroups, addProductHierarchicalTags, getProductHierarchicalTags, replaceProductHierarchicalTags } from "@/lib/api/hierarchicalTags";
 import { getBrandsClient } from "@/lib/api/brands";
+import { getProductById } from "@/lib/api/products";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,9 +47,12 @@ import CategorySelector from "@/components/customui/CategorySelector";
 import toastManager from "@/lib/toast";
 
 /**
- * AddProductComponent - Simplified with file uploads and optional advanced features
+ * EditProductComponent - Edit existing products with pre-populated data
  */
-export default function AddProductComponent() {
+export default function EditProductComponent({ id }) {
+  // Loading state for fetching product data
+  const [loadingProduct, setLoadingProduct] = useState(true);
+  
   // State management
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -104,14 +108,12 @@ export default function AddProductComponent() {
       sku: "",
       categoryId: "",
       categoryIds: [],
-      vendorId: VENDOR_ID_STATIC?.toString() || "1", // Set default vendor ID
+      vendorId: VENDOR_ID_STATIC?.toString() || "1",
       brandId: "",
       images: [],
       tagsCsv: "",
-      // Simple product fields
       price: "",
       quantity: "",
-      // Advanced features (hidden by default)
       flashSale: false,
       flashSaleEndDate: "",
       discountId: "",
@@ -120,40 +122,200 @@ export default function AddProductComponent() {
     mode: "onChange",
   });
 
-  // Load initial data
+  // Load initial data AND fetch product
   useEffect(() => {
     async function loadInitialData() {
       if (!TOKEN) return;
       
       try {
-        const [categoriesData, tagPresetsData, tagGroupsData, attributesData, brandsData] = await Promise.all([
-          getCategoriesClient(TOKEN, true), // Get ALL categories for product creation
+        // Fetch all data including the product to edit
+        const [product, categoriesData, tagPresetsData, tagGroupsData, attributesData, brandsData, productTags, productHierarchicalTags] = await Promise.all([
+          getProductById(id, TOKEN),
+          getCategoriesClient(TOKEN, true),
           getTagPresets(),
           getTagGroups(),
           getAttributes(),
           getBrandsClient(TOKEN),
+          getTags(id).catch(() => []),
+          getProductHierarchicalTags(id).catch(() => null),
         ]);
         
-          setCategories(categoriesData);
+        if (!product) {
+          setError("Бараа олдсонгүй");
+          setLoadingProduct(false);
+          return;
+        }
+        
+        console.log("Loaded product:", product);
+        console.log("Product variants:", product.variants);
+        console.log("Product brand:", product.brand);
+        console.log("Product tags:", product.tags);
+        
+        // Determine product mode based on variants
+        const hasMultipleVariants = product.variants && product.variants.length > 1;
+        setProductMode(hasMultipleVariants ? "variants" : "simple");
+        console.log("Product mode set to:", hasMultipleVariants ? "variants" : "simple");
+        
+        // Set variants if they exist
+        if (hasMultipleVariants && product.variants) {
+          const formattedVariants = product.variants.map(v => ({
+            ...v,
+            id: v.id,
+            price: Number(v.price || 0),
+            inventory: { quantity: Number(v.inventory?.quantity || 0) },
+            images: (v.images || []).map(img => ({
+              imageUrl: img.imageUrl || img.url || img,
+              altText: img.altText || '',
+              isPrimary: img.isPrimary || false
+            })),
+            attributes: v.attributes || []
+          }));
+          setVariants(formattedVariants);
+          console.log("Formatted variants:", formattedVariants);
+          
+          // Extract and set selected attribute options from variants
+          const attributeOptionsMap = {};
+          formattedVariants.forEach(variant => {
+            if (variant.attributes && Array.isArray(variant.attributes)) {
+              variant.attributes.forEach(attr => {
+                const attributeId = attr.attributeId || attr.attribute?.id;
+                const optionId = attr.optionId || attr.option?.id;
+                if (attributeId && optionId) {
+                  if (!attributeOptionsMap[attributeId]) {
+                    attributeOptionsMap[attributeId] = new Set();
+                  }
+                  attributeOptionsMap[attributeId].add(optionId);
+                }
+              });
+            }
+          });
+          
+          // Convert Sets to Arrays
+          const selectedOptions = {};
+          Object.keys(attributeOptionsMap).forEach(attrId => {
+            selectedOptions[attrId] = Array.from(attributeOptionsMap[attrId]);
+          });
+          setSelectedAttributeOptions(selectedOptions);
+          console.log("Selected attribute options:", selectedOptions);
+        }
+        
+        // Extract category IDs - handle multiple formats
+        let productCategoryIds = [];
+        if (product.categories && Array.isArray(product.categories)) {
+          // Format from detailed API: [{category: {id, name}}, ...]
+          productCategoryIds = product.categories
+            .map(cat => cat.category?.id || cat.categoryId || cat.id)
+            .filter(Boolean);
+        } else if (product.categoryIds && Array.isArray(product.categoryIds)) {
+          productCategoryIds = product.categoryIds;
+        } else if (product.categoryId) {
+          productCategoryIds = [product.categoryId];
+        }
+        setSelectedCategoryIds(productCategoryIds);
+        console.log("Category IDs set to:", productCategoryIds);
+        
+        // Get price and quantity from first variant for simple products
+        const firstVariant = product.variants?.[0];
+        const productPrice = firstVariant ? Number(firstVariant.price) : Number(product.price || 0);
+        const productQuantity = firstVariant?.inventory?.quantity || product.stock || 0;
+        console.log("Price:", productPrice, "Quantity:", productQuantity);
+        
+        // Extract brand ID
+        const productBrandId = product.brand?.id || product.brandId || "";
+        console.log("Brand ID:", productBrandId);
+        
+        // Set form values
+        form.reset({
+          name: product.name || "",
+          description: product.description || "",
+          howToUse: product.howToUse || "",
+          ingredients: product.ingredients || "",
+          sku: product.sku || "",
+          categoryId: product.categoryId?.toString() || "",
+          categoryIds: productCategoryIds,
+          vendorId: product.vendorId?.toString() || VENDOR_ID_STATIC.toString(),
+          brandId: productBrandId.toString(),
+          images: [],
+          tagsCsv: "",
+          price: productPrice.toString(),
+          quantity: productQuantity.toString(),
+          flashSale: product.flashSale || false,
+          flashSaleEndDate: product.flashSaleEndDate || "",
+          discountId: product.discountId?.toString() || "",
+          promotionId: product.promotionId?.toString() || "",
+        });
+        console.log("Form reset with values");
+        
+        // Set product specifications
+        if (product.specs && Array.isArray(product.specs)) {
+          setProductSpecs(product.specs.map(spec => ({
+            type: spec.type || "",
+            value: spec.value || ""
+          })));
+          console.log("Product specs set:", product.specs.length);
+        }
+        
+        // Set tags - handle multiple formats
+        let tagsToSet = [];
+        if (product.tags && Array.isArray(product.tags)) {
+          // Tags can be array of strings or array of objects with tag property
+          tagsToSet = product.tags.map(t => typeof t === 'string' ? t : t.tag).filter(Boolean);
+        } else if (productTags && Array.isArray(productTags)) {
+          tagsToSet = productTags.filter(Boolean);
+        }
+        if (tagsToSet.length > 0) {
+          setSelectedTags(tagsToSet);
+          console.log("Tags set:", tagsToSet);
+        }
+        
+        // Set hierarchical tags
+        if (productHierarchicalTags?.tagOptions) {
+          const tagOptionIds = productHierarchicalTags.tagOptions.map(t => t.id);
+          setSelectedHierarchicalTags(new Set(tagOptionIds));
+          console.log("Hierarchical tags set:", tagOptionIds);
+        }
+        
+        // Set existing images
+        if (product.ProductImages || product.images) {
+          const existingImages = (product.ProductImages || product.images || []).map(img => ({
+            url: img.imageUrl || img.url,
+            name: img.altText || img.alt || '',
+            isPrimary: img.isPrimary || false,
+            id: img.id
+          }));
+          setUploadedImages(existingImages);
+          setPreviewImages(existingImages.map(img => img.url));
+          console.log("Images set:", existingImages.length);
+        }
+        
+        // Set other data
+        setCategories(categoriesData);
         setTagPresets(tagPresetsData);
         setTagGroups(tagGroupsData);
         setAttributes(attributesData.filter(attr => 
           Array.isArray(attr.options) && attr.options.length > 0
         ));
         setBrands(brandsData);
-        } catch (error) {
-        console.error("Failed to load initial data:", error);
+        
+        // Show advanced features if any are set
+        if (product.flashSale || product.discountId || product.promotionId) {
+          setShowAdvancedFeatures(true);
+        }
+        
+      } catch (error) {
+        console.error("Failed to load product data:", error);
         setError("Өгөгдөл ачаалахад алдаа гарлаа");
-        } finally {
-          setLoadingCategories(false);
+      } finally {
+        setLoadingCategories(false);
         setLoadingAttributes(false);
         setLoadingBrands(false);
         setLoadingTagGroups(false);
+        setLoadingProduct(false);
       }
     }
 
     loadInitialData();
-  }, [TOKEN]);
+  }, [TOKEN, id]);
 
   // Tag management helpers
   const TYPE_LABELS = useMemo(() => ({
@@ -693,72 +855,106 @@ export default function AddProductComponent() {
           "Content-Type": "application/json",
         };
 
-        console.log("Sending request with payload:", payload);
+        console.log("Sending UPDATE request with payload:", payload);
 
         const response = await fetch(
-          `${getBackendUrl()}/api/v1/products/createproduct`,
+          `${getBackendUrl()}/api/v1/products/${id}`,
           {
-            method: "POST",
+            method: "PUT",
             headers: headers,
             body: JSON.stringify(payload),
           }
         );
         
         const responseData = await response.json();
-        console.log("Response:", responseData);
+        console.log("Update response:", responseData);
         
         if (response.ok) {
-          setSuccess(responseData.message || "Бараа амжилттай нэмэгдлээ");
+          setSuccess(responseData.message || "Бараа амжилттай шинэчлэгдлээ");
+          toastManager?.success("Бараа амжилттай шинэчлэгдлээ", { title: 'Амжилттай' });
           
-          // If hierarchical tags were selected, add them to the created product
-          if (selectedHierarchicalTags.size > 0 && responseData.data?.id) {
+          // Update hierarchical tags (replace existing ones)
+          if (selectedHierarchicalTags.size > 0) {
             try {
-              const hierarchicalTagsSuccess = await addProductHierarchicalTags(
-                responseData.data.id,
+              const hierarchicalTagsSuccess = await replaceProductHierarchicalTags(
+                id,
                 { tagOptionIds: Array.from(selectedHierarchicalTags) },
                 TOKEN
               );
               
               if (hierarchicalTagsSuccess) {
-                console.log("Hierarchical tags added successfully");
+                console.log("Hierarchical tags updated successfully");
               } else {
-                console.warn("Failed to add hierarchical tags, but product was created");
+                console.warn("Failed to update hierarchical tags, but product was updated");
               }
             } catch (error) {
-              console.error("Error adding hierarchical tags:", error);
+              console.error("Error updating hierarchical tags:", error);
               // Don't fail the whole process if hierarchical tags fail
             }
           }
           
-          // Reset form
-          form.reset();
-          setSelectedTags([]);
-          setSelectedHierarchicalTags(new Set());
-          setPreviewImages([]);
-          setUploadedImages([]);
-          setImageUploadErrors([]);
-          setImageUploadProgress(0);
-          setVariants([]);
-          setSelectedAttributeOptions({});
-          setProductMode("simple");
-          setShowAdvancedFeatures(false);
+          // Optionally reload the page or redirect
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
         } else {
           setError(responseData.message || "Алдаа гарлаа");
+          toastManager?.error(responseData.message || "Алдаа гарлаа", { title: 'Алдаа' });
         }
       } catch (error) {
         console.error("Submit error:", error);
         setError("Системийн алдаа гарлаа. Дахин оролдоно уу.");
+        toastManager?.error("Системийн алдаа гарлаа", { title: 'Алдаа' });
       }
     });
   };
 
+  // Show loading state while fetching product
+  if (loadingProduct) {
+    return (
+      <Layout
+        breadcrumbTitleParent="Бараа"
+        breadcrumbTitle="Бараа засах"
+        pageTitle="Бараа засах"
+      >
+        <div className="loading-product-state">
+          <div className="loading-spinner">
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+          </div>
+          <p className="loading-text">Бараа ачааллаж байна...</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
       <Layout
         breadcrumbTitleParent="Бараа"
-        breadcrumbTitle="Бараа нэмэх"
-        pageTitle="Бараа нэмэх"
+        breadcrumbTitle="Бараа засах"
+        pageTitle="Бараа засах"
       >
-
+        {/* Debug Panel - Remove after testing */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ 
+            background: '#f0f0f0', 
+            padding: '15px', 
+            margin: '10px 0', 
+            borderRadius: '8px',
+            fontSize: '12px',
+            fontFamily: 'monospace'
+          }}>
+            <strong>Debug Info:</strong><br/>
+            Images: {uploadedImages.length} loaded<br/>
+            Tags: {selectedTags.length} selected<br/>
+            Hierarchical Tags: {selectedHierarchicalTags.size} selected<br/>
+            Variants: {variants.length}<br/>
+            Product Mode: {productMode}<br/>
+            Brand ID: {form.watch('brandId')}<br/>
+            Categories: {selectedCategoryIds.length} selected
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="premium-form-container">
@@ -1218,6 +1414,7 @@ export default function AddProductComponent() {
                         type="products"
                         autoUpload={true} // Enable auto-upload to Cloudinary
                         showProgress={true}
+                        existingImages={uploadedImages} // Pass existing images for pre-population
                         onUploadComplete={handleUploadComplete}
                         onUploadError={handleUploadError}
                         onPrimaryChange={handlePrimaryImageChange}
@@ -2329,11 +2526,11 @@ export default function AddProductComponent() {
                         ) : success ? (
                           <i className="icon-check" />
                         ) : (
-                          <i className="icon-plus" />
+                          <i className="icon-edit" />
                         )}
                       </div>
                       <span className="btn-text">
-                        {isPending ? "Нэмж байна..." : success ? "Нэмэгдлээ!" : "Бараа нэмэх"}
+                        {isPending ? "Шинэчилж байна..." : success ? "Шинэчлэгдлээ!" : "Бараа шинэчлэх"}
                       </span>
                     </div>
                     <div className="btn-glow"></div>
