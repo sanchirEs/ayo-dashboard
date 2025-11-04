@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { getStatusBadgeClass, formatOrderDate, formatPrice } from "@/lib/api/orders";
+import { getStatusBadgeClass, formatOrderDate, formatPrice, translateStatus } from "@/lib/api/orders";
 import OrderRowActions from "./OrderRowActions";
 import OrderImage from "./OrderImage";
 
@@ -60,7 +60,7 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
         </div>
         <div>
           <div className={getStatusBadgeClass(order.status)}>
-            {order.status}
+            {translateStatus(order.status)}
           </div>
         </div>
         <div className="body-text text-sm">
