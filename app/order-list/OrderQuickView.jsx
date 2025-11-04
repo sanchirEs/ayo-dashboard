@@ -146,6 +146,12 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                   {order.user.addresses[0].addressLine2 && <>{order.user.addresses[0].addressLine2}<br /></>}
                   {order.user.addresses[0].city}, {order.user.addresses[0].postalCode}<br />
                   {order.user.addresses[0].country}
+                  {order.user.addresses[0].mobile && (
+                    <>
+                      <br />
+                      <span className="text-gray-600">Mobile: {order.user.addresses[0].mobile}</span>
+                    </>
+                  )}
                 </div>
               </div>
             )}
