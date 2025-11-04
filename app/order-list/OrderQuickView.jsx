@@ -6,10 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { getOrderDetailsClient, formatOrderDate, formatPrice, getStatusBadgeClass } from "@/lib/api/orders";
 import { updateOrderStatusClient, cancelOrderClient } from "@/lib/api/orders-client";
 import GetTokenClient from "@/lib/GetTokenClient";
@@ -92,433 +89,237 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     }
   };
 
-  const copyTrackingNumber = () => {
-    if (order?.shipping?.trackingNumber) {
-      navigator.clipboard.writeText(order.shipping.trackingNumber);
-      alert('Tracking number copied to clipboard');
-    }
-  };
-
-  const buildTimeline = () => {
-    if (!order) return [];
-    
-    const timeline = [];
-    
-    // Order created
-    timeline.push({
-      event: 'ORDER_CREATED',
-      timestamp: order.createdAt,
-      description: 'Order created',
-      status: 'completed'
-    });
-    
-    // Payment
-    if (order.payment) {
-      timeline.push({
-        event: 'PAYMENT_INITIATED',
-        timestamp: order.payment.createdAt || order.createdAt,
-        description: `Payment initiated with ${order.payment.provider}`,
-        status: order.payment.status === 'COMPLETED' ? 'completed' : 'pending'
-      });
-      
-      if (order.payment.status === 'COMPLETED') {
-        timeline.push({
-          event: 'PAYMENT_COMPLETED',
-          timestamp: order.payment.modifiedAt || order.payment.createdAt,
-          description: 'Payment completed',
-          status: 'completed'
-        });
-      }
-    }
-    
-    // Order status progression
-    if (order.status === 'PROCESSING') {
-      timeline.push({
-        event: 'ORDER_PROCESSING',
-        timestamp: order.modifiedAt,
-        description: 'Order processing',
-        status: 'completed'
-      });
-    }
-    
-    if (order.status === 'SHIPPED' || order.status === 'DELIVERED') {
-      timeline.push({
-        event: 'ORDER_SHIPPED',
-        timestamp: order.shipping?.modifiedAt || order.modifiedAt,
-        description: order.shipping?.trackingNumber 
-          ? `Shipped with tracking: ${order.shipping.trackingNumber}`
-          : 'Order shipped',
-        status: 'completed'
-      });
-    }
-    
-    if (order.status === 'DELIVERED') {
-      timeline.push({
-        event: 'ORDER_DELIVERED',
-        timestamp: order.modifiedAt,
-        description: 'Order delivered',
-        status: 'completed'
-      });
-    }
-    
-    if (order.status === 'CANCELLED') {
-      timeline.push({
-        event: 'ORDER_CANCELLED',
-        timestamp: order.modifiedAt,
-        description: 'Order cancelled',
-        status: 'failed'
-      });
-    }
-    
-    return timeline.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  };
-
   if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-none w-[94vw] md:w-[85vw] lg:w-[75vw] xl:w-[65vw] p-6 md:p-8 rounded-2xl max-h-[90vh] overflow-auto">
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="text-blue-600">🛍️</span>
-            <span>Order #{orderId}</span>
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 mt-1">
-            Complete order information, payment status, and delivery timeline
-          </DialogDescription>
-        </DialogHeader>
-
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto p-0">
         {loading ? (
-          <div className="text-center py-8">
-            <div className="spinner-border" role="status">
-              <span className="sr-only">Loading...</span>
-            </div>
+          <div className="text-center py-16">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p className="mt-3 text-gray-600">Loading order...</p>
           </div>
         ) : order ? (
-          <div className="space-y-6">
-            {/* Order Header */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  <div className={`${getStatusBadgeClass(order.status)} text-sm font-medium px-4 py-2 rounded-lg shadow-sm`}>
-                    {order.status}
-                  </div>
-                  <div className="text-sm text-gray-700 bg-white px-3 py-1.5 rounded-lg">
-                    💰 {formatPrice(order.total)}
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Created:</span>{' '}
-                  <span className="text-gray-900">
-                    {order.createdAt ? formatOrderDate(order.createdAt) : 'N/A'}
-                  </span>
-                </div>
+          <div className="bg-white">
+            {/* Receipt Header */}
+            <div className="text-center py-8 px-6 border-b-2 border-dashed">
+              <div className="text-3xl font-bold text-gray-900 mb-2">Order Receipt</div>
+              <div className="text-sm text-gray-500">Order #{orderId}</div>
+              <div className="text-xs text-gray-400 mt-1">
+                {order.createdAt ? formatOrderDate(order.createdAt) : 'N/A'}
               </div>
+            </div>
+
+            {/* Status Badge */}
+            <div className="flex justify-center py-4 border-b">
+              <span className={`inline-block px-4 py-1.5 text-sm font-medium rounded-full ${
+                order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                order.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800' :
+                order.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-800' :
+                order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {order.status}
+              </span>
             </div>
 
             {/* Customer Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 text-gray-800">Customer Information</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-600 w-20">Name:</span>
-                    <span className="text-gray-900">
-                      {order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() || 'N/A' : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-600 w-20">Email:</span>
-                    <span className="text-gray-900">{order.user?.email || 'N/A'}</span>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-600 w-20">Phone:</span>
-                    <span className="text-gray-900">{order.user?.telephone || 'N/A'}</span>
-                  </div>
+            <div className="px-6 py-4 border-b bg-gray-50">
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Customer</div>
+              <div className="text-sm">
+                <div className="font-medium text-gray-900">
+                  {order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'N/A'}
                 </div>
-                <div className="mt-3 flex gap-2">
-                  {order.user?.email && (
-                    <a
-                      href={`mailto:${order.user.email}`}
-                      className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                    >
-                      📧 Email
-                    </a>
-                  )}
-                  {order.user?.telephone && (
-                    <a
-                      href={`tel:${order.user.telephone}`}
-                      className="text-xs px-3 py-1.5 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                    >
-                      📞 Call
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Payment Details */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 text-gray-800">Payment Details</h3>
-                {order.payment ? (
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-start">
-                      <span className="font-medium text-gray-600 w-24">Provider:</span>
-                      <span className="text-gray-900">{order.payment.provider}</span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="font-medium text-gray-600 w-24">Status:</span>
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        order.payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                        order.payment.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        order.payment.status === 'EXPIRED' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {order.payment.status}
-                      </span>
-                    </div>
-                    <div className="flex items-start">
-                      <span className="font-medium text-gray-600 w-24">Amount:</span>
-                      <span className="text-gray-900 font-semibold">{formatPrice(order.payment.amount)}</span>
-                    </div>
-                    {order.payment.providerTransactionId && (
-                      <div className="flex items-start">
-                        <span className="font-medium text-gray-600 w-24">Transaction:</span>
-                        <span className="text-gray-900 text-xs break-all">{order.payment.providerTransactionId}</span>
-                      </div>
-                    )}
-                    {order.payment.createdAt && (
-                      <div className="flex items-start">
-                        <span className="font-medium text-gray-600 w-24">Date:</span>
-                        <span className="text-gray-900">{formatOrderDate(order.payment.createdAt)}</span>
-                      </div>
-                    )}
-                    {order.payment.expiresAt && (
-                      <div className="flex items-start">
-                        <span className="font-medium text-gray-600 w-24">Expires:</span>
-                        <span className="text-gray-900">{formatOrderDate(order.payment.expiresAt)}</span>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-sm text-gray-500 italic">No payment information available</div>
+                <div className="text-gray-600">{order.user?.email || 'N/A'}</div>
+                {order.user?.telephone && (
+                  <div className="text-gray-600">{order.user.telephone}</div>
                 )}
               </div>
             </div>
 
+            {/* Shipping Address */}
+            {order.user?.addresses && order.user.addresses.length > 0 && (
+              <div className="px-6 py-4 border-b bg-gray-50">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Shipping Address</div>
+                <div className="text-sm text-gray-900">
+                  {order.user.addresses[0].addressLine1}<br />
+                  {order.user.addresses[0].addressLine2 && <>{order.user.addresses[0].addressLine2}<br /></>}
+                  {order.user.addresses[0].city}, {order.user.addresses[0].postalCode}<br />
+                  {order.user.addresses[0].country}
+                </div>
+              </div>
+            )}
+
             {/* Order Items */}
-            <div className="bg-white">
-              <h3 className="font-semibold mb-3 text-gray-800">Order Items</h3>
+            <div className="px-6 py-4">
+              <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Items</div>
               <div className="space-y-3">
                 {order.orderItems?.map((item, index) => {
                   const itemTotal = (parseFloat(item.price) || 0) * (item.quantity || 0);
                   return (
-                    <div key={index} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition">
+                    <div key={index} className="flex gap-3">
                       <img
                         src={item.product?.ProductImages?.[0]?.imageUrl 
                           ? resolveImageUrl(item.product.ProductImages[0].imageUrl)
                           : "/images/products/1.png"}
                         alt={item.product?.name || 'Product'}
-                        className="w-20 h-20 object-cover rounded-lg border"
+                        className="w-12 h-12 object-cover rounded"
                         onError={(e) => { e.target.src = "/images/products/1.png"; }}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 mb-1">{item.product?.name || 'Product'}</div>
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {item.product?.name || 'Product'}
+                        </div>
                         {item.variant && (
-                          <div className="text-xs text-gray-500 mb-1">
-                            <span className="bg-gray-100 px-2 py-0.5 rounded">SKU: {item.variant.sku}</span>
-                          </div>
+                          <div className="text-xs text-gray-500">SKU: {item.variant.sku}</div>
                         )}
-                        <div className="text-sm text-gray-600">
-                          <span className="font-medium">{item.quantity}</span> × {formatPrice(item.price)}
+                        <div className="text-xs text-gray-600">
+                          Qty: {item.quantity} × {formatPrice(item.price)}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900 text-lg">
-                          {formatPrice(itemTotal)}
-                        </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatPrice(itemTotal)}
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className="mt-6 pt-4 border-t-2 border-gray-200">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal:</span>
-                      <span className="font-medium text-gray-900">
-                        {formatPrice((parseFloat(order.subtotal) || parseFloat(order.total) || 0) - (parseFloat(order.shippingCost) || 0))}
-                      </span>
-                    </div>
-                    {order.shippingCost && parseFloat(order.shippingCost) > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Shipping:</span>
-                        <span className="font-medium text-gray-900">{formatPrice(order.shippingCost)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-                      <span className="text-gray-800">Total:</span>
-                      <span className="text-blue-600">{formatPrice(order.total)}</span>
-                    </div>
+            </div>
+
+            {/* Totals */}
+            <div className="px-6 py-4 border-t-2 border-dashed">
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span>{formatPrice((parseFloat(order.subtotal) || parseFloat(order.total) || 0) - (parseFloat(order.shippingCost) || 0))}</span>
+                </div>
+                {order.shippingCost && parseFloat(order.shippingCost) > 0 && (
+                  <div className="flex justify-between text-gray-600">
+                    <span>Shipping</span>
+                    <span>{formatPrice(order.shippingCost)}</span>
                   </div>
+                )}
+                <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t">
+                  <span>Total</span>
+                  <span>{formatPrice(order.total)}</span>
                 </div>
               </div>
             </div>
+
+            {/* Payment Info */}
+            {order.payment && (
+              <div className="px-6 py-4 border-t bg-gray-50">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Payment</div>
+                <div className="flex justify-between items-center text-sm">
+                  <div>
+                    <div className="text-gray-900">{order.payment.provider}</div>
+                    <div className="text-xs text-gray-500">
+                      {order.payment.createdAt && formatOrderDate(order.payment.createdAt)}
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${
+                    order.payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                    order.payment.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                    order.payment.status === 'EXPIRED' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.payment.status}
+                  </span>
+                </div>
+              </div>
+            )}
 
             {/* Shipping Details */}
             {order.shipping && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-3 text-gray-800">Shipping Details</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-600 w-32">Method:</span>
-                    <span className="text-gray-900 capitalize">
-                      {order.shipping.shippingMethod || 'Standard'}
-                    </span>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="font-medium text-gray-600 w-32">Tracking:</span>
-                    {order.shipping.trackingNumber ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-900 font-mono text-xs bg-white px-2 py-1 rounded border">
-                          {order.shipping.trackingNumber}
-                        </span>
-                        <button
-                          onClick={copyTrackingNumber}
-                          className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-                        >
-                          Copy
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-500 italic">Not available</span>
-                    )}
-                  </div>
+              <div className="px-6 py-4 border-t bg-gray-50">
+                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Shipping</div>
+                <div className="text-sm space-y-1">
+                  {order.shipping.trackingNumber && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tracking</span>
+                      <span className="text-gray-900 font-mono text-xs">{order.shipping.trackingNumber}</span>
+                    </div>
+                  )}
                   {order.shipping.estimatedDelivery && (
-                    <div className="flex items-start">
-                      <span className="font-medium text-gray-600 w-32">Est. Delivery:</span>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Est. Delivery</span>
                       <span className="text-gray-900">{formatOrderDate(order.shipping.estimatedDelivery)}</span>
                     </div>
                   )}
-                  {order.shipping.shippingCost && (
-                    <div className="flex items-start">
-                      <span className="font-medium text-gray-600 w-32">Cost:</span>
-                      <span className="text-gray-900 font-semibold">{formatPrice(order.shipping.shippingCost)}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Method</span>
+                    <span className="text-gray-900 capitalize">{order.shipping.shippingMethod || 'Standard'}</span>
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Saga Info - Show if failed */}
+            {/* Saga Error */}
             {order.sagas && order.sagas.length > 0 && order.sagas[0].status === 'FAILED' && (
-              <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2 text-red-800 flex items-center gap-2">
-                  <span>⚠️</span>
-                  <span>Order Processing Issue</span>
-                </h3>
-                <div className="text-sm text-red-700 space-y-1">
-                  <div>
-                    <strong>Error:</strong> {order.sagas[0].errorMessage || 'Unknown error occurred'}
-                  </div>
-                  <div className="text-xs text-red-600 mt-2">
-                    Failed at step {order.sagas[0].currentStep + 1} of {order.sagas[0].totalSteps}
-                  </div>
-                </div>
+              <div className="px-6 py-4 border-t bg-red-50">
+                <div className="text-xs text-red-600 uppercase tracking-wide mb-1">Processing Error</div>
+                <div className="text-sm text-red-700">{order.sagas[0].errorMessage || 'Unknown error'}</div>
               </div>
             )}
 
-            {/* Order Timeline */}
-            <div className="bg-white">
-              <h3 className="font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                <span>📋</span>
-                <span>Order Timeline</span>
-              </h3>
-              <div className="relative">
-                <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-                <div className="space-y-4">
-                  {buildTimeline().map((event, index) => (
-                    <div key={index} className="relative flex items-start gap-4 pl-2">
-                      <div className={`relative z-10 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white ${
-                        event.status === 'completed' ? 'bg-green-500' : 
-                        event.status === 'failed' || event.status === 'cancelled' ? 'bg-red-500' : 
-                        'bg-yellow-500'
-                      }`}>
-                        {event.status === 'completed' && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                        {(event.status === 'failed' || event.status === 'cancelled') && (
-                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <div className="text-sm font-semibold text-gray-900">{event.description}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{formatOrderDate(event.timestamp)}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            {/* Action Buttons */}
+            {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
+              <div className="px-6 py-4 border-t bg-gray-50 flex gap-2 justify-end">
+                {order.status === 'PENDING' && (
+                  <button
+                    onClick={() => handleStatusUpdate('PROCESSING')}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {updating ? 'Updating...' : 'Mark Processing'}
+                  </button>
+                )}
+                {order.status === 'PROCESSING' && (
+                  <button
+                    onClick={() => handleStatusUpdate('SHIPPED')}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    {updating ? 'Updating...' : 'Mark Shipped'}
+                  </button>
+                )}
+                {order.status === 'SHIPPED' && (
+                  <button
+                    onClick={() => handleStatusUpdate('DELIVERED')}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                  >
+                    {updating ? 'Updating...' : 'Mark Delivered'}
+                  </button>
+                )}
+                {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
+                  <button
+                    onClick={handleCancelOrder}
+                    disabled={updating}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    {updating ? 'Cancelling...' : 'Cancel Order'}
+                  </button>
+                )}
               </div>
+            )}
+
+            {/* Footer */}
+            <div className="px-6 py-6 border-t-2 border-dashed text-center">
+              <button 
+                onClick={() => onOpenChange(false)}
+                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                Close
+              </button>
             </div>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            Failed to load order details
+          <div className="text-center py-16 px-6">
+            <div className="text-gray-400 mb-3">❌</div>
+            <div className="text-gray-600">Failed to load order details</div>
           </div>
         )}
-
-        <DialogFooter className="mt-8 pt-4 border-t flex flex-wrap gap-2 justify-end">
-          {order && order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-            <>
-              {order.status === 'PENDING' && (
-                <Button
-                  onClick={() => handleStatusUpdate('PROCESSING')}
-                  disabled={updating}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updating ? '⏳ Updating...' : '🔄 Mark as Processing'}
-                </Button>
-              )}
-              {order.status === 'PROCESSING' && (
-                <Button
-                  onClick={() => handleStatusUpdate('SHIPPED')}
-                  disabled={updating}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updating ? '⏳ Updating...' : '📦 Mark as Shipped'}
-                </Button>
-              )}
-              {order.status === 'SHIPPED' && (
-                <Button
-                  onClick={() => handleStatusUpdate('DELIVERED')}
-                  disabled={updating}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updating ? '⏳ Updating...' : '✅ Mark as Delivered'}
-                </Button>
-              )}
-              {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
-                <Button
-                  onClick={handleCancelOrder}
-                  disabled={updating}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {updating ? '⏳ Cancelling...' : '❌ Cancel Order'}
-                </Button>
-              )}
-            </>
-          )}
-          <Button 
-            onClick={() => onOpenChange(false)} 
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg transition font-medium"
-          >
-            Close
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
