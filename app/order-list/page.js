@@ -6,6 +6,9 @@ import OrderFilters from "./OrderFilters";
 export default async function OrderList(props) {
     const searchParams = await props.searchParams;
     
+    // Create a unique key based on search params to force re-render when filters change
+    const searchKey = JSON.stringify(searchParams || {});
+    
     return (
         <>
             <Layout breadcrumbTitleParent="Orders" breadcrumbTitle="Order List">
@@ -15,6 +18,7 @@ export default async function OrderList(props) {
                     </Suspense>
                     
                     <Suspense 
+                        key={searchKey}
                         fallback={
                             <div className="wg-table table-all-category">
                                 <div className="text-center py-8">

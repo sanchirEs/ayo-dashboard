@@ -5,6 +5,7 @@ import { useState } from "react";
 import { updateOrderStatusClient, cancelOrderClient } from "@/lib/api/orders-client";
 import { useRouter } from "next/navigation";
 import GetTokenClient from "@/lib/GetTokenClient";
+import QuickViewAction from "./QuickViewAction";
 
 export default function OrderRowActions({ order }) {
   const [isUpdating, setIsUpdating] = useState(false);
@@ -53,12 +54,8 @@ export default function OrderRowActions({ order }) {
 
   return (
     <div className="list-icon-function">
-      {/* View Order Details */}
-      <div className="item eye">
-        <Link href={`/order-detail/${order.id}`} title="View Details">
-          <i className="icon-eye" />
-        </Link>
-      </div>
+      {/* View Order Details - Quick View */}
+      <QuickViewAction order={order} />
 
       {/* Status Update Dropdown */}
       {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (

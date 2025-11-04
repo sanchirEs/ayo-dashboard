@@ -123,3 +123,44 @@ export async function cancelOrderClient(
     };
   }
 }
+
+export async function bulkUpdateOrderStatusClient(
+  orderIds: number[],
+  status: string,
+  token: string
+): Promise<{ success: boolean; message?: string; updatedCount?: number }> {
+  try {
+    if (!token) {
+      throw new Error('No authentication token available');
+    }
+
+    const url = `${getBackendUrl()}/api/v1/orders/bulk-status`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ orderIds, status }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return {
+      success: result.success,
+      message: result.message || 'Orders updated successfully',
+      updatedCount: result.data?.updatedCount || orderIds.length
+    };
+  } catch (error) {
+    console.error('Error updating orders:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to update orders'
+    };
+  }
+}
