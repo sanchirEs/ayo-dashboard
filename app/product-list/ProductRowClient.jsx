@@ -141,6 +141,44 @@ export default function ProductRowClient({ product, gridTemplate }) {
           <span style={{ color: '#9ca3af' }}>-</span>
         )}
       </div>
+      
+      {/* Delivery Information Column */}
+      <div className="body-text" style={{ fontSize: '12px', color: '#6b7280' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {/* Delivery Type Badge */}
+          <div>
+            {product.delivery?.isImported || product.isImportedProduct ? (
+              <span style={{
+                backgroundColor: '#fef3c7',
+                color: '#92400e',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '10px',
+                fontWeight: '500'
+              }}>
+                Захиалгын
+              </span>
+            ) : (
+              <span style={{
+                backgroundColor: '#d1fae5',
+                color: '#166534',
+                padding: '2px 6px',
+                borderRadius: '12px',
+                fontSize: '10px',
+                fontWeight: '500'
+              }}>
+                Энгийн
+              </span>
+            )}
+          </div>
+          
+          {/* Delivery Days */}
+          <div style={{ fontSize: '11px', color: '#9ca3af' }}>
+            {product.delivery?.estimatedDays || product.estimatedDeliveryDays || 7} days
+          </div>
+        </div>
+      </div>
+      
        <div className="body-text" style={{ fontSize: '13px', color: '#6b7280' }}>
          {product.allCategories && product.allCategories.length > 0 
            ? renderLimitedCategories(product.allCategories, 4)

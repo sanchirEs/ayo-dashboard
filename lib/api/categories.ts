@@ -20,6 +20,23 @@ export interface CategoryNode {
 
 export async function getCategories(all: boolean = false): Promise<Category[]> {
   try {
+    // Use server proxy when running in the browser to avoid CORS issues
+    const isBrowser = typeof window !== 'undefined';
+    
+    if (isBrowser) {
+      const url = new URL('/api/categories/all', window.location.origin);
+      if (all) {
+        url.searchParams.set('all', 'true');
+      }
+      const response = await fetch(url.toString(), { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch categories: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.data || [];
+    }
+    
+    // Server-side execution
     const token = await getToken();
     const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
     if (all) {
@@ -30,7 +47,7 @@ export async function getCategories(all: boolean = false): Promise<Category[]> {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-      cache: 'no-store', // Always fetch fresh data
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -87,16 +104,13 @@ export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
 
 export async function getCategoriesClient(token: string, all: boolean = false): Promise<Category[]> {
   try {
-    const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
+    // Always use proxy route for client calls to avoid CORS
+    const url = new URL('/api/categories/all', window.location.origin);
     if (all) {
       url.searchParams.set('all', 'true');
     }
     
-    const response = await fetch(url.toString(), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await fetch(url.toString(), { cache: 'no-store' });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);

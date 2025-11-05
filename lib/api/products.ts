@@ -36,6 +36,16 @@ export interface Product {
   tags?: string[];
   createdAt: string;
   modifiedAt: string;
+  
+  // Delivery fields
+  isImportedProduct?: boolean;
+  estimatedDeliveryDays?: number;
+  deliveryNote?: string;
+  delivery?: {
+    isImported: boolean;
+    estimatedDays: number;
+    note?: string;
+  };
 }
 
 export interface ProductsResponse {

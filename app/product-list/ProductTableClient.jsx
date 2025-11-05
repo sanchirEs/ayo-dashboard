@@ -16,7 +16,8 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
     category: '',
     stockStatus: '',
     minPrice: '',
-    maxPrice: ''
+    maxPrice: '',
+    deliveryType: ''
   });
 
   // Extract unique brands and categories for filter dropdowns
@@ -95,6 +96,24 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
         const min = filters.minPrice ? parseFloat(filters.minPrice) : 0;
         const max = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
         return price >= min && price <= max;
+      });
+    }
+
+    if (filters.deliveryType) {
+      filtered = filtered.filter(p => {
+        const isImported = p.delivery?.isImported || p.isImportedProduct;
+        const deliveryDays = p.delivery?.estimatedDays || p.estimatedDeliveryDays || 7;
+        
+        switch (filters.deliveryType) {
+          case 'fast':
+            return deliveryDays <= 3;
+          case 'standard':
+            return !isImported && deliveryDays > 3 && deliveryDays <= 14;
+          case 'imported':
+            return isImported;
+          default:
+            return true;
+        }
       });
     }
 
@@ -234,6 +253,7 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
           </li>
           <li><div className="body-title">Tags</div></li>
           <li><div className="body-title">Brand</div></li>
+          <li><div className="body-title">Delivery</div></li>
           <li><div className="body-title">Category</div></li>
           <li><div className="body-title">Action</div></li>
         </ul>

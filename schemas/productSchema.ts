@@ -109,6 +109,18 @@ export const addProductsSchema = z.object({
   // Optional promotion fields - hidden by default
   flashSale: z.boolean().optional().default(false),
   flashSaleEndDate: z.string().optional(),
+  
+  // Delivery fields
+  isImportedProduct: z.boolean().optional().default(false),
+  estimatedDeliveryDays: z.union([
+    z.string().refine((v) => {
+      if (!v) return true; // Allow empty, will default to 7
+      let n = Number(v);
+      return !isNaN(n) && n >= 1 && n <= 365;
+    }, { message: "1-365 хоногийн хооронд оруулна уу" }),
+    z.number().min(1, { message: "1-с дээш хоног оруулна уу" }).max(365, { message: "365-с доош хоног оруулна уу" })
+  ]).optional(),
+  deliveryNote: z.string().max(500, { message: "Тайлбар 500 тэмдэгтээс хэтрэх ёсгүй" }).optional(),
   discountId: z.union([
     z.string().refine((v) => {
       if (!v) return true;
@@ -171,6 +183,18 @@ export const editProductsSchema = z.object({
     z.array(z.instanceof(File)),
     z.array(imageSchema)
   ]).optional(),
+  
+  // Delivery fields
+  isImportedProduct: z.boolean().optional(),
+  estimatedDeliveryDays: z.union([
+    z.string().refine((v) => {
+      if (!v) return true; // Allow empty
+      let n = Number(v);
+      return !isNaN(n) && n >= 1 && n <= 365;
+    }, { message: "1-365 хоногийн хооронд оруулна уу" }),
+    z.number().min(1, { message: "1-с дээш хоног оруулна уу" }).max(365, { message: "365-с доош хоног оруулна уу" })
+  ]).optional(),
+  deliveryNote: z.string().max(500, { message: "Тайлбар 500 тэмдэгтээс хэтрэх ёсгүй" }).optional(),
 });
 
 // Export types for use in components

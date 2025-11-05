@@ -15,7 +15,8 @@ export default function ProductFilters({ filters, setFilters, uniqueBrands, uniq
       category: '',
       stockStatus: '',
       minPrice: '',
-      maxPrice: ''
+      maxPrice: '',
+      deliveryType: ''
     });
   };
 
@@ -94,6 +95,27 @@ export default function ProductFilters({ filters, setFilters, uniqueBrands, uniq
           <option value="inStock">Нөөцөд байгаа (10+)</option>
           <option value="lowStock">Нөөц бага (1-10)</option>
           <option value="outOfStock">Дууссан (0)</option>
+        </select>
+
+        {/* Delivery Type Filter */}
+        <select
+          value={filters.deliveryType}
+          onChange={(e) => handleFilterChange('deliveryType', e.target.value)}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb',
+            fontSize: '13px',
+            backgroundColor: filters.deliveryType ? '#f3f4f6' : 'white',
+            cursor: 'pointer',
+            minWidth: '120px',
+            maxWidth: '160px'
+          }}
+        >
+          <option value="">Хүргэлтийн төрөл</option>
+          <option value="fast">Шуурхай (1-3 хоног)</option>
+          <option value="standard">Ердийн (4-14 хоног)</option>
+          <option value="imported">Захиалгын бараа</option>
         </select>
 
         {/* Advanced Filters Toggle */}
