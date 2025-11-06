@@ -1,4 +1,10 @@
 export function getBackendUrl(): string {
+  // When running in browser, use the Next.js rewrite proxy to avoid CORS
+  if (typeof window !== 'undefined') {
+    return ''; // Empty string = use relative URLs which go through Next.js rewrites
+  }
+  
+  // Server-side: use actual backend URL
   const candidate = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!candidate) {
     throw new Error('BACKEND_URL is not configured');

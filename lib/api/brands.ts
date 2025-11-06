@@ -52,11 +52,7 @@ export async function getBrands(searchParams: Record<string, string> = {}): Prom
 
 export async function getAllBrands(): Promise<Brand[]> {
   try {
-    // Use server proxy when running in the browser to avoid CORS issues
-    const isBrowser = typeof window !== 'undefined';
-    const url = isBrowser ? '/api/brands/all' : `${getBackendUrl()}/api/v1/brands/all`;
-    
-    const response = await fetch(url, {
+    const response = await fetch(`${getBackendUrl()}/api/v1/brands/all`, {
       cache: 'no-store',
     });
 
@@ -74,8 +70,10 @@ export async function getAllBrands(): Promise<Brand[]> {
 
 export async function getBrandsClient(token: string): Promise<Brand[]> {
   try {
-    // Always use proxy route for client calls to avoid CORS
-    const response = await fetch('/api/brands/all', {
+    const response = await fetch(`${getBackendUrl()}/api/v1/brands/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: 'no-store',
     });
 

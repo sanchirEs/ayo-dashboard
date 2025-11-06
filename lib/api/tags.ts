@@ -75,11 +75,7 @@ export async function createTags(
 
 export async function getTagPresets(): Promise<TagPreset[]> {
   try {
-    // Use server proxy when running in the browser to avoid CORS issues
-    const isBrowser = typeof window !== 'undefined';
-    const url = isBrowser ? '/api/tags/presets' : `${getBackendUrl()}/api/v1/tags/presets`;
-    
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(`${getBackendUrl()}/api/v1/tags/presets`, { cache: "no-store" });
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const json = await res.json();
     return json.data || [];
