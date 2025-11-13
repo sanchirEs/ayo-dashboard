@@ -116,10 +116,6 @@ export default function AddProductComponent() {
       flashSaleEndDate: "",
       discountId: "",
       promotionId: "",
-      // Delivery fields
-      isImportedProduct: false,
-      estimatedDeliveryDays: "7",
-      deliveryNote: "",
     },
     mode: "onChange",
   });
@@ -497,10 +493,6 @@ export default function AddProductComponent() {
       vendorId: Number(formValues.vendorId || VENDOR_ID_STATIC),
       ...(formValues.brandId && { brandId: Number(formValues.brandId) }),
       tags: selectedTags,
-      // Delivery fields
-      isImportedProduct: formValues.isImportedProduct || false,
-      estimatedDeliveryDays: Number(formValues.estimatedDeliveryDays) || 7,
-      deliveryNote: formValues.deliveryNote || "",
     };
 
     // Add price at product level based on mode
@@ -2083,124 +2075,6 @@ export default function AddProductComponent() {
                 )}
                   </div>
                 )}
-
-            {/* Delivery Information Section */}
-            <div className="premium-card form-section-card delivery-info-card">
-              <div className="card-header">
-                <div className="card-icon">
-                  <i className="icon-truck" />
-                </div>
-                <div className="card-title-group">
-                  <h3 className="card-title">Хүргэлтийн мэдээлэл</h3>
-                  <p className="card-subtitle">Хүргэлтийн хугацаа болон бусад мэдээлэл</p>
-                </div>
-              </div>
-              
-              <div className="delivery-fields-grid">
-                {/* Imported Product Toggle */}
-                <FormField
-                  control={form.control}
-                  name="isImportedProduct"
-                  render={({ field }) => (
-                    <FormItem className="premium-checkbox-item">
-                      <div className="checkbox-wrapper">
-                        <FormControl>
-                          <label className="premium-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="checkbox-input"
-                            />
-                            <span className="checkbox-indicator">
-                              <i className="icon-check" />
-                            </span>
-                            <div className="checkbox-content">
-                              <span className="checkbox-label">Захиалгын бараа</span>
-                              <span className="checkbox-description">Захиалгаар авдаг бүтээгдэхүүн бол тэмдэглэнэ үү</span>
-                            </div>
-                          </label>
-                        </FormControl>
-                      </div>
-                      <FormMessage className="premium-error" />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Estimated Delivery Days */}
-                <FormField
-                  control={form.control}
-                  name="estimatedDeliveryDays"
-                  render={({ field }) => (
-                    <FormItem className="premium-form-item">
-                      <FormLabel className="premium-label">
-                        <span className="label-text">Хүргэлтийн хугацаа (хоног)</span>
-                        <div className="label-underline"></div>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="premium-input-wrapper">
-                          <div className="input-icon">
-                            <i className="icon-clock" />
-                          </div>
-                          <Input
-                            className="premium-input"
-                            type="number"
-                            placeholder="7"
-                            min="1"
-                            max="365"
-                            {...field}
-                          />
-                          <div className="input-border-animation"></div>
-                        </div>
-                      </FormControl>
-                      <FormMessage className="premium-error" />
-                      <FormDescription className="premium-description">
-                        <i className="icon-info-circle" />
-                        Хэрэглэгчид хүргэгдэх хүлээгдэж буй хоногийн тоо (1-365)
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Delivery Note */}
-                <FormField
-                  control={form.control}
-                  name="deliveryNote"
-                  render={({ field }) => (
-                    <FormItem className="premium-form-item delivery-note-field">
-                      <FormLabel className="premium-label">
-                        <span className="label-text">Хүргэлтийн тайлбар</span>
-                        <span className="label-optional">(заавал биш)</span>
-                        <div className="label-underline"></div>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="premium-textarea-wrapper">
-                          <div className="textarea-icon">
-                            <i className="icon-message-circle" />
-                          </div>
-                          <textarea
-                            {...field}
-                            className="premium-textarea"
-                            placeholder="Жишээ: Гаднаас импортолдог учир 3-4 долоо хоног хүлээнэ үү"
-                            rows={2}
-                            maxLength={500}
-                          />
-                          <div className="input-border-animation"></div>
-                          <div className="character-count">
-                            {(field.value || "").length}/500
-                          </div>
-                        </div>
-                      </FormControl>
-                      <FormMessage className="premium-error" />
-                      <FormDescription className="premium-description">
-                        <i className="icon-info-circle" />
-                        Хүргэлтийн талаарх нэмэлт мэдээлэл (хамгийн ихдээ 500 тэмдэгт)
-                      </FormDescription>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
 
             {/* Advanced Features - Cinematic Expandable Panel */}
             <div className="premium-card form-section-card advanced-features-card">

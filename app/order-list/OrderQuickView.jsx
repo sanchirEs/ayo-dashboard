@@ -94,6 +94,7 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto p-0">
+        <DialogTitle className="sr-only">Order Receipt #{orderId}</DialogTitle>
         {loading ? (
           <div className="text-center py-16">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
