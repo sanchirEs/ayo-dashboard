@@ -21,12 +21,25 @@ export interface CategoryNode {
 export async function getCategories(all: boolean = false): Promise<Category[]> {
   try {
     const token = await getToken();
-    const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
-    if (all) {
-      url.searchParams.set('all', 'true');
+    const backendUrl = getBackendUrl();
+    let url: string;
+    
+    if (backendUrl === '') {
+      // Client-side: use relative URL for Next.js rewrites
+      url = '/api/v1/categories/';
+      if (all) {
+        url += '?all=true';
+      }
+    } else {
+      // Server-side: use full URL
+      const fullUrl = new URL(`${backendUrl}/api/v1/categories/`);
+      if (all) {
+        fullUrl.searchParams.set('all', 'true');
+      }
+      url = fullUrl.toString();
     }
     
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -87,12 +100,25 @@ export async function getCategoryTreePublic(): Promise<CategoryNode[]> {
 
 export async function getCategoriesClient(token: string, all: boolean = false): Promise<Category[]> {
   try {
-    const url = new URL(`${getBackendUrl()}/api/v1/categories/`);
-    if (all) {
-      url.searchParams.set('all', 'true');
+    const backendUrl = getBackendUrl();
+    let url: string;
+    
+    if (backendUrl === '') {
+      // Client-side: use relative URL for Next.js rewrites
+      url = '/api/v1/categories/';
+      if (all) {
+        url += '?all=true';
+      }
+    } else {
+      // Server-side: use full URL
+      const fullUrl = new URL(`${backendUrl}/api/v1/categories/`);
+      if (all) {
+        fullUrl.searchParams.set('all', 'true');
+      }
+      url = fullUrl.toString();
     }
     
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
