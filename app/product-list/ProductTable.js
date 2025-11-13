@@ -15,7 +15,7 @@ export default async function ProductTable({ searchParams }) {
     }
 
     // UX-optimized grid template: shorter product column for better balance
-    const gridTemplate = 'minmax(100px,1fr) 90px 90px 70px 140px 130px 120px 200px 90px';
+    const gridTemplate = 'minmax(100px,1fr) 90px 90px 70px 140px 130px 200px 90px';
 
     return (
       <>

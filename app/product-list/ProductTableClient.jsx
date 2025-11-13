@@ -253,7 +253,6 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
           </li>
           <li><div className="body-title">Tags</div></li>
           <li><div className="body-title">Brand</div></li>
-          <li><div className="body-title">Delivery</div></li>
           <li><div className="body-title">Category</div></li>
           <li><div className="body-title">Action</div></li>
         </ul>
