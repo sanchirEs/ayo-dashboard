@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { getStatusBadgeClass, formatOrderDate, formatPrice, translateStatus } from "@/lib/api/orders";
+import { getStatusBlockClass, formatOrderDate, formatPrice, translateStatus } from "@/lib/api/orders";
 import OrderRowActions from "./OrderRowActions";
 import OrderImage from "./OrderImage";
 
@@ -59,7 +59,7 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
           {order.payment ? order.payment.provider : 'N/A'}
         </div>
         <div>
-          <div className={getStatusBadgeClass(order.status)}>
+          <div className={getStatusBlockClass(order.status)}>
             {translateStatus(order.status)}
           </div>
         </div>

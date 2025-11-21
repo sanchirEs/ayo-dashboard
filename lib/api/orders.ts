@@ -335,6 +335,17 @@ export function getStatusBadgeClass(status: string): string {
   return statusClasses[status] || statusClasses['PENDING'];
 }
 
+export function getStatusBlockClass(status: string): string {
+  const statusBlockClasses: Record<string, string> = {
+    'PENDING': 'block-pending',
+    'PROCESSING': 'block-tracking',
+    'SHIPPED': 'block-tracking',
+    'DELIVERED': 'block-available',
+    'CANCELLED': 'block-not-available'
+  };
+  return statusBlockClasses[status] || statusBlockClasses['PENDING'];
+}
+
 export function formatOrderDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
