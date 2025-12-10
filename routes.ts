@@ -3,6 +3,7 @@ export const vendorRoutes = [
   "/add-product",
   "/product-list", 
   "/order-list",
+  "/delivery",
   "/order-detail",
   "/order-tracking",
   "/add-tags"

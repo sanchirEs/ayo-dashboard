@@ -246,11 +246,11 @@ export default function OrderFilters() {
           }}
         >
           <option value="">All Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="PENDING">Төлбөр төлөөгүй</option>
+          <option value="PROCESSING">Төлбөр төлсөн</option>
+          <option value="SHIPPED">Хүргэлтэнд гарсан</option>
+          <option value="DELIVERED">Хүргэгдсэн</option>
+          <option value="CANCELLED">Цуцлагдсан</option>
         </select>
 
         {/* Payment Status Filter */}
@@ -269,12 +269,12 @@ export default function OrderFilters() {
           }}
         >
           <option value="">Payment Status</option>
-          <option value="PENDING">Pending</option>
-          <option value="COMPLETED">Completed</option>
-          <option value="FAILED">Failed</option>
+          <option value="PENDING">Төлбөр Хүлээгдэж байна</option>
+          <option value="COMPLETED">Төлбөр төлсөн</option>
+          <option value="FAILED">Төлбөр амжилтгүй</option>
           <option value="PROCESSING">Processing</option>
           <option value="EXPIRED">Expired</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="CANCELLED">Төлбөр цуцалсан</option>
           <option value="REFUNDED">Refunded</option>
         </select>
 

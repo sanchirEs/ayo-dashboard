@@ -29,13 +29,14 @@ export default function Menu() {
       "/tags": 6,
       "/add-tags": 6,
       "/hierarchical-tags": 6,
-      "/brand-list": 2,
-      "/new-brand": 2,
-      "/edit-brand": 2,
-      "/brand-detail": 2,
+      "/brand-list": 13,
+      "/new-brand": 13,
+      "/edit-brand": 13,
+      "/brand-detail": 13,
       "/order-list": 5,
       "/order-detail": 5,
       "/order-tracking": 5,
+      "/delivery": 12,
       "/coupons": 7,
       "/new-coupon": 7,
       "/campaigns": 11,
@@ -127,7 +128,7 @@ export default function Menu() {
                     <div className="text">Захиалгын жагсаалт</div>
                   </Link>
                 </li>
-                <li className="sub-menu-item">
+                {/* <li className="sub-menu-item">
                   <Link
                     href="/order-detail"
                     className={
@@ -145,6 +146,38 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Захиалгын хяналт</div>
+                  </Link>
+                </li> */}
+              </ul>
+            </li>
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 12 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(12)}
+              >
+                <div className="icon">
+                  <i className="icon-truck" />
+                </div>
+                <div className="text">🚚 Хүргэлт</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 12 ? "block" : "none"}`,
+                }}
+              >
+                <li className="sub-menu-item">
+                  <Link
+                    href="/delivery"
+                    className={
+                      isSubMenuItemActive("/delivery") ? "active" : ""
+                    }
+                  >
+                    <div className="text">Хүргэлт</div>
                   </Link>
                 </li>
               </ul>
@@ -189,6 +222,28 @@ export default function Menu() {
                     <div className="text">Барааны жагсаалт</div>
                   </Link>
                 </li>
+              </ul>
+            </li>
+            <li
+              className={`menu-item has-children ${
+                activeAccordion === 13 ? "active" : ""
+              }`}
+            >
+              <a
+                className="menu-item-button"
+                onClick={() => handleAccordion(13)}
+              >
+                <div className="icon">
+                  <i className="icon-award" />
+                </div>
+                <div className="text">Брэнд</div>
+              </a>
+              <ul
+                className="sub-menu"
+                style={{
+                  display: `${activeAccordion === 13 ? "block" : "none"}`,
+                }}
+              >
                 <li className="sub-menu-item">
                   <Link
                     href="/brand-list"
@@ -196,7 +251,7 @@ export default function Menu() {
                       isSubMenuItemActive("/brand-list") ? "active" : ""
                     }
                   >
-                    <div className="text">Брэнд</div>
+                    <div className="text">Брэндийн жагсаалт</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
@@ -209,36 +264,6 @@ export default function Menu() {
                     <div className="text">Брэнд нэмэх</div>
                   </Link>
                 </li>
-                {/* <li className="sub-menu-item">
-                  <Link
-                    href="/product-detail-1"
-                    className={
-                      isSubMenuItemActive("/product-detail-1") ? "active" : ""
-                    }
-                  >
-                    <div className="text">Product Detail 1</div>
-                  </Link>
-                </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/product-detail-2"
-                    className={
-                      isSubMenuItemActive("/product-detail-2") ? "active" : ""
-                    }
-                  >
-                    <div className="text">Product Detail 2</div>
-                  </Link>
-                </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/product-detail-3"
-                    className={
-                      isSubMenuItemActive("/product-detail-3") ? "active" : ""
-                    }
-                  >
-                    <div className="text">Product Detail 3</div>
-                  </Link>
-                </li> */}
               </ul>
             </li>
             <li
@@ -368,7 +393,7 @@ export default function Menu() {
                       isSubMenuItemActive("/hierarchical-tags") ? "active" : ""
                     }
                   >
-                    <div className="text">Ангилал шошго</div>
+                    <div className="text">Нэмэлт ангилал</div>
                   </Link>
                 </li>
               </ul>

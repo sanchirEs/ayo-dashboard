@@ -1,6 +1,7 @@
 "use client";
 
 import { getBackendUrl } from './env';
+import { handleApiError, logApiError } from './error-handler';
 
 export interface OrderItem {
   id: number;
@@ -53,7 +54,9 @@ export async function updateOrderStatusClient(
 ): Promise<{ success: boolean; message?: string }> {
   try {
     if (!token) {
-      throw new Error('No authentication token available');
+      const apiError = handleApiError(new Error('No authentication token available'));
+      logApiError('updateOrderStatusClient', apiError, { orderId, status });
+      return { success: false, message: 'Authentication required' };
     }
 
     const url = `${getBackendUrl()}/api/v1/orders/updateorder/${orderId}`;
@@ -78,10 +81,11 @@ export async function updateOrderStatusClient(
       message: result.message || 'Order status updated successfully'
     };
   } catch (error) {
-    console.error('Error updating order status:', error);
+    const apiError = handleApiError(error);
+    logApiError('updateOrderStatusClient', apiError, { orderId, status });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to update order status'
+      message: apiError.message
     };
   }
 }
@@ -92,7 +96,9 @@ export async function cancelOrderClient(
 ): Promise<{ success: boolean; message?: string }> {
   try {
     if (!token) {
-      throw new Error('No authentication token available');
+      const apiError = handleApiError(new Error('No authentication token available'));
+      logApiError('cancelOrderClient', apiError, { orderId });
+      return { success: false, message: 'Authentication required' };
     }
 
     const url = `${getBackendUrl()}/api/v1/orders/cancelorder/${orderId}`;
@@ -116,10 +122,11 @@ export async function cancelOrderClient(
       message: result.message || 'Order cancelled successfully'
     };
   } catch (error) {
-    console.error('Error cancelling order:', error);
+    const apiError = handleApiError(error);
+    logApiError('cancelOrderClient', apiError, { orderId });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to cancel order'
+      message: apiError.message
     };
   }
 }
@@ -131,7 +138,9 @@ export async function bulkUpdateOrderStatusClient(
 ): Promise<{ success: boolean; message?: string; updatedCount?: number }> {
   try {
     if (!token) {
-      throw new Error('No authentication token available');
+      const apiError = handleApiError(new Error('No authentication token available'));
+      logApiError('bulkUpdateOrderStatusClient', apiError, { orderCount: orderIds.length, status });
+      return { success: false, message: 'Authentication required' };
     }
 
     const url = `${getBackendUrl()}/api/v1/orders/bulk-status`;
@@ -157,10 +166,11 @@ export async function bulkUpdateOrderStatusClient(
       updatedCount: result.data?.updatedCount || orderIds.length
     };
   } catch (error) {
-    console.error('Error updating orders:', error);
+    const apiError = handleApiError(error);
+    logApiError('bulkUpdateOrderStatusClient', apiError, { orderCount: orderIds.length, status });
     return {
       success: false,
-      message: error instanceof Error ? error.message : 'Failed to update orders'
+      message: apiError.message
     };
   }
 }
