@@ -2,16 +2,54 @@ import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { createSafeApiResponse, handleApiError, logApiError } from './error-handler';
 
+export interface CargoShipment {
+  id: number;
+  papaCargoId: string;
+  papaShippingId?: string;
+  cargoStatus?: string;
+  cargoName?: string;
+  cargoCode?: string;
+  startPincode?: string;
+  endPincode?: string;
+  receiverName?: string;
+  receiverPhone?: string;
+  toAddress?: string;
+  lastSyncedAt?: string;
+  syncError?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PapaShipment {
   id: number;
   papaCode: string;
   papaStatus: string;
   driverName?: string;
   driverPhone?: string;
+  driverId?: string;
   papaPincode?: string;
   shippingAmount?: number;
+  isPaid?: boolean;
   createdAt?: string;
+  updatedAt?: string;
   statusChangedAt?: string;
+  driverAssignedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
+  completedAt?: string;
+  confirmedAt?: string;
+  creator?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
+  confirmer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
+  cargoShipments?: CargoShipment[];
 }
 
 export interface OrderItem {
@@ -53,9 +91,13 @@ export interface Delivery {
   id: number;
   userId: number;
   total: string;
+  shippingCost?: string;
   status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   createdAt: string;
   modifiedAt?: string;
+  readyToShip?: boolean;
+  packedAt?: string;
+  packedBy?: number;
   orderItems: OrderItem[];
   shipping?: ShippingDetails;
   payment?: {
@@ -63,6 +105,7 @@ export interface Delivery {
     status: string;
     amount: string;
     provider: string;
+    createdAt?: string;
   };
   user?: {
     id: number;
@@ -72,6 +115,12 @@ export interface Delivery {
     telephone?: string;
   };
   papaShipment?: PapaShipment;
+  papaCargoShipments?: CargoShipment[];
+  packer?: {
+    id: number;
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export interface DeliveriesResponse {
