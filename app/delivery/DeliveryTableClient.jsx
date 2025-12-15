@@ -54,8 +54,8 @@ export default function DeliveryTableClient({ deliveries: initialDeliveries, pag
     setSelectedDeliveries(newSelected);
   };
 
-  const allSelected = deliveries.length > 0 && deliveries.every(delivery => selectedDeliveries.has(delivery.id));
-  const someSelected = deliveries.some(delivery => selectedDeliveries.has(delivery.id));
+  // const allSelected = deliveries.length > 0 && deliveries.every(delivery => selectedDeliveries.has(delivery.id));
+  // const someSelected = deliveries.some(delivery => selectedDeliveries.has(delivery.id));
 
   return (
     <>

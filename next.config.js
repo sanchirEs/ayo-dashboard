@@ -1,4 +1,4 @@
-/** @type {import('next').NextConfig} */
+  /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: { remotePatterns: [{ hostname: "lh3.googleusercontent.com" }, { hostname: "res.cloudinary.com" }] },
   env: {
@@ -26,4 +26,8 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = {
+  reactStrictMode: true,
+  swcMinify: true,
+  productionBrowserSourceMaps: true,
+}
