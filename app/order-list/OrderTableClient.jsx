@@ -6,8 +6,15 @@ import OrderRowClient from "./OrderRowClient";
 import BulkActions from "./BulkActions";
 
 export default function OrderTableClient({ orders: initialOrders, pagination: initialPagination }) {
-  const [orders] = useState(initialOrders);
-  const [pagination] = useState(initialPagination);
+  // Defensive defaults: production data may differ from dev, and RSC boundaries can deliver
+  // unexpected shapes. Ensure we always operate on arrays/objects we control.
+  const [orders] = useState(() => (Array.isArray(initialOrders) ? initialOrders : []));
+  const [pagination] = useState(() => ({
+    total: typeof initialPagination?.total === 'number' ? initialPagination.total : 0,
+    totalPages: typeof initialPagination?.totalPages === 'number' ? initialPagination.totalPages : 0,
+    currentPage: typeof initialPagination?.currentPage === 'number' ? initialPagination.currentPage : 1,
+    limit: typeof initialPagination?.limit === 'number' ? initialPagination.limit : 100,
+  }));
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   
   // Load selected orders from sessionStorage on mount
@@ -59,8 +66,8 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
     setSelectedOrders(new Set());
   };
 
-  const allSelected = orders.length > 0 && orders.every(order => selectedOrders.has(order.id));
-  const someSelected = orders.some(order => selectedOrders.has(order.id));
+  const allSelected = orders.length > 0 && orders.every((order) => selectedOrders.has(order?.id));
+  const someSelected = orders.some((order) => selectedOrders.has(order?.id));
 
   return (
     <>

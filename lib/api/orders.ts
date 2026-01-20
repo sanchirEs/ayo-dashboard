@@ -1,6 +1,7 @@
 import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { createSafeApiResponse, handleApiError, logApiError } from './error-handler';
+import { coerceOrdersArray } from './orders-shape';
 
 export interface OrderItem {
   id: number;
@@ -155,10 +156,19 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
       throw new Error(result.message || 'Failed to fetch orders');
     }
     
+    const ordersArray = coerceOrdersArray<Order>(result);
+    if (!Array.isArray(result?.data) && ordersArray.length === 0) {
+      // Don’t crash the UI if backend shape changes in production.
+      console.warn('[getOrders] Unexpected response shape for orders; coercing to empty list', {
+        hasData: typeof (result as any)?.data !== 'undefined',
+        dataType: typeof (result as any)?.data,
+      });
+    }
+
     // ✅ Return only the current page data
     return {
       success: true,
-      data: result.data || [],
+      data: ordersArray,
       pagination: result.pagination || {
         total: 0,
         totalPages: 0,
