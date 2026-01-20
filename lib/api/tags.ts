@@ -1,5 +1,6 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface ProductTag {
   id: number;
@@ -50,7 +51,7 @@ export async function createTags(
       return { success: false, message: "Not authenticated" };
     }
 
-    const response = await fetch(
+    const response = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/tags/${productId}`,
       {
         method: "POST",
@@ -60,7 +61,7 @@ export async function createTags(
         },
         body: JSON.stringify({ tags }),
       }
-    );
+    , 'createTags');
 
     const json = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -92,14 +93,14 @@ export async function createTagPreset(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(
+    const res = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/tags/presets`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       }
-    );
+    , 'createTagPreset');
     return res.ok;
   } catch (e) {
     console.error("Error creating tag preset", e);
@@ -115,14 +116,14 @@ export async function updateTagPreset(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(
+    const res = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/tags/presets/${id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload),
       }
-    );
+    , 'updateTagPreset');
     return res.ok;
   } catch (e) {
     console.error("Error updating tag preset", e);
@@ -134,10 +135,10 @@ export async function deleteTagPreset(id: number, tokenOverride?: string | null)
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(
+    const res = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/tags/presets/${id}`,
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
-    );
+    , 'deleteTagPreset');
     return res.ok;
   } catch (e) {
     console.error("Error deleting tag preset", e);

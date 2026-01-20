@@ -1,5 +1,6 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface AttributeOption {
   id: number;
@@ -45,11 +46,11 @@ export async function createAttribute(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return null;
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'createAttribute');
     const json = await res.json().catch(() => ({}));
     if (!res.ok) return null;
     return json.data as Attribute;
@@ -67,11 +68,11 @@ export async function updateAttribute(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'updateAttribute');
     return res.ok;
   } catch (e) {
     console.error("Error updating attribute", e);
@@ -83,10 +84,10 @@ export async function deleteAttribute(id: number, tokenOverride?: string | null)
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return { ok: false, message: "Not authenticated" };
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    });
+    }, 'deleteAttribute');
     const json = await res.json().catch(() => ({}));
     return { ok: res.ok, message: json.message };
   } catch (e) {
@@ -115,11 +116,11 @@ export async function createAttributeOption(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes/${attributeId}/options`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes/${attributeId}/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'createAttributeOption');
     return res.ok;
   } catch (e) {
     console.error("Error creating attribute option", e);
@@ -135,11 +136,11 @@ export async function updateAttributeOption(
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes/options/${optionId}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes/options/${optionId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'updateAttributeOption');
     return res.ok;
   } catch (e) {
     console.error("Error updating attribute option", e);
@@ -151,10 +152,10 @@ export async function deleteAttributeOption(optionId: number, tokenOverride?: st
   try {
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
-    const res = await fetch(`${getBackendUrl()}/api/v1/attributes/options/${optionId}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/attributes/options/${optionId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    });
+    }, 'deleteAttributeOption');
     return res.ok;
   } catch (e) {
     console.error("Error deleting attribute option", e);

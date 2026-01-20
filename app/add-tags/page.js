@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Layout from "@/components/layout/Layout";
 import GetToken from "@/lib/GetTokenClient";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export default function AddTags() {
   const token = GetToken();
@@ -72,7 +73,7 @@ export default function AddTags() {
 
     startTransition(async () => {
       try {
-        const res = await fetch(
+        const res = await fetchWithAuthHandling(
           `${require("@/lib/api/env").getBackendUrl()}/api/v1/tags/${productId}`,
           {
             method: "POST",
@@ -82,7 +83,7 @@ export default function AddTags() {
             },
             body: JSON.stringify({ tags: tagsArray }),
           }
-        );
+        , "AddTags.createTags");
         const json = await res.json();
         if (!res.ok) {
           setError(json.message || `Failed to save tags (${res.status})`);

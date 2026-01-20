@@ -7,6 +7,7 @@ import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import useSWR from "swr";
 import { useEffect } from "react";
 import { getCategoryTreePublic } from "@/lib/api/categories";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 // Category validation schema
 const categorySchema = z.object({
@@ -37,7 +38,7 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
     
     startTransition(async () => {
       try {
-      const response = await fetch(
+      const response = await fetchWithAuthHandling(
         `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/`,
           {
             method: "POST",
@@ -51,7 +52,7 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
               parentId: values.parentId ? Number(values.parentId) : null,
             }),
           }
-        );
+        , "NewCategoryForm.createCategory");
 
         const responseData = await response.json();
         

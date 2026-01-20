@@ -1,5 +1,6 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface Category {
   id: number;
@@ -39,12 +40,12 @@ export async function getCategories(all: boolean = false): Promise<Category[]> {
       url = fullUrl.toString();
     }
     
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getCategories');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);
@@ -61,7 +62,7 @@ export async function getCategories(all: boolean = false): Promise<Category[]> {
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   try {
     const token = await getToken();
-    const response = await fetch(
+    const response = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/categories/tree/all`,
       {
         headers: {
@@ -69,7 +70,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
         },
         cache: "no-store",
       }
-    );
+    , 'getCategoryTree');
     if (!response.ok) {
       throw new Error(`Failed to fetch category tree: ${response.status}`);
     }
@@ -118,12 +119,12 @@ export async function getCategoriesClient(token: string, all: boolean = false): 
       url = fullUrl.toString();
     }
     
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getCategoriesClient');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch categories: ${response.status}`);

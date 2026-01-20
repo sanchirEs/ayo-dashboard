@@ -1,6 +1,7 @@
 import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { createSafeApiResponse, handleApiError, logApiError } from './error-handler';
+import { fetchWithAuthHandling } from './fetch-with-auth';
 
 export interface CargoShipment {
   id: number;
@@ -182,14 +183,14 @@ export async function getDeliveries(params: DeliveriesParams = {}): Promise<Deli
     
     console.log('🔍 Frontend: Fetching deliveries from:', url.replace(/Bearer\s+\w+/, 'Bearer ***'));
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store', // Always fetch fresh data for deliveries
-    });
+    }, 'getDeliveries');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

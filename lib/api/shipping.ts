@@ -2,6 +2,7 @@
 import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { createSafeApiResponse, handleApiError, logApiError } from './error-handler';
+import { fetchWithAuthHandling } from './fetch-with-auth';
 
 // ==================== TYPES ====================
 
@@ -112,14 +113,14 @@ export async function getDeliverableOrders(
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/orders/deliverable?page=${page}&limit=${limit}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
-    });
+    }, 'getDeliverableOrders');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -154,14 +155,14 @@ export async function bulkDeliverOrders(orderIds: number[]): Promise<BulkDeliver
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/orders/bulk-deliver`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ orderIds }),
-    });
+    }, 'bulkDeliverOrders');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -206,14 +207,14 @@ export async function getShipmentStats(
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/stats?period=${period}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
-    });
+    }, 'getShipmentStats');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -254,14 +255,14 @@ export async function getFailedShipments(
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/failures?page=${page}&limit=${limit}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
-    });
+    }, 'getFailedShipments');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -296,14 +297,14 @@ export async function retryFailedShipments(
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/failures/retry`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ failureIds }),
-    });
+    }, 'retryFailedShipments');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -345,14 +346,14 @@ export async function bulkDeliverOrdersClient(
 
     const url = `${getBackendUrl()}/api/v1/admin/shipping/orders/bulk-deliver`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ orderIds }),
-    });
+    }, 'bulkDeliverOrdersClient');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

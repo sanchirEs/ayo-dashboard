@@ -11,6 +11,7 @@ import "../public/icon/style.css";
 import { SessionProvider } from "next-auth/react";
 import ToastProvider from "@/context/ToastProvider";
 import { Toast } from "@radix-ui/react-toast";
+import AuthSessionWatcher from "@/components/auth/AuthSessionWatcher";
  
 const nunito = Nunito({
   weight: ["300", "400", "500", "600", "700"],
@@ -28,7 +29,10 @@ export default function RootLayout({ children }) {
     <html lang="en" data-scroll-behavior="smooth">
       <body className={`${nunito.variable} body`}>
         <ToastProvider />
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <AuthSessionWatcher />
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );

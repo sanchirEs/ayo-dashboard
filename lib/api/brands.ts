@@ -1,5 +1,6 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface Brand {
   id: number;
@@ -28,12 +29,12 @@ export async function getBrands(searchParams: Record<string, string> = {}): Prom
     const token = await getToken();
     const params = new URLSearchParams(searchParams);
     
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands?${params.toString()}`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands?${params.toString()}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getBrands');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch brands: ${response.status}`);
@@ -70,12 +71,12 @@ export async function getAllBrands(): Promise<Brand[]> {
 
 export async function getBrandsClient(token: string): Promise<Brand[]> {
   try {
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands/all`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands/all`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getBrandsClient');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch brands: ${response.status}`);
@@ -93,12 +94,12 @@ export async function getBrandById(id: number, tokenOverride?: string | null): P
   try {
     const token = tokenOverride || await getToken();
     
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands/${id}`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getBrandById');
 
     if (!response.ok) {
       if (response.status === 404) return null;
@@ -142,13 +143,13 @@ export async function createBrand(
       formData.append('logo', payload.logo);
     }
 
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: formData,
-    });
+    }, 'createBrand');
 
     const data = await response.json();
 
@@ -191,13 +192,13 @@ export async function updateBrand(
       formData.append('logo', payload.logo);
     }
 
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands/${id}`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands/${id}`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: formData,
-    });
+    }, 'updateBrand');
 
     const data = await response.json();
 
@@ -224,12 +225,12 @@ export async function deleteBrand(
       ? `${getBackendUrl()}/api/v1/brands/${id}?force=true`
       : `${getBackendUrl()}/api/v1/brands/${id}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
+    }, 'deleteBrand');
 
     const data = await response.json();
 
@@ -248,12 +249,12 @@ export async function getBrandsWithStats(tokenOverride?: string | null): Promise
   try {
     const token = tokenOverride || await getToken();
     
-    const response = await fetch(`${getBackendUrl()}/api/v1/brands/stats`, {
+    const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands/stats`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
       cache: 'no-store',
-    });
+    }, 'getBrandsWithStats');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch brand stats: ${response.status}`);

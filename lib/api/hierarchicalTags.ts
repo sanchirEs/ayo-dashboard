@@ -1,5 +1,6 @@
 import { getBackendUrl } from "./env";
 import getToken from "@/lib/GetTokenServer";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface TagGroup {
   id: number;
@@ -63,10 +64,10 @@ export async function getTagGroupsWithStats(tokenOverride?: string | null): Prom
     const token = tokenOverride ?? (await getToken());
     if (!token) return [];
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups/stats`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-groups/stats`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store"
-    });
+    }, 'getTagGroupsWithStats');
     if (!res.ok) throw new Error(`Failed: ${res.status}`);
     const json = await res.json();
     return json.data || [];
@@ -96,11 +97,11 @@ export async function createTagGroup(
     const token = tokenOverride ?? (await getToken());
     if (!token) return null;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-groups`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'createTagGroup');
     const json = await res.json().catch(() => ({}));
     if (!res.ok) return null;
     return json.data as TagGroup;
@@ -119,11 +120,11 @@ export async function updateTagGroup(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-groups/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'updateTagGroup');
     return res.ok;
   } catch (e) {
     console.error("Error updating tag group", e);
@@ -136,10 +137,10 @@ export async function deleteTagGroup(id: number, tokenOverride?: string | null):
     const token = tokenOverride ?? (await getToken());
     if (!token) return { ok: false, message: "Not authenticated" };
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-groups/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    });
+    }, 'deleteTagGroup');
     const json = await res.json().catch(() => ({}));
     return { ok: res.ok, message: json.message };
   } catch (e) {
@@ -183,11 +184,11 @@ export async function createTagOption(
     const token = tokenOverride ?? (await getToken());
     if (!token) return null;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-groups/${groupId}/options`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-groups/${groupId}/options`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'createTagOption');
     const json = await res.json().catch(() => ({}));
     if (!res.ok) return null;
     return json.data as TagOption;
@@ -206,11 +207,11 @@ export async function updateTagOption(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-options/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-options/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'updateTagOption');
     return res.ok;
   } catch (e) {
     console.error("Error updating tag option", e);
@@ -223,10 +224,10 @@ export async function deleteTagOption(id: number, tokenOverride?: string | null)
     const token = tokenOverride ?? (await getToken());
     if (!token) return { ok: false, message: "Not authenticated" };
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/tag-options/${id}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/tag-options/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    });
+    }, 'deleteTagOption');
     const json = await res.json().catch(() => ({}));
     return { ok: res.ok, message: json.message };
   } catch (e) {
@@ -270,11 +271,11 @@ export async function addProductHierarchicalTags(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'addProductHierarchicalTags');
     return res.ok;
   } catch (e) {
     console.error("Error adding product hierarchical tags", e);
@@ -291,11 +292,11 @@ export async function replaceProductHierarchicalTags(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
-    });
+    }, 'replaceProductHierarchicalTags');
     return res.ok;
   } catch (e) {
     console.error("Error replacing product hierarchical tags", e);
@@ -312,10 +313,10 @@ export async function removeProductHierarchicalTag(
     const token = tokenOverride ?? (await getToken());
     if (!token) return false;
     
-    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags/${tagOptionId}`, {
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/products/${productId}/hierarchical-tags/${tagOptionId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
-    });
+    }, 'removeProductHierarchicalTag');
     return res.ok;
   } catch (e) {
     console.error("Error removing product hierarchical tag", e);

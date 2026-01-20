@@ -1,5 +1,6 @@
 import getToken from "@/lib/GetTokenServer";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 export interface ProductSpec {
   id?: number;
@@ -66,13 +67,13 @@ export async function getProductById(productId: number, tokenOverride?: string |
     params.set('include', 'categories,brand,variants,inventory,tags,specs');
     params.set('fields', 'detailed');
     
-    const response = await fetch(
+    const response = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/products/${productId}?${params.toString()}`,
       {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         cache: 'no-store',
       }
-    );
+    , 'getProductById');
     if (!response.ok) throw new Error(`Failed to fetch product: ${response.status}`);
     const data = await response.json();
     const p = data.data;
@@ -123,13 +124,13 @@ export async function updateProduct(
       });
     }
 
-    const res = await fetch(`${getBackendUrl()}/api/v1/products/${productId}`,
+    const res = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/products/${productId}`,
       {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       }
-    );
+    , 'updateProduct');
     const json = await res.json().catch(() => ({}));
     if (!res.ok) return { success: false, message: json.message || `Failed: ${res.status}` };
     return { success: true, message: json.message || 'Updated' };
@@ -155,7 +156,7 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     }
     
     // Fetch first page to get pagination info
-    const response = await fetch(
+    const response = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/products?${params.toString()}`,
       {
         headers: {
@@ -163,7 +164,7 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
         },
         cache: 'no-store', // Always fetch fresh data for admin dashboard
       }
-    );
+    , 'getProducts');
 
     if (!response.ok) {
       throw new Error(`Failed to fetch products: ${response.status}`);
@@ -193,7 +194,7 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
         pageParams.set('page', page.toString());
         
         pagePromises.push(
-          fetch(
+          fetchWithAuthHandling(
             `${getBackendUrl()}/api/v1/products?${pageParams.toString()}`,
             {
               headers: {
@@ -201,7 +202,7 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
               },
               cache: 'no-store',
             }
-          ).then(res => {
+          , `getProducts(page:${page})`).then(res => {
             if (!res.ok) throw new Error(`Failed to fetch page ${page}: ${res.status}`);
             return res.json();
           }).then(data => 
@@ -244,7 +245,7 @@ export async function deleteProduct(productId: number): Promise<boolean> {
   try {
     const token = await getToken();
     
-    const response = await fetch(
+    const response = await fetchWithAuthHandling(
       `${getBackendUrl()}/api/v1/products/${productId}`,
       {
         method: 'DELETE',
@@ -252,7 +253,7 @@ export async function deleteProduct(productId: number): Promise<boolean> {
           Authorization: `Bearer ${token}`,
         },
       }
-    );
+    , 'deleteProduct');
 
     return response.ok;
   } catch (error) {

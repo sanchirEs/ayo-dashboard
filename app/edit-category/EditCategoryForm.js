@@ -6,6 +6,7 @@ import { z } from "zod";
 import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import useSWR from "swr";
 import { getCategoryTreePublic } from "@/lib/api/categories";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 
 const schema = z.object({
   name: z.string().min(1, "Category name is required"),
@@ -56,7 +57,7 @@ export default function EditCategoryForm({ categoryId }) {
     setSuccess("");
     startTransition(async () => {
       try {
-        const response = await fetch(
+        const response = await fetchWithAuthHandling(
           `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/${categoryId}`,
           {
             method: "PUT",
@@ -70,7 +71,7 @@ export default function EditCategoryForm({ categoryId }) {
               parentId: values.parentId ? Number(values.parentId) : null,
             }),
           }
-        );
+        , "EditCategoryForm.updateCategory");
         const responseData = await response.json();
         if (response.ok) {
           setSuccess("Category updated successfully!");

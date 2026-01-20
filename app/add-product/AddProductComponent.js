@@ -41,6 +41,7 @@ import LoadingButton from "@/components/customui/LoadingButton";
 import Layout from "@/components/layout/Layout";
 import GetToken from "@/lib/GetTokenClient";
 import { getBackendUrl } from "@/lib/api/env";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 import ImageUploadField from "@/components/upload/ImageUploadField";
 import CategorySelector from "@/components/customui/CategorySelector";
 import toastManager from "@/lib/toast";
@@ -695,14 +696,14 @@ export default function AddProductComponent() {
 
         console.log("Sending request with payload:", payload);
 
-        const response = await fetch(
+        const response = await fetchWithAuthHandling(
           `${getBackendUrl()}/api/v1/products/createproduct`,
           {
             method: "POST",
             headers: headers,
             body: JSON.stringify(payload),
           }
-        );
+        , "AddProductComponent.createProduct");
         
         const responseData = await response.json();
         console.log("Response:", responseData);

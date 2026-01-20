@@ -2,6 +2,7 @@ import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { createSafeApiResponse, handleApiError, logApiError } from './error-handler';
 import { coerceOrdersArray } from './orders-shape';
+import { fetchWithAuthHandling } from './fetch-with-auth';
 
 export interface OrderItem {
   id: number;
@@ -130,14 +131,14 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
     
     console.log('🔍 Frontend: Fetching orders from:', url.replace(/Bearer\s+\w+/, 'Bearer ***'));
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store', // Always fetch fresh data for orders
-    });
+    }, 'getOrders');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -199,14 +200,14 @@ export async function getOrderDetails(orderId: number): Promise<OrderDetailsResp
 
     const url = `${getBackendUrl()}/api/v1/orders/getorder/${orderId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
-    });
+    }, 'getOrderDetails');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -238,14 +239,14 @@ export async function getOrderDetailsClient(orderId: number, token: string): Pro
 
     const url = `${getBackendUrl()}/api/v1/orders/getorder/${orderId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
-    });
+    }, 'getOrderDetailsClient');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -279,14 +280,14 @@ export async function updateOrderStatus(
 
     const url = `${getBackendUrl()}/api/v1/orders/updateorder/${orderId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ status }),
-    });
+    }, 'updateOrderStatus');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -319,13 +320,13 @@ export async function cancelOrder(orderId: number): Promise<{ success: boolean; 
 
     const url = `${getBackendUrl()}/api/v1/orders/cancelorder/${orderId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuthHandling(url, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
-    });
+    }, 'cancelOrder');
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));

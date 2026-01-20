@@ -3,19 +3,31 @@ import Link from "next/link";
 import getToken from "@/lib/GetTokenServer";
 import Pagination from "@/components/Pagination";
 import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
+import { AuthenticationError } from "@/lib/api/error-handler";
+import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 export default async function DataTable({ searchParams }) {
   const TOKEN = await getToken();
   console.log("spa", searchParams);
   const params = new URLSearchParams(searchParams);
-  const response = await fetch(
-    `${require("@/lib/api/env").getBackendUrl()}/api/v1/users/getusers?${params.toString()}`,
-    {
-      cache: "no-store",
-      headers: {
-        Authorization: `Bearer ${TOKEN}`,
+  let response;
+  try {
+    response = await fetchWithAuthHandling(
+      `${require("@/lib/api/env").getBackendUrl()}/api/v1/users/getusers?${params.toString()}`,
+      {
+        cache: "no-store",
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+        },
       },
+      "UserTable.getUsers"
+    );
+  } catch (err) {
+    if (err instanceof AuthenticationError) {
+      redirect("/login");
     }
-  ).catch((err) => notFound());
+    notFound();
+  }
   const data = await response.json();
   if (!response.ok) {
     const message =
