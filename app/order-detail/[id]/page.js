@@ -38,10 +38,9 @@ export default async function OrderDetail({ params }) {
     }
 
     const customerName = order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'N/A';
-    const subtotal = parseFloat(order.total || 0);
-    const shippingCost = order.shipping ? parseFloat(order.shipping.shippingCost || 0) : 0;
-    const tax = subtotal * 0.1; // Assuming 10% tax
-    const totalWithTax = subtotal + shippingCost + tax;
+    const subtotal = parseFloat(order.subtotal || 0);
+    const shippingCost = parseFloat(order.shippingCost || 0);
+    const orderTotal = parseFloat(order.total || 0);
 
     return (
       <Layout breadcrumbTitleParent="Orders" breadcrumbTitle={`Order #${order.id}`}>
@@ -126,20 +125,15 @@ export default async function OrderDetail({ params }) {
                   {shippingCost > 0 && (
                     <>
                       <li className="cart-totals-item">
-                        <span className="body-text">Shipping ({order.shipping?.shippingMethod}):</span>
+                        <span className="body-text">Хүргэлт:</span>
                         <span className="body-title-2">{formatPrice(shippingCost)}</span>
                       </li>
                       <li className="divider" />
                     </>
                   )}
                   <li className="cart-totals-item">
-                    <span className="body-text">Tax (10%):</span>
-                    <span className="body-title-2">{formatPrice(tax)}</span>
-                  </li>
-                  <li className="divider" />
-                  <li className="cart-totals-item">
-                    <span className="body-title">Total Amount:</span>
-                    <span className="body-title tf-color-1">{formatPrice(totalWithTax)}</span>
+                    <span className="body-title">Нийт дүн:</span>
+                    <span className="body-title tf-color-1">{formatPrice(orderTotal)}</span>
                   </li>
                 </ul>
               </div>
