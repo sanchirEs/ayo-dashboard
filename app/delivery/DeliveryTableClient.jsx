@@ -3,142 +3,144 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import DeliveryRowClient from "./DeliveryRowClient";
+import DeliveryBulkActions from "./DeliveryBulkActions";
 
 export default function DeliveryTableClient({ deliveries: initialDeliveries, pagination: initialPagination }) {
-  const [deliveries] = useState(initialDeliveries);
-  const [pagination] = useState(initialPagination);
-  const [selectedDeliveries, setSelectedDeliveries] = useState(new Set());
-  
-  // Load selected deliveries from sessionStorage on mount
+  const [deliveries] = useState(() => (Array.isArray(initialDeliveries) ? initialDeliveries : []));
+  const [pagination] = useState(() => ({
+    total: initialPagination?.total ?? 0,
+    totalPages: initialPagination?.totalPages ?? 0,
+    currentPage: initialPagination?.currentPage ?? 1,
+    limit: initialPagination?.limit ?? 100,
+  }));
+  const [selected, setSelected] = useState(new Set());
+
   useEffect(() => {
-    const saved = sessionStorage.getItem('selectedDeliveries');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setSelectedDeliveries(new Set(parsed));
-      } catch (e) {
-        console.error('Failed to parse saved selected deliveries', e);
-      }
-    }
+    try {
+      const saved = sessionStorage.getItem('selectedDeliveries');
+      if (saved) setSelected(new Set(JSON.parse(saved)));
+    } catch {}
   }, []);
-  
-  // Save selected deliveries to sessionStorage whenever it changes
+
   useEffect(() => {
-    if (selectedDeliveries.size > 0) {
-      sessionStorage.setItem('selectedDeliveries', JSON.stringify([...selectedDeliveries]));
-    } else {
-      sessionStorage.removeItem('selectedDeliveries');
-    }
-  }, [selectedDeliveries]);
-  
-  // Grid template for delivery table columns
-  // Columns: Order ID | Customer | Papa Code | Status | Driver | Items | Created
-  const gridTemplate = '70px minmax(150px, 1.5fr) minmax(120px, 1.2fr) minmax(100px, 1fr) minmax(120px, 1.2fr) minmax(80px, 0.8fr) minmax(150px, 1.5fr)';
+    if (selected.size > 0) sessionStorage.setItem('selectedDeliveries', JSON.stringify([...selected]));
+    else sessionStorage.removeItem('selectedDeliveries');
+  }, [selected]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      const allDeliveryIds = new Set(deliveries.map(delivery => delivery.id));
-      setSelectedDeliveries(allDeliveryIds);
-    } else {
-      setSelectedDeliveries(new Set());
-    }
+  const toggle = (id) => {
+    const next = new Set(selected);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelected(next);
   };
 
-  const handleSelectDelivery = (deliveryId) => {
-    const newSelected = new Set(selectedDeliveries);
-    if (newSelected.has(deliveryId)) {
-      newSelected.delete(deliveryId);
-    } else {
-      newSelected.add(deliveryId);
-    }
-    setSelectedDeliveries(newSelected);
-  };
-
-  // const allSelected = deliveries.length > 0 && deliveries.every(delivery => selectedDeliveries.has(delivery.id));
-  // const someSelected = deliveries.some(delivery => selectedDeliveries.has(delivery.id));
+  const allSelected = deliveries.length > 0 && deliveries.every(d => selected.has(d.id));
+  const someSelected = deliveries.some(d => selected.has(d.id));
+  const selectedDeliveries = deliveries.filter(d => selected.has(d.id));
 
   return (
     <>
+      {/* Bulk actions bar */}
+      {selected.size > 0 && (
+        <div style={{
+          padding: '8px 12px', backgroundColor: '#eff6ff',
+          border: '1px solid #bfdbfe', borderRadius: '6px', marginBottom: '1rem',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '13px', color: '#1e40af', fontWeight: '500' }}>
+              {selected.size} сонгогдсон
+            </span>
+            <DeliveryBulkActions
+              selectedOrders={selected}
+              selectedDeliveries={selectedDeliveries}
+              onUpdateComplete={() => setSelected(new Set())}
+            />
+          </div>
+          <button
+            onClick={() => setSelected(new Set())}
+            style={{ padding: '4px 10px', fontSize: '13px', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
+            onMouseEnter={(e) => e.target.style.color = '#1e40af'}
+            onMouseLeave={(e) => e.target.style.color = '#6b7280'}
+          >
+            ✕ Цэвэрлэх
+          </button>
+        </div>
+      )}
+
       <div className="wg-table table-all-category">
+        {/* Table header */}
         <ul className="table-title flex gap20 mb-14">
-          {/* <li>
-            <div className="body-title">Order ID</div>
-          </li> */}
           <li>
-            <div className="body-title">Customer</div>
+            <div className="body-title" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <input
+                type="checkbox"
+                checked={allSelected}
+                ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                onChange={(e) => setSelected(e.target.checked ? new Set(deliveries.map(d => d.id)) : new Set())}
+                style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+              />
+              Захиалга
+            </div>
           </li>
-          <li>
-            <div className="body-title">Papa Code</div>
-          </li>
-          <li>
-            <div className="body-title">Status</div>
-          </li>
-          <li>
-            <div className="body-title">Driver</div>
-          </li>
-          <li>
-            <div className="body-title">Items</div>
-          </li>
-          <li>
-            <div className="body-title">Created</div>
-          </li>
- 
+          <li><div className="body-title">Дүүрэг</div></li>
+          <li><div className="body-title">Papa статус</div></li>
+          <li><div className="body-title">Papa код</div></li>
+          <li><div className="body-title">Нийт</div></li>
+          <li><div className="body-title">Огноо</div></li>
+          <li><div className="body-title">Хүргэлт</div></li>
+          <li style={{ width: 150, flexShrink: 0 }}><div className="body-title">Үйлдэл</div></li>
         </ul>
+
+        {/* Rows */}
         <ul className="flex flex-column">
           {deliveries.length === 0 ? (
             <li className="product-item gap14">
-              <div className="text-center py-8 text-gray-500">
-                No deliveries found
+              <div className="text-center py-8" style={{ color: '#6b7280', width: '100%' }}>
+                Захиалга олдсонгүй
               </div>
             </li>
           ) : (
             deliveries.map((delivery) => (
-              <DeliveryRowClient 
-                key={delivery.id} 
+              <DeliveryRowClient
+                key={delivery.id}
                 delivery={delivery}
-                isSelected={selectedDeliveries.has(delivery.id)}
-                onSelect={() => handleSelectDelivery(delivery.id)}
+                isSelected={selected.has(delivery.id)}
+                onSelect={() => toggle(delivery.id)}
               />
             ))
           )}
         </ul>
-        
+
         {/* Pagination */}
         {pagination.totalPages > 1 && (
           <>
             <div className="divider" />
             <div className="flex items-center justify-between flex-wrap gap10">
               <div className="text-tiny">
-                Showing {deliveries.length > 0 ? (pagination.currentPage - 1) * pagination.limit + 1 : 0} to{" "}
-                {Math.min(pagination.currentPage * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} deliveries
+                Showing {deliveries.length > 0 ? (pagination.currentPage - 1) * pagination.limit + 1 : 0} to{' '}
+                {Math.min(pagination.currentPage * pagination.limit, pagination.total)} of{' '}
+                {pagination.total} entries
               </div>
               <ul className="wg-pagination">
                 <li>
-                  <Link 
+                  <Link
                     href={`?page=${Math.max(1, pagination.currentPage - 1)}&limit=${pagination.limit}`}
                     className={pagination.currentPage <= 1 ? 'disabled' : ''}
                   >
                     <i className="icon-chevron-left" />
                   </Link>
                 </li>
-                
-                {/* Page numbers */}
                 {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  const pageNum = Math.max(1, pagination.currentPage - 2) + i;
-                  if (pageNum > pagination.totalPages) return null;
-                  
+                  const p = Math.max(1, pagination.currentPage - 2) + i;
+                  if (p > pagination.totalPages) return null;
                   return (
-                    <li key={pageNum} className={pagination.currentPage === pageNum ? 'active' : ''}>
-                      <Link href={`?page=${pageNum}&limit=${pagination.limit}`}>
-                        {pageNum}
-                      </Link>
+                    <li key={p} className={pagination.currentPage === p ? 'active' : ''}>
+                      <Link href={`?page=${p}&limit=${pagination.limit}`}>{p}</Link>
                     </li>
                   );
                 })}
-                
                 <li>
-                  <Link 
+                  <Link
                     href={`?page=${Math.min(pagination.totalPages, pagination.currentPage + 1)}&limit=${pagination.limit}`}
                     className={pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}
                   >
@@ -153,4 +155,3 @@ export default function DeliveryTableClient({ deliveries: initialDeliveries, pag
     </>
   );
 }
-

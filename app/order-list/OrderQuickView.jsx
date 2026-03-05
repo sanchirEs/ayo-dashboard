@@ -1,331 +1,535 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getOrderDetailsClient, formatOrderDate, formatPrice, getStatusBadgeClass, translateStatus } from "@/lib/api/orders";
+import {
+  getOrderDetailsClient,
+  formatOrderDate,
+  formatPrice,
+  translateStatus,
+} from "@/lib/api/orders";
 import { updateOrderStatusClient, cancelOrderClient } from "@/lib/api/orders-client";
-import GetTokenClient from "@/lib/GetTokenClient";
 import { resolveImageUrl } from "@/lib/api/env";
 import { useRouter } from "next/navigation";
 
+// ── Status config ──────────────────────────────────────────────────────────────
+const STATUS_CONFIG = {
+  PENDING:    { label: "Хүлээгдэж байна", dot: "#f59e0b", bg: "#fffbeb", text: "#92400e" },
+  PROCESSING: { label: "Баталгаажсан",     dot: "#3b82f6", bg: "#eff6ff", text: "#1e40af" },
+  SHIPPED:    { label: "Илгээгдсэн",       dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
+  DELIVERED:  { label: "Хүргэгдсэн",       dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
+  CANCELLED:  { label: "Цуцлагдсан",       dot: "#ef4444", bg: "#fef2f2", text: "#991b1b" },
+};
+
+const PAYMENT_STATUS_CONFIG = {
+  COMPLETED: { label: "Төлөгдсөн", color: "#10b981", bg: "#ecfdf5" },
+  PENDING:   { label: "Хүлээгдэж байна", color: "#f59e0b", bg: "#fffbeb" },
+  FAILED:    { label: "Амжилтгүй", color: "#ef4444", bg: "#fef2f2" },
+  EXPIRED:   { label: "Хугацаа дууссан", color: "#6b7280", bg: "#f9fafb" },
+  CANCELLED: { label: "Цуцлагдсан", color: "#ef4444", bg: "#fef2f2" },
+};
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, dot: "#6b7280", bg: "#f9fafb", text: "#374151" };
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: 6,
+      padding: "4px 12px", borderRadius: 20,
+      backgroundColor: cfg.bg, color: cfg.text,
+      fontSize: 12, fontWeight: 600, letterSpacing: "0.02em",
+    }}>
+      <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: cfg.dot, flexShrink: 0 }} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function PaymentBadge({ status }) {
+  const cfg = PAYMENT_STATUS_CONFIG[status] || { label: status, color: "#6b7280", bg: "#f9fafb" };
+  return (
+    <span style={{
+      padding: "2px 10px", borderRadius: 10,
+      backgroundColor: cfg.bg, color: cfg.color,
+      fontSize: 11, fontWeight: 600,
+    }}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function MetaItem({ label, value }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", color: "#9ca3af", textTransform: "uppercase" }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 500 }}>{value || "—"}</span>
+    </div>
+  );
+}
+
+function Divider({ dashed }) {
+  return (
+    <div style={{
+      height: 0, margin: "0 -24px",
+      borderTop: dashed ? "1.5px dashed #e5e7eb" : "1px solid #f3f4f6",
+    }} />
+  );
+}
+
+function LoadingSkeleton() {
+  const bar = (w, h = 12, mt = 0) => (
+    <div style={{
+      width: w, height: h, borderRadius: 6, marginTop: mt,
+      background: "linear-gradient(90deg, #f3f4f6 25%, #e9eaec 50%, #f3f4f6 75%)",
+      backgroundSize: "200% 100%",
+      animation: "shimmer 1.4s infinite",
+    }} />
+  );
+  return (
+    <>
+      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+      <div style={{ padding: "28px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>{bar(100, 20)}{bar(140, 13, 8)}</div>
+          {bar(80, 26, 0)}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+          {[1,2,3].map(i => <div key={i}>{bar("60%", 10)}{bar("80%", 14, 6)}</div>)}
+        </div>
+        <Divider dashed />
+        {[1,2].map(i => (
+          <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 8, backgroundColor: "#f3f4f6", flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>{bar("70%", 13)}{bar("50%", 11, 6)}</div>
+            {bar(60, 13)}
+          </div>
+        ))}
+        <Divider dashed />
+        {[1,2,3].map(i => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+            {bar(80, 12)}{bar(60, 12)}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
+
 export default function OrderQuickView({ open, onOpenChange, orderId }) {
+  const { data: session } = useSession();
+  const token = session?.user?.accessToken || null;
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [updating, setUpdating] = useState(false);
+  const [actionError, setActionError] = useState(null);
   const router = useRouter();
-  const token = GetTokenClient();
 
+  // Fetch when modal opens OR when token becomes available
   useEffect(() => {
-    if (open && orderId) {
-      fetchOrderDetails();
-    } else {
-      setOrder(null);
+    if (open && orderId && token) {
+      fetchOrder();
     }
-  }, [open, orderId]);
+    if (!open) {
+      setOrder(null);
+      setError(null);
+      setActionError(null);
+    }
+  }, [open, orderId, token]);
 
-  const fetchOrderDetails = async () => {
-    if (!token) return;
-    
+  async function fetchOrder() {
     setLoading(true);
+    setError(null);
     try {
       const result = await getOrderDetailsClient(orderId, token);
       if (result.success && result.data) {
-        // Handle both flat and nested data structures
-        const orderData = result.data.order || result.data;
-        setOrder(orderData);
+        setOrder(result.data.order || result.data);
+      } else {
+        setError(result.message || "Захиалга олдсонгүй");
       }
-    } catch (error) {
-      console.error('Error fetching order details:', error);
-      alert('Failed to load order details');
+    } catch (e) {
+      setError(e.message || "Захиалга ачааллахад алдаа гарлаа");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleStatusUpdate = async (newStatus) => {
+  async function handleStatusUpdate(newStatus) {
     if (!token || updating) return;
-    
     setUpdating(true);
+    setActionError(null);
     try {
       const result = await updateOrderStatusClient(orderId, newStatus, token);
       if (result.success) {
         setOrder(prev => prev ? { ...prev, status: newStatus } : null);
         router.refresh();
       } else {
-        alert(`Failed to update order status: ${result.message}`);
+        setActionError(result.message || "Статус шинэчлэхэд алдаа гарлаа");
       }
-    } catch (error) {
-      alert(`Error updating order status: ${error.message}`);
+    } catch (e) {
+      setActionError(e.message || "Алдаа гарлаа");
     } finally {
       setUpdating(false);
     }
-  };
+  }
 
-  const handleCancelOrder = async () => {
+  async function handleCancel() {
     if (!token || updating) return;
-    
-    if (!confirm('Are you sure you want to cancel this order?')) {
-      return;
-    }
-
+    if (!window.confirm("Захиалгыг цуцлах уу?")) return;
     setUpdating(true);
+    setActionError(null);
     try {
       const result = await cancelOrderClient(orderId, token);
       if (result.success) {
-        setOrder(prev => prev ? { ...prev, status: 'CANCELLED' } : null);
+        setOrder(prev => prev ? { ...prev, status: "CANCELLED" } : null);
         router.refresh();
       } else {
-        alert(`Failed to cancel order: ${result.message}`);
+        setActionError(result.message || "Цуцлахад алдаа гарлаа");
       }
-    } catch (error) {
-      alert(`Error cancelling order: ${error.message}`);
+    } catch (e) {
+      setActionError(e.message || "Алдаа гарлаа");
     } finally {
       setUpdating(false);
     }
-  };
+  }
 
   if (!open) return null;
 
+  // ── Computed values ──────────────────────────────────────────────────────────
+  const customerName = order?.user
+    ? `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim()
+    : null;
+  const address = order?.user?.addresses?.[0] || order?.shipping || null;
+  const subtotal = order
+    ? order.orderItems?.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0) ?? parseFloat(order.total) - parseFloat(order.shippingCost || 0)
+    : 0;
+  const shipping = parseFloat(order?.shippingCost || 0);
+  const total = parseFloat(order?.total || 0);
+  const canAct = order && order.status !== "CANCELLED" && order.status !== "DELIVERED";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto p-0">
-        <DialogTitle className="sr-only">Order Receipt #{orderId}</DialogTitle>
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <p className="mt-3 text-gray-600">Loading order...</p>
-          </div>
-        ) : order ? (
-          <div className="bg-white">
-            {/* Receipt Header */}
-            <div className="text-center py-8 px-6 border-b-2 border-dashed">
-              <div className="text-3xl font-bold text-gray-900 mb-2">Order Receipt</div>
-              <div className="text-sm text-gray-500">Order #{orderId}</div>
-              <div className="text-xs text-gray-400 mt-1">
-                {order.createdAt ? formatOrderDate(order.createdAt) : 'N/A'}
-              </div>
+      <DialogContent
+        className="p-0 overflow-hidden"
+        style={{
+          maxWidth: 620,
+          width: "95vw",
+          maxHeight: "92vh",
+          borderRadius: 16,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(0,0,0,0.08)",
+          display: "flex",
+          flexDirection: "column",
+          border: "none",
+        }}
+      >
+        <DialogTitle className="sr-only">Order #{orderId}</DialogTitle>
+
+        {/* ── Scrollable body ─────────────────────────────────────────────── */}
+        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#fff" }}>
+
+          {loading && !order ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div style={{ padding: "60px 24px", textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
+              <div style={{ fontSize: 14, color: "#6b7280" }}>{error}</div>
+              <button
+                onClick={fetchOrder}
+                style={{
+                  marginTop: 16, padding: "8px 20px",
+                  borderRadius: 8, border: "1px solid #e5e7eb",
+                  fontSize: 13, cursor: "pointer", backgroundColor: "#fff",
+                  color: "#374151",
+                }}
+              >
+                Дахин оролдох
+              </button>
             </div>
-
-            {/* Status Badge */}
-            <div className="flex justify-center py-4 border-b">
-              <span className={`inline-block px-4 py-1.5 text-sm font-medium rounded-full ${
-                order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
-                order.status === 'SHIPPED' ? 'bg-purple-100 text-purple-800' :
-                order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
-                order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {translateStatus(order.status)}
-              </span>
-            </div>
-
-            {/* Customer Info */}
-            <div className="px-6 py-4 border-b bg-gray-50">
-              <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Customer</div>
-              <div className="text-sm">
-                <div className="font-medium text-gray-900">
-                  {order.user ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : 'N/A'}
-                </div>
-                <div className="text-gray-600">{order.user?.email || 'N/A'}</div>
-                {order.user?.telephone && (
-                  <div className="text-gray-600">{order.user.telephone}</div>
-                )}
-              </div>
-            </div>
-
-            {/* Shipping Address */}
-            {order.user?.addresses && order.user.addresses.length > 0 && (
-              <div className="px-6 py-4 border-b bg-gray-50">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Shipping Address</div>
-                <div className="text-sm text-gray-900">
-                  {order.user.addresses[0].addressLine1}<br />
-                  {order.user.addresses[0].addressLine2 && <>{order.user.addresses[0].addressLine2}<br /></>}
-                  {order.user.addresses[0].city}, {order.user.addresses[0].postalCode}<br />
-                  {order.user.addresses[0].country}
-                  {order.user.addresses[0].mobile && (
-                    <>
-                      <br />
-                      <span className="text-gray-600">Mobile: {order.user.addresses[0].mobile}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Order Items */}
-            <div className="px-6 py-4">
-              <div className="text-xs text-gray-500 uppercase tracking-wide mb-3">Items</div>
-              <div className="space-y-3">
-                {order.orderItems?.map((item, index) => {
-                  const itemTotal = (parseFloat(item.price) || 0) * (item.quantity || 0);
-                  return (
-                    <div key={index} className="flex gap-3">
-                      <img
-                        src={item.product?.ProductImages?.[0]?.imageUrl 
-                          ? resolveImageUrl(item.product.ProductImages[0].imageUrl)
-                          : "/images/products/1.png"}
-                        alt={item.product?.name || 'Product'}
-                        className="w-12 h-12 object-cover rounded"
-                        onError={(e) => { e.target.src = "/images/products/1.png"; }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 truncate">
-                          {item.product?.name || 'Product'}
-                        </div>
-                        {item.variant && (
-                          <div className="text-xs text-gray-500">SKU: {item.variant.sku}</div>
-                        )}
-                        <div className="text-xs text-gray-600">
-                          Qty: {item.quantity} × {formatPrice(item.price)}
-                        </div>
-                      </div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatPrice(itemTotal)}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Totals */}
-            <div className="px-6 py-4 border-t-2 border-dashed">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
-                  <span>{formatPrice((parseFloat(order.subtotal) || parseFloat(order.total) || 0) - (parseFloat(order.shippingCost) || 0))}</span>
-                </div>
-                {order.shippingCost && parseFloat(order.shippingCost) > 0 && (
-                  <div className="flex justify-between text-gray-600">
-                    <span>Shipping</span>
-                    <span>{formatPrice(order.shippingCost)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t">
-                  <span>Total</span>
-                  <span>{formatPrice(order.total)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Info */}
-            {order.payment && (
-              <div className="px-6 py-4 border-t bg-gray-50">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Payment</div>
-                <div className="flex justify-between items-center text-sm">
+          ) : order ? (
+            <>
+              {/* ── Header ────────────────────────────────────────────────── */}
+              <div style={{ padding: "24px 24px 20px", borderBottom: "1px solid #f3f4f6" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
-                    <div className="text-gray-900">{order.payment.provider}</div>
-                    <div className="text-xs text-gray-500">
-                      {order.payment.createdAt && formatOrderDate(order.payment.createdAt)}
+                    <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+                      Захиалга
+                    </div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#111827", lineHeight: 1.2 }}>
+                      #{orderId}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                      {order.createdAt ? formatOrderDate(order.createdAt) : "—"}
                     </div>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${
-                    order.payment.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                    order.payment.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                    order.payment.status === 'EXPIRED' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {order.payment.status}
-                  </span>
+                  <StatusBadge status={order.status} />
+                </div>
+
+                {/* Meta row */}
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: 16,
+                  marginTop: 20,
+                  padding: "16px",
+                  backgroundColor: "#f9fafb",
+                  borderRadius: 10,
+                }}>
+                  <MetaItem label="Хэрэглэгч" value={customerName || order.user?.email} />
+                  <MetaItem label="Утас" value={order.user?.telephone} />
+                  <MetaItem
+                    label="Төлбөр"
+                    value={
+                      order.payment ? (
+                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 13, color: "#111827" }}>{order.payment.provider}</span>
+                          <PaymentBadge status={order.payment.status} />
+                        </span>
+                      ) : "—"
+                    }
+                  />
                 </div>
               </div>
-            )}
 
-            {/* Shipping Details */}
-            {order.shipping && (
-              <div className="px-6 py-4 border-t bg-gray-50">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-2">Shipping</div>
-                <div className="text-sm space-y-1">
-                  {order.shipping.trackingNumber && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Tracking</span>
-                      <span className="text-gray-900 font-mono text-xs">{order.shipping.trackingNumber}</span>
+              {/* ── Order Items ───────────────────────────────────────────── */}
+              <div style={{ padding: "20px 24px" }}>
+                <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Бүтээгдэхүүн
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {order.orderItems?.map((item, idx) => {
+                    const imgUrl = item.product?.ProductImages?.[0]?.imageUrl
+                      ? resolveImageUrl(item.product.ProductImages[0].imageUrl)
+                      : "/images/products/1.png";
+                    const lineTotal = parseFloat(item.price) * item.quantity;
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          display: "flex", gap: 12, alignItems: "center",
+                          padding: "10px 12px", borderRadius: 10,
+                          backgroundColor: "#f9fafb",
+                          border: "1px solid #f3f4f6",
+                        }}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={item.product?.name || "Product"}
+                          style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 8, flexShrink: 0, backgroundColor: "#e5e7eb" }}
+                          onError={e => { e.target.src = "/images/products/1.png"; }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {item.product?.name || "Бүтээгдэхүүн"}
+                          </div>
+                          {item.variant && (
+                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                              SKU: {item.variant.sku}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
+                            {item.quantity} ширхэг × {formatPrice(item.price)}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", flexShrink: 0 }}>
+                          {formatPrice(lineTotal)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Divider dashed />
+
+              {/* ── Totals ────────────────────────────────────────────────── */}
+              <div style={{ padding: "16px 24px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
+                    <span>Нийт бүтээгдэхүүн</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                  {shipping > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
+                      <span>Хүргэлтийн төлбөр</span>
+                      <span>{formatPrice(shipping)}</span>
                     </div>
                   )}
-                  {order.shipping.estimatedDelivery && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Est. Delivery</span>
-                      <span className="text-gray-900">{formatOrderDate(order.shipping.estimatedDelivery)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Method</span>
-                    <span className="text-gray-900 capitalize">{order.shipping.shippingMethod || 'Standard'}</span>
+                  <div style={{
+                    display: "flex", justifyContent: "space-between",
+                    fontSize: 16, fontWeight: 700, color: "#111827",
+                    paddingTop: 10, marginTop: 4,
+                    borderTop: "1.5px solid #111827",
+                  }}>
+                    <span>Нийт дүн</span>
+                    <span>{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Saga Error */}
-            {order.sagas && order.sagas.length > 0 && order.sagas[0].status === 'FAILED' && (
-              <div className="px-6 py-4 border-t bg-red-50">
-                <div className="text-xs text-red-600 uppercase tracking-wide mb-1">Processing Error</div>
-                <div className="text-sm text-red-700">{order.sagas[0].errorMessage || 'Unknown error'}</div>
-              </div>
-            )}
+              {/* ── Address ───────────────────────────────────────────────── */}
+              {address && (
+                <>
+                  <Divider />
+                  <div style={{ padding: "16px 24px" }}>
+                    <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                      Хүргэлтийн хаяг
+                    </div>
+                    <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+                      {address.addressLine1 && <div>{address.addressLine1}</div>}
+                      {address.addressLine2 && <div>{address.addressLine2}</div>}
+                      {(address.city || address.postalCode) && (
+                        <div>{[address.city, address.postalCode].filter(Boolean).join(", ")}</div>
+                      )}
+                      {address.country && <div>{address.country}</div>}
+                      {address.mobile && (
+                        <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {address.mobile}</div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
 
-            {/* Action Buttons */}
-            {order.status !== 'CANCELLED' && order.status !== 'DELIVERED' && (
-              <div className="px-6 py-4 border-t bg-gray-50 flex gap-2 justify-end">
-                {order.status === 'PENDING' && (
-                  <button
-                    onClick={() => handleStatusUpdate('PROCESSING')}
-                    disabled={updating}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {updating ? 'Шинэчилж байна...' : 'Баталгаажуулах'}
-                  </button>
-                )}
-                {order.status === 'PROCESSING' && (
-                  <button
-                    onClick={() => handleStatusUpdate('SHIPPED')}
-                    disabled={updating}
-                    className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded hover:bg-purple-700 disabled:opacity-50"
-                  >
-                    {updating ? 'Шинэчилж байна...' : 'Илгээх'}
-                  </button>
-                )}
-                {order.status === 'SHIPPED' && (
-                  <button
-                    onClick={() => handleStatusUpdate('DELIVERED')}
-                    disabled={updating}
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {updating ? 'Шинэчилж байна...' : 'Хүргэсэн'}
-                  </button>
-                )}
-                {(order.status === 'PENDING' || order.status === 'PROCESSING') && (
-                  <button
-                    onClick={handleCancelOrder}
-                    disabled={updating}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
-                  >
-                    {updating ? 'Цуцлаж байна...' : 'Цуцлах'}
-                  </button>
-                )}
-              </div>
-            )}
+              {/* ── Shipping tracking ─────────────────────────────────────── */}
+              {order.shipping?.trackingNumber && (
+                <>
+                  <Divider />
+                  <div style={{ padding: "14px 24px" }}>
+                    <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
+                      Хүргэлт
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                      <span style={{ color: "#6b7280" }}>Tracking</span>
+                      <span style={{ fontFamily: "monospace", fontWeight: 600, color: "#111827" }}>{order.shipping.trackingNumber}</span>
+                    </div>
+                    {order.shipping.shippingMethod && (
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginTop: 6 }}>
+                        <span style={{ color: "#6b7280" }}>Арга</span>
+                        <span style={{ color: "#374151", textTransform: "capitalize" }}>{order.shipping.shippingMethod}</span>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
-            {/* Footer */}
-            <div className="px-6 py-6 border-t-2 border-dashed text-center">
-              <button 
+              {/* ── Saga error ────────────────────────────────────────────── */}
+              {order.sagas?.length > 0 && order.sagas[0].status === "FAILED" && (
+                <>
+                  <Divider />
+                  <div style={{ padding: "12px 24px", backgroundColor: "#fef2f2" }}>
+                    <div style={{ fontSize: 11, color: "#dc2626", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+                      Алдаа
+                    </div>
+                    <div style={{ fontSize: 13, color: "#7f1d1d" }}>{order.sagas[0].errorMessage || "Тодорхойгүй алдаа"}</div>
+                  </div>
+                </>
+              )}
+            </>
+          ) : (
+            // Token not yet available
+            <div style={{ padding: "60px 24px", textAlign: "center", color: "#9ca3af", fontSize: 13 }}>
+              Ачаалж байна...
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer / Actions ─────────────────────────────────────────────── */}
+        {order && (
+          <div style={{
+            padding: "14px 24px",
+            borderTop: "1px solid #f3f4f6",
+            backgroundColor: "#fafafa",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 10,
+            flexShrink: 0,
+          }}>
+            {/* Error message */}
+            <div style={{ flex: 1 }}>
+              {actionError && (
+                <div style={{ fontSize: 12, color: "#dc2626" }}>{actionError}</div>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <button
                 onClick={() => onOpenChange(false)}
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                style={{
+                  padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                  border: "1px solid #e5e7eb", backgroundColor: "#fff", color: "#374151",
+                  cursor: "pointer",
+                }}
               >
                 Хаах
               </button>
+
+              {canAct && (
+                <>
+                  {(order.status === "PENDING" || order.status === "PROCESSING") && (
+                    <button
+                      onClick={handleCancel}
+                      disabled={updating}
+                      style={{
+                        padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+                        border: "1px solid #fee2e2", backgroundColor: "#fff", color: "#dc2626",
+                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
+                      }}
+                    >
+                      Цуцлах
+                    </button>
+                  )}
+                  {order.status === "PENDING" && (
+                    <button
+                      onClick={() => handleStatusUpdate("PROCESSING")}
+                      disabled={updating}
+                      style={{
+                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        border: "none", backgroundColor: "#3b82f6", color: "#fff",
+                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
+                      }}
+                    >
+                      {updating ? "..." : "Баталгаажуулах"}
+                    </button>
+                  )}
+                  {order.status === "PROCESSING" && (
+                    <button
+                      onClick={() => handleStatusUpdate("SHIPPED")}
+                      disabled={updating}
+                      style={{
+                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        border: "none", backgroundColor: "#8b5cf6", color: "#fff",
+                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
+                      }}
+                    >
+                      {updating ? "..." : "Илгээх"}
+                    </button>
+                  )}
+                  {order.status === "SHIPPED" && (
+                    <button
+                      onClick={() => handleStatusUpdate("DELIVERED")}
+                      disabled={updating}
+                      style={{
+                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        border: "none", backgroundColor: "#10b981", color: "#fff",
+                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
+                      }}
+                    >
+                      {updating ? "..." : "Хүргэсэн"}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-16 px-6">
-            <div className="text-gray-400 mb-3">❌</div>
-            <div className="text-gray-600">Failed to load order details</div>
           </div>
         )}
       </DialogContent>

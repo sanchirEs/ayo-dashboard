@@ -6,297 +6,146 @@ import { useRouter, useSearchParams } from "next/navigation";
 export default function DeliveryFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   const [search, setSearch] = useState(searchParams.get('search') || '');
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [papaStatus, setPapaStatus] = useState(searchParams.get('papaStatus') || '');
+  const [datePreset, setDatePreset] = useState('');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
-  const [datePreset, setDatePreset] = useState('');
 
-  const getPresetDates = (presetValue) => {
+  const getPresetDates = (preset) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
-    switch (presetValue) {
+    switch (preset) {
       case 'today':
-        return {
-          from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'yesterday':
-        const yesterday = new Date(today);
-        yesterday.setDate(yesterday.getDate() - 1);
-        return {
-          from: yesterday.toISOString().split('T')[0],
-          to: yesterday.toISOString().split('T')[0]
-        };
-      case 'last7days':
-        const last7 = new Date(today);
-        last7.setDate(last7.getDate() - 7);
-        return {
-          from: last7.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'last30days':
-        const last30 = new Date(today);
-        last30.setDate(last30.getDate() - 30);
-        return {
-          from: last30.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'last90days':
-        const last90 = new Date(today);
-        last90.setDate(last90.getDate() - 90);
-        return {
-          from: last90.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      default:
-        return { from: '', to: '' };
+        return { from: today.toISOString().split('T')[0], to: today.toISOString().split('T')[0] };
+      case 'yesterday': {
+        const d = new Date(today); d.setDate(d.getDate() - 1);
+        return { from: d.toISOString().split('T')[0], to: d.toISOString().split('T')[0] };
+      }
+      case 'last7days': {
+        const d = new Date(today); d.setDate(d.getDate() - 7);
+        return { from: d.toISOString().split('T')[0], to: today.toISOString().split('T')[0] };
+      }
+      case 'last30days': {
+        const d = new Date(today); d.setDate(d.getDate() - 30);
+        return { from: d.toISOString().split('T')[0], to: today.toISOString().split('T')[0] };
+      }
+      default: return { from: '', to: '' };
     }
   };
 
-  const handleDatePresetChange = (presetValue) => {
-    setDatePreset(presetValue);
-    
-    if (presetValue === '') {
-      setDateFrom('');
-      setDateTo('');
-      updateAllFilters('', '');
-    } else {
-      const dates = getPresetDates(presetValue);
-      setDateFrom(dates.from);
-      setDateTo(dates.to);
-      updateAllFilters(dates.from, dates.to);
-    }
+  const push = (overrides = {}) => {
+    const s = overrides.search  ?? search;
+    const ps = overrides.papaStatus ?? papaStatus;
+    const df = overrides.dateFrom  ?? dateFrom;
+    const dt = overrides.dateTo    ?? dateTo;
+    const params = new URLSearchParams();
+    if (s)  params.set('search', s);
+    if (ps) params.set('papaStatus', ps);
+    if (df) params.set('dateFrom', df);
+    if (dt) params.set('dateTo', dt);
+    params.set('page', '1');
+    router.push(`/delivery${params.toString() ? '?' + params.toString() : ''}`);
   };
 
-  const updateAllFilters = (newDateFrom = dateFrom, newDateTo = dateTo) => {
-    const params = new URLSearchParams();
-    
-    if (search) params.set('search', search);
-    if (status) params.set('status', status);
-    if (newDateFrom) params.set('dateFrom', newDateFrom);
-    if (newDateTo) params.set('dateTo', newDateTo);
-    params.set('page', '1');
+  const handleSearch = (e) => { e.preventDefault(); push(); };
 
-    const queryString = params.toString();
-    router.push(`/delivery${queryString ? '?' + queryString : ''}`);
-  };
+  const handlePapaStatus = (v) => { setPapaStatus(v); push({ papaStatus: v }); };
 
-  const handleStatusChange = (newStatus) => {
-    setStatus(newStatus);
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    if (newStatus) params.set('status', newStatus);
-    if (dateFrom) params.set('dateFrom', dateFrom);
-    if (dateTo) params.set('dateTo', dateTo);
-    params.set('page', '1');
-    router.push(`/delivery?${params.toString()}`);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    if (status) params.set('status', status);
-    if (dateFrom) params.set('dateFrom', dateFrom);
-    if (dateTo) params.set('dateTo', dateTo);
-    params.set('page', '1');
-    router.push(`/delivery?${params.toString()}`);
+  const handleDatePreset = (v) => {
+    setDatePreset(v);
+    if (!v) { setDateFrom(''); setDateTo(''); push({ dateFrom: '', dateTo: '' }); return; }
+    const { from, to } = getPresetDates(v);
+    setDateFrom(from); setDateTo(to);
+    push({ dateFrom: from, dateTo: to });
   };
 
   const clearFilters = () => {
-    setSearch('');
-    setStatus('');
-    setDateFrom('');
-    setDateTo('');
-    setDatePreset('');
+    setSearch(''); setPapaStatus(''); setDateFrom(''); setDateTo(''); setDatePreset('');
     router.push('/delivery');
   };
 
-  const activeFiltersCount = [search, status, dateFrom, dateTo].filter(v => v).length;
+  const activeCount = [search, papaStatus, dateFrom, dateTo].filter(Boolean).length;
+
+  const selectStyle = (active) => ({
+    padding: '8px 12px',
+    borderRadius: '6px',
+    border: '1px solid #e5e7eb',
+    fontSize: '13px',
+    backgroundColor: active ? '#f3f4f6' : 'white',
+    cursor: 'pointer',
+    minWidth: '110px',
+    maxWidth: '160px',
+    outline: 'none',
+  });
 
   return (
-    <div style={{ marginBottom: '1rem' }}>
-      {/* Minimal Single Row Filters */}
-      <form onSubmit={handleSearch} style={{ 
-        display: 'flex', 
-        gap: '8px', 
-        alignItems: 'center',
-        flexWrap: 'nowrap',
-        width: '100%'
-      }}>
-        {/* Search Input */}
-        <div style={{ 
-          position: 'relative',
-          flex: '1 1 auto',
-          minWidth: '200px'
-        }}>
-          <input
-            type="text"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: '4px',
-              border: '1px solid #e5e7eb',
-              fontSize: '13px',
-              backgroundColor: 'white',
-              outline: 'none',
-              transition: 'all 0.2s'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#3730a3'}
-            onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-          />
+    <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', paddingBottom: '4px' }}>
+
+        {/* Search */}
+        <div style={{ flex: '1 1 300px', minWidth: '250px' }}>
+          <form onSubmit={handleSearch}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Захиалгын дугаар, харилцагчийн нэрээр хайх..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '8px 40px 8px 12px',
+                  borderRadius: '6px', border: '1px solid #e5e7eb',
+                  fontSize: '13px', backgroundColor: 'white', outline: 'none',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3730a3'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+              <button type="submit" style={{
+                position: 'absolute', right: '8px', background: 'none',
+                border: 'none', cursor: 'pointer', padding: '4px', color: '#6b7280',
+              }}>
+                <i className="icon-search" />
+              </button>
+            </div>
+          </form>
         </div>
 
-        {/* Status Filter */}
-        <select
-          value={status}
-          onChange={(e) => handleStatusChange(e.target.value)}
-          style={{
-            padding: '8px 10px',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: 'white',
-            cursor: 'pointer',
-            outline: 'none',
-            transition: 'all 0.2s',
-            flex: '0 1 auto',
-            minWidth: '110px'
-          }}
-          onFocus={(e) => e.target.style.borderColor = '#3730a3'}
-          onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-        >
-          <option value="">All Status</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="PENDING">Pending</option>
-        </select>
-
-        {/* Date Preset */}
-        <select
-          value={datePreset}
-          onChange={(e) => handleDatePresetChange(e.target.value)}
-          style={{
-            padding: '8px 10px',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: 'white',
-            cursor: 'pointer',
-            outline: 'none',
-            flex: '0 1 auto',
-            minWidth: '100px'
-          }}
-        >
-          <option value="">Date</option>
+        {/* Date Range */}
+        <select value={datePreset} onChange={(e) => handleDatePreset(e.target.value)} style={selectStyle(!!datePreset)}>
+          <option value="">Date Range</option>
           <option value="today">Today</option>
           <option value="yesterday">Yesterday</option>
-          <option value="last7days">Last 7D</option>
-          <option value="last30days">Last 30D</option>
-          <option value="last90days">Last 90D</option>
+          <option value="last7days">Last 7 days</option>
+          <option value="last30days">Last 30 days</option>
         </select>
 
-        {/* Manual Date From */}
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => {
-            setDateFrom(e.target.value);
-            setDatePreset('');
-          }}
-          style={{
-            padding: '8px 10px',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: 'white',
-            outline: 'none',
-            flex: '0 1 auto'
-          }}
-          onFocus={(e) => e.target.style.borderColor = '#3730a3'}
-          onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-        />
+        {/* Papa Status */}
+        <select value={papaStatus} onChange={(e) => handlePapaStatus(e.target.value)} style={selectStyle(!!papaStatus)}>
+          <option value="">Papa статус</option>
+          <option value="none">Илгээгдээгүй</option>
+          <option value="NEW">Шинэ</option>
+          <option value="CONFIRM">Баталгаажсан</option>
+          <option value="START">Гарсан</option>
+          <option value="END">Ирсэн</option>
+          <option value="COMPLETED">Дууссан</option>
+          <option value="CANCELLED">Цуцалсан</option>
+        </select>
 
-        {/* Manual Date To */}
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => {
-            setDateTo(e.target.value);
-            setDatePreset('');
+        {/* Clear */}
+        {activeCount > 0 && (
+          <button onClick={clearFilters} style={{
+            padding: '8px 12px', borderRadius: '6px', border: '1px solid #ef4444',
+            color: '#ef4444', fontSize: '13px', backgroundColor: 'white',
+            cursor: 'pointer', marginLeft: 'auto',
           }}
-          style={{
-            padding: '8px 10px',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: 'white',
-            outline: 'none',
-            flex: '0 1 auto'
-          }}
-          onFocus={(e) => e.target.style.borderColor = '#3730a3'}
-          onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
-        />
-
-        {/* Search Button */}
-        <button
-          type="submit"
-          style={{
-            padding: '8px 16px',
-            borderRadius: '4px',
-            border: 'none',
-            backgroundColor: '#3730a3',
-            color: 'white',
-            fontSize: '13px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            flex: '0 0 auto'
-          }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#2d25a0'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#3730a3'}
-        >
-          Search
-        </button>
-
-        {/* Clear Button */}
-        {activeFiltersCount > 0 && (
-          <button
-            onClick={clearFilters}
-            type="button"
-            style={{
-              padding: '8px 12px',
-              borderRadius: '4px',
-              border: '1px solid #e5e7eb',
-              backgroundColor: '#f9fafb',
-              color: '#6b7280',
-              fontSize: '13px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              flex: '0 0 auto'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f3f4f6';
-              e.target.style.color = '#374151';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = '#f9fafb';
-              e.target.style.color = '#6b7280';
-            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
           >
-            Clear
+            ✕ Clear ({activeCount})
           </button>
         )}
-      </form>
+      </div>
     </div>
   );
 }
-

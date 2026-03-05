@@ -326,6 +326,41 @@ export async function retryFailedShipments(
 // ==================== CLIENT-SIDE FUNCTIONS ====================
 
 /**
+ * Dispatch a single item from an order to Papa (client-side version)
+ */
+export async function dispatchOrderItemClient(
+  orderId: number,
+  itemId: number,
+  token: string
+): Promise<{ success: boolean; message: string; data?: any; error?: string }> {
+  try {
+    if (!token) {
+      return { success: false, message: 'Authentication required', error: 'No token' };
+    }
+
+    const url = `/api/v1/admin/shipping/orders/${orderId}/dispatch-item`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ itemId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    return { success: false, message: error.message || 'Алдаа гарлаа', error: error.message };
+  }
+}
+
+/**
  * Bulk deliver orders (client-side version)
  */
 export async function bulkDeliverOrdersClient(

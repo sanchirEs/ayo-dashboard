@@ -1,22 +1,23 @@
-  /** @type {import('next').NextConfig} */
-const nextConfig = {
+/** @type {import('next').NextConfig} */
+module.exports = {
+  reactStrictMode: true,
+  productionBrowserSourceMaps: true,
   images: { remotePatterns: [{ hostname: "lh3.googleusercontent.com" }, { hostname: "res.cloudinary.com" }] },
   env: {
-    // Avoid hardcoded localhost in production; prefer server-side BACKEND_URL
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
-  
-  // Global proxy to fix ALL CORS errors by rewriting /api/v1/* to backend
+
+  // Proxy /api/v1/* to the backend to avoid CORS in the browser
   async rewrites() {
     const backendUrl = process.env.BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
-    
+
     if (!backendUrl) {
       console.warn('⚠️ BACKEND_URL is not configured. API rewrites will not work.');
       return [];
     }
-    
+
     console.log('🔄 Proxying /api/v1/* requests to:', backendUrl);
-    
+
     return [
       {
         source: '/api/v1/:path*',
@@ -25,9 +26,3 @@ const nextConfig = {
     ];
   },
 };
-
-module.exports = {
-  reactStrictMode: true,
-  swcMinify: true,
-  productionBrowserSourceMaps: true,
-}

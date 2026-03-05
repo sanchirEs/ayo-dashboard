@@ -1,133 +1,214 @@
 "use client";
 
-import Link from "next/link";
-import { getStatusBlockClass, formatOrderDate } from "@/lib/api/orders";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { formatPrice } from "@/lib/api/orders";
 import DeliveryRowActions from "./DeliveryRowActions";
+import DeliveryItemRow from "./DeliveryItemRow";
+import DeliveryConfirmModal from "./DeliveryConfirmModal";
+import { dispatchOrderItemClient } from "@/lib/api/shipping";
 
-export default function DeliveryRowClient({ delivery, isSelected, onSelect }) {
-  const customerName = delivery.user ? `${delivery.user.firstName} ${delivery.user.lastName}` : 'N/A';
-  const customerPhone = delivery.user?.telephone || 'N/A';
-  
-  // Extract Papa shipment data
-  const papaShipment = delivery.papaShipment;
-  const papaCode = papaShipment?.papaCode || 'Not Created';
-  const papaStatus = papaShipment?.papaStatus || 'PENDING';
-  const driverName = papaShipment?.driverName || 'Not Assigned';
-  const driverPhone = papaShipment?.driverPhone || '';
-  
-  // Get cargo shipment count
-  const cargoCount = papaShipment?.cargoShipments?.length || 
-                     delivery.papaCargoShipments?.length || 0;
-  
-  // Format driver display with phone if available
-  const driverDisplay = driverName === 'Not Assigned' 
-    ? 'Not Assigned' 
-    : driverPhone 
-      ? `${driverName} (${driverPhone.slice(-4)})` 
-      : driverName;
-  
-  // Status-based emoji indicators
-  const getStatusEmoji = (status) => {
-    switch (status) {
-      case 'NEW': return '🔵';
-      case 'CONFIRM': return '🟡';
-      case 'START': return '🟠';
-      case 'END': return '🟣';
-      case 'COMPLETED': return '✅';
-      case 'CANCELLED': return '❌';
-      default: return '⚪';
-    }
-  };
-  
-  return (
-    <li 
-      className="product-item gap14"
-      style={{ 
-        transition: 'background-color 0.2s ease',
-        borderBottom: '1px solid #f3f4f6',
-        backgroundColor: isSelected ? '#eff6ff' : 'transparent',
-        padding: '12px 16px'
-      }}
-      onMouseEnter={(e) => {
-        if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
-      }}
-      onMouseLeave={(e) => {
-        if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
-      }}
-    >
-      <div className="flex items-center justify-between gap20 flex-grow">
-        {/* Order ID & Customer */}
-        <div className="body-text" style={{ minWidth: '180px' }}>
-          <Link href={`/order-detail/${delivery.id}`} className="text-blue-600 hover:underline font-medium">
-            #{delivery.id}
-          </Link>
-          <div className="body-text" style={{ fontSize: '0.875rem', marginTop: '2px' }}>
-            {customerName}
-          </div>
-          {customerPhone !== 'N/A' && (
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-              📞 {customerPhone}
-            </div>
-          )}
-        </div>
+const PAPA_STATUS_MAP = {
+  NEW: { cls: "block-tracking", label: "Шинэ" },
+  CONFIRM: { cls: "block-tracking", label: "Баталгаажсан" },
+  START: { cls: "block-pending", label: "Гарсан" },
+  END: { cls: "block-pending", label: "Ирсэн" },
+  COMPLETED: { cls: "block-available", label: "Дууссан" },
+  CANCELLED: { cls: "block-pending", label: "Цуцалсан" },
+};
 
-        {/* Papa Code */}
-        <div className="body-text font-mono text-sm" style={{ minWidth: '110px' }}>
-          {papaCode === 'Not Created' ? (
-            <span className="text-gray-400">{papaCode}</span>
-          ) : (
-            <span className="text-gray-700 font-semibold">{papaCode}</span>
-          )}
-        </div>
-
-        {/* Papa Status Badge */}
-        <div style={{ minWidth: '120px' }}>
-          <div className={getStatusBlockClass(papaStatus)} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>{getStatusEmoji(papaStatus)}</span>
-            <span>{papaStatus}</span>
-          </div>
-        </div>
-
-        {/* Driver Info */}
-        <div className="body-text text-sm" style={{ minWidth: '160px' }}>
-          {driverName === 'Not Assigned' ? (
-            <span className="text-gray-400">🚗 {driverName}</span>
-          ) : (
-            <div>
-              <div className="text-gray-700 font-medium">{driverName}</div>
-              {driverPhone && (
-                <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-                  📞 {driverPhone}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Item Count & Cargo */}
-        <div className="body-text" style={{ minWidth: '90px' }}>
-          <div>{delivery.orderItems.length} items</div>
-          {cargoCount > 0 && (
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-              📦 {cargoCount} {cargoCount === 1 ? 'cargo' : 'cargos'}
-            </div>
-          )}
-        </div>
-
-        {/* Created Date & Last Update */}
-        <div className="body-text text-sm" style={{ minWidth: '140px' }}>
-          <div>{formatOrderDate(delivery.createdAt)}</div>
-          {papaShipment?.statusChangedAt && (
-            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '2px' }}>
-              Updated: {formatOrderDate(papaShipment.statusChangedAt)}
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <DeliveryRowActions delivery={delivery} />
-      </div>
-    </li>
-  );
+// "Aug 29 · 04:23"
+function shortDate(dateStr) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  const mon = d.toLocaleDateString("en-US", { month: "short" });
+  const day = d.getDate();
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  return `${mon} ${day} · ${h}:${m}`;
 }
 
+export default function DeliveryRowClient({ delivery, isSelected, onSelect }) {
+  const router = useRouter();
+  const { data: session } = useSession();
+
+  const [expanded, setExpanded] = useState(false);
+  const [selectedItems, setSelectedItems] = useState(new Set());
+  const [confirmItem, setConfirmItem] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [dispatchError, setDispatchError] = useState(null);
+
+  const itemCount = delivery.orderItems?.length ?? 0;
+
+  const customerName = delivery.user
+    ? `${delivery.user.firstName} ${delivery.user.lastName}`
+    : "N/A";
+  const phone =
+    delivery.user?.telephone || delivery.shipping?.mobile || "—";
+  const district = delivery.shipping?.district || "—";
+
+  const papaShipment = delivery.papaShipment;
+  const papaCode = papaShipment?.papaCode ?? null;
+  const papaStatus = papaShipment?.papaStatus ?? null;
+  const statusInfo = papaStatus ? PAPA_STATUS_MAP[papaStatus] : null;
+
+  const toggleItem = (id) => {
+    const next = new Set(selectedItems);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedItems(next);
+  };
+
+  const handleCallDriver = (item) => {
+    setDispatchError(null);
+    setConfirmItem(item);
+  };
+
+  const handleConfirmDispatch = async () => {
+    const token = session?.user?.accessToken;
+    if (!token || !confirmItem || sending) return;
+    setSending(true);
+    setDispatchError(null);
+    try {
+      const res = await dispatchOrderItemClient(delivery.id, confirmItem.id, token);
+      if (res.success) {
+        setConfirmItem(null);
+        router.refresh();
+      } else {
+        setDispatchError(res.error || res.message || "Алдаа гарлаа");
+      }
+    } catch (e) {
+      setDispatchError(e.message || "Алдаа гарлаа");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <>
+      <li
+        className="product-item gap14"
+        onClick={() => setExpanded((v) => !v)}
+        style={{
+          transition: "background-color 0.2s ease",
+          borderBottom: "1px solid #f3f4f6",
+          backgroundColor: isSelected ? "#eff6ff" : "transparent",
+          flexWrap: "wrap",
+          rowGap: 0,
+          alignItems: "center",
+          cursor: "pointer",
+        }}
+        onMouseEnter={(e) => {
+          if (!isSelected) e.currentTarget.style.backgroundColor = "#f9fafb";
+        }}
+        onMouseLeave={(e) => {
+          if (!isSelected) e.currentTarget.style.backgroundColor = "transparent";
+        }}
+      >
+        {/* Checkbox — stop row toggle */}
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onSelect}
+            style={{ cursor: "pointer", width: "18px", height: "18px" }}
+          />
+        </div>
+
+        {/* All columns */}
+        <div className="flex items-center justify-between gap20 flex-grow">
+
+          {/* Col 1: Order ID + Customer name + Phone */}
+          <div className="name">
+            <div className="body-title-2">#{delivery.id} · {customerName}</div>
+            <div className="body-text">{phone}</div>
+          </div>
+
+          {/* Col 2: District */}
+          <div className="body-text">{district}</div>
+
+          {/* Col 3: Papa status */}
+          <div>
+            {statusInfo ? (
+              <div className={statusInfo.cls}>{statusInfo.label}</div>
+            ) : (
+              <div
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "3px 10px",
+                  borderRadius: "4px",
+                  backgroundColor: "#f3f4f6",
+                  color: "#9ca3af",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                }}
+              >
+                Илгээгдээгүй
+              </div>
+            )}
+          </div>
+
+          {/* Col 4: Papa code */}
+          <div
+            className="body-text"
+            style={{ fontFamily: "monospace", fontWeight: "600", letterSpacing: "0.3px" }}
+          >
+            {papaCode ?? <span style={{ color: "#d1d5db", fontWeight: "400" }}>—</span>}
+          </div>
+
+          {/* Col 5: Total */}
+          <div className="body-text">{formatPrice(delivery.total)}</div>
+
+          {/* Col 6: Date */}
+          <div className="body-text">{shortDate(delivery.createdAt)}</div>
+
+          {/* Col 7: Delivery cost */}
+          <div className="body-text" style={{ fontWeight: "600" }}>₮6,000</div>
+
+          {/* Col 8: Actions — stop row toggle */}
+          <div
+            style={{ width: 150, flexShrink: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DeliveryRowActions delivery={delivery} />
+          </div>
+        </div>
+
+        {/* Expanded item rows — stop row toggle */}
+        {expanded && itemCount > 0 && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ flex: "0 0 100%", width: "100%", borderTop: "1px solid #e9eaec" }}
+          >
+            {delivery.orderItems.map((item) => (
+              <DeliveryItemRow
+                key={item.id}
+                item={item}
+                isSelected={selectedItems.has(item.id)}
+                onSelect={() => toggleItem(item.id)}
+                onCallDriver={handleCallDriver}
+              />
+            ))}
+          </div>
+        )}
+      </li>
+
+      {/* Per-item dispatch confirmation modal */}
+      <DeliveryConfirmModal
+        open={!!confirmItem}
+        onClose={() => {
+          if (!sending) { setConfirmItem(null); setDispatchError(null); }
+        }}
+        order={delivery}
+        item={confirmItem}
+        onConfirm={handleConfirmDispatch}
+        sending={sending}
+        error={dispatchError}
+      />
+    </>
+  );
+}

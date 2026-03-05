@@ -1,144 +1,183 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { formatOrderDate, getStatusBlockClass } from "@/lib/api/orders";
-import GetTokenClient from "@/lib/GetTokenClient";
-import { getBackendUrl } from "@/lib/api/env";
+import { formatPrice } from "@/lib/api/orders";
 
-export default function DeliveryQuickView({ open, onOpenChange, deliveryId }) {
-  const [delivery, setDelivery] = useState(null);
-  const [cargos, setCargos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const token = GetTokenClient();
+const PAPA_STATUS_LABEL = {
+  NEW: "Шинэ",
+  CONFIRM: "Баталгаажсан",
+  START: "Гарсан",
+  END: "Ирсэн",
+  COMPLETED: "Дууссан",
+  CANCELLED: "Цуцалсан",
+};
 
-  useEffect(() => {
-    if (open && deliveryId) {
-      fetchDeliveryDetails();
-    } else {
-      setDelivery(null);
-      setCargos([]);
-    }
-  }, [open, deliveryId, token]);
+const PAPA_STATUS_COLOR = {
+  NEW: "#6b7280",
+  CONFIRM: "#2563eb",
+  START: "#d97706",
+  END: "#7c3aed",
+  COMPLETED: "#16a34a",
+  CANCELLED: "#dc2626",
+};
 
-  const fetchDeliveryDetails = async () => {
-    if (!token) return;
-    
-    setLoading(true);
-    try {
-      // Fetch cargo details for the order
-      const cargoUrl = `${getBackendUrl()}/api/v1/admin/shipping/orders/${deliveryId}/cargos`;
-      const cargoResponse = await fetch(cargoUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+function shortDate(dateStr) {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("mn-MN", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
+  });
+}
 
-      if (cargoResponse.ok) {
-        const cargoResult = await cargoResponse.json();
-        setCargos(cargoResult.data || []);
-      }
-    } catch (error) {
-      console.error('Error fetching cargo details:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function DeliveryQuickView({ open, onOpenChange, delivery }) {
+  if (!open || !delivery) return null;
 
-  if (!open) return null;
+  const papaShipment = delivery.papaShipment ?? delivery.papaShipments?.[0] ?? null;
+  const endPincode = papaShipment?.cargoShipments?.[0]?.endPincode ?? null;
+  const user = delivery.user;
+  const shipping = delivery.shipping;
+
+  const customerName = user ? `${user.firstName} ${user.lastName}` : "N/A";
+  const phone = shipping?.recipientPhone || user?.telephone || "—";
+  const district = shipping?.district || "—";
+  const address = [shipping?.addressLine1, shipping?.addressLine2]
+    .filter(Boolean).join(" ") || "—";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-auto p-0">
-        <DialogTitle className="sr-only">Delivery Details #{deliveryId}</DialogTitle>
-        {loading ? (
-          <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-            <p className="mt-3 text-gray-600">Loading delivery details...</p>
-          </div>
-        ) : (
-          <div className="bg-white">
-            {/* Header */}
-            <div className="text-center py-8 px-6 border-b-2 border-dashed">
-              <div className="text-3xl font-bold text-gray-900 mb-2">Delivery Details</div>
-              <div className="text-sm text-gray-500">Order #{deliveryId}</div>
-            </div>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-auto p-0">
+        <DialogTitle className="sr-only">Delivery #{delivery.id}</DialogTitle>
 
-            {/* Cargo Information */}
-            {cargos.length > 0 ? (
-              <div className="px-6 py-4">
-                <div className="text-xs text-gray-500 uppercase tracking-wide mb-4">Cargo Shipments</div>
-                <div className="space-y-4">
-                  {cargos.map((cargo, index) => (
-                    <div key={cargo.id} className="border rounded-lg p-4 bg-gray-50">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="font-medium text-gray-900">
-                          {cargo.cargoName || `Cargo ${index + 1}`}
-                        </div>
-                        <div className={getStatusBlockClass(cargo.cargoStatus)}>
-                          {cargo.cargoStatus}
-                        </div>
-                      </div>
-
-                      {cargo.receiverName && (
-                        <div className="text-sm text-gray-600 mb-1">
-                          <strong>Receiver:</strong> {cargo.receiverName}
-                        </div>
-                      )}
-
-                      {cargo.receiverPhone && (
-                        <div className="text-sm text-gray-600 mb-1">
-                          <strong>Phone:</strong> {cargo.receiverPhone}
-                        </div>
-                      )}
-
-                      {cargo.toAddress && (
-                        <div className="text-sm text-gray-600 mb-1">
-                          <strong>Address:</strong> {cargo.toAddress}
-                        </div>
-                      )}
-
-                      {(cargo.startPincode || cargo.endPincode) && (
-                        <div className="text-sm text-gray-600 mt-2">
-                          <strong>Route:</strong> {cargo.startPincode || 'N/A'} → {cargo.endPincode || 'Pending'}
-                        </div>
-                      )}
-
-                      {cargo.cargoCode && (
-                        <div className="text-xs text-gray-500 mt-2">
-                          Code: <span className="font-mono">{cargo.cargoCode}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+        <div style={{ fontFamily: "sans-serif", fontSize: "13px", color: "#111827" }}>
+          {/* Header */}
+          <div style={{
+            padding: "20px 24px 16px",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div>
+              <div style={{ fontSize: "16px", fontWeight: "700" }}>Захиалга #{delivery.id}</div>
+              <div style={{ fontSize: "12px", color: "#6b7280", marginTop: "2px" }}>
+                {shortDate(delivery.createdAt)}
               </div>
-            ) : (
-              <div className="px-6 py-8 text-center text-gray-500">
-                <p>No cargo shipments found for this delivery</p>
+            </div>
+            {papaShipment && (
+              <div style={{
+                padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
+                backgroundColor: PAPA_STATUS_COLOR[papaShipment.papaStatus] + "1a",
+                color: PAPA_STATUS_COLOR[papaShipment.papaStatus],
+                border: `1px solid ${PAPA_STATUS_COLOR[papaShipment.papaStatus]}40`,
+              }}>
+                {PAPA_STATUS_LABEL[papaShipment.papaStatus] ?? papaShipment.papaStatus}
               </div>
             )}
+          </div>
 
-            {/* Close Button */}
-            <div className="border-t bg-gray-50 px-6 py-4 flex justify-end">
-              <button
-                onClick={() => onOpenChange(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Close
-              </button>
+          {/* Papa shipment info */}
+          {papaShipment && (
+            <div style={{
+              margin: "16px 24px", padding: "12px 16px",
+              backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px",
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px",
+            }}>
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "3px" }}>Papa код</div>
+                <div style={{ fontWeight: "700", fontFamily: "monospace", letterSpacing: "0.5px" }}>
+                  {papaShipment.papaCode ?? "—"}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "3px" }}>Pincode</div>
+                <div style={{ fontWeight: "700", fontSize: "16px" }}>
+                  {papaShipment.papaPincode ?? "—"}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "3px" }}>End code</div>
+                <div style={{ fontWeight: "700", fontSize: "16px", color: endPincode ? "#15803d" : "#9ca3af" }}>
+                  {endPincode ?? "—"}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "3px" }}>Жолоочийн төлбөр</div>
+                <div style={{ fontWeight: "600" }}>
+                  ₮{(papaShipment.shippingAmount ?? 6000).toLocaleString()}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customer & address */}
+          <div style={{ padding: "0 24px 16px" }}>
+            <div style={{
+              padding: "14px 16px", backgroundColor: "#f9fafb",
+              border: "1px solid #e5e7eb", borderRadius: "8px",
+            }}>
+              <div style={{ fontWeight: "600", marginBottom: "10px" }}>{customerName}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: "5px 8px", color: "#374151" }}>
+                <span style={{ color: "#9ca3af" }}>Утас</span><span>{phone}</span>
+                <span style={{ color: "#9ca3af" }}>Дүүрэг</span><span>{district}</span>
+                {address !== "—" && <><span style={{ color: "#9ca3af" }}>Хаяг</span><span>{address}</span></>}
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Order items */}
+          {delivery.orderItems?.length > 0 && (
+            <div style={{ padding: "0 24px 16px" }}>
+              <div style={{ fontSize: "11px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase", marginBottom: "8px" }}>
+                Бараанууд ({delivery.orderItems.length})
+              </div>
+              <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflow: "hidden" }}>
+                {delivery.orderItems.map((item, i) => (
+                  <div key={item.id} style={{
+                    display: "flex", alignItems: "center", gap: "10px",
+                    padding: "10px 14px",
+                    borderBottom: i < delivery.orderItems.length - 1 ? "1px solid #f3f4f6" : "none",
+                    backgroundColor: i % 2 === 0 ? "white" : "#fafafa",
+                  }}>
+                    {item.product?.ProductImages?.[0]?.imageUrl && (
+                      <img
+                        src={item.product.ProductImages[0].imageUrl}
+                        alt=""
+                        style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "4px", flexShrink: 0 }}
+                      />
+                    )}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {item.product?.name ?? "Бараа"}
+                      </div>
+                      {item.variant?.sku && (
+                        <div style={{ fontSize: "11px", color: "#9ca3af" }}>{item.variant.sku}</div>
+                      )}
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontWeight: "600" }}>{formatPrice(item.price)}</div>
+                      <div style={{ fontSize: "11px", color: "#6b7280" }}>× {item.quantity}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Total */}
+          <div style={{
+            margin: "0 24px 20px",
+            padding: "12px 16px",
+            backgroundColor: "#f9fafb", borderRadius: "8px",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <span style={{ color: "#6b7280" }}>Нийт дүн</span>
+            <span style={{ fontWeight: "700", fontSize: "15px" }}>{formatPrice(delivery.total)}</span>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
-

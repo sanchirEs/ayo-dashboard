@@ -36,6 +36,7 @@ export default function Menu() {
       "/order-list": 5,
       "/order-detail": 5,
       "/order-tracking": 5,
+      "/import-orders": 5,
       "/delivery": 12,
       "/coupons": 7,
       "/new-coupon": 7,
@@ -126,6 +127,16 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Захиалгын жагсаалт</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/import-orders"
+                    className={
+                      isSubMenuItemActive("/import-orders") ? "active" : ""
+                    }
+                  >
+                    <div className="text">🌏 Импорт захиалга</div>
                   </Link>
                 </li>
                 {/* <li className="sub-menu-item">
