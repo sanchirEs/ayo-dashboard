@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import ProductImage from "./ProductImage";
 import QuickViewAction from "./QuickViewActionClient";
-import DeleteProductButton from "./DeleteProductButton.jsx";
+import ToggleActiveButton from "./ToggleActiveButton.jsx";
 
 export default function ProductRowClient({ product, gridTemplate }) {
   const [removed, setRemoved] = useState(false);
+  const inactive = product.isActive === false;
 
   if (removed) return null;
 
@@ -92,23 +93,24 @@ export default function ProductRowClient({ product, gridTemplate }) {
   return (
      <li
        className="product-item"
-       style={{ 
-         display: 'grid', 
-         gridTemplateColumns: gridTemplate, 
-         alignItems: 'center', 
-         columnGap: 12, 
+       style={{
+         display: 'grid',
+         gridTemplateColumns: gridTemplate,
+         alignItems: 'center',
+         columnGap: 12,
          minHeight: 72,
          padding: '0.75rem 1.25rem',
          transition: 'background-color 0.2s ease',
-         borderBottom: '1px solid #f3f4f6'
+         borderBottom: '1px solid #f3f4f6',
+         opacity: inactive ? 0.55 : 1,
        }}
-      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = inactive ? '#fafafa' : '#f9fafb'}
       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
     >
       <div className="flex items-center" style={{ gap: 16, minWidth: 0 }}>
         <ProductImage product={product} size={56} />
         <div className="name" style={{ minWidth: 0, flex: 1 }}>
-          <Link href={`/edit-product/${product.id}`} className="body-title-2" style={{ 
+          <Link href={`/edit-product/${product.id}`} className="body-title-2" style={{
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -118,6 +120,19 @@ export default function ProductRowClient({ product, gridTemplate }) {
           }}>
             {product.name}
           </Link>
+          {inactive && (
+            <span style={{
+              display: 'inline-block',
+              marginTop: 2,
+              fontSize: 10,
+              fontWeight: 600,
+              padding: '1px 6px',
+              borderRadius: 8,
+              backgroundColor: '#fee2e2',
+              color: '#dc2626',
+              letterSpacing: '0.02em',
+            }}>Идэвхгүй</span>
+          )}
         </div>
       </div>
        <div className="body-text" style={{ fontSize: '12px', color: '#6b7280', textAlign: 'center' }}>#{product.sku}</div>
@@ -154,7 +169,7 @@ export default function ProductRowClient({ product, gridTemplate }) {
         <Link href={`/edit-product/${product.id}`} className="item edit">
           <i className="icon-edit-3" />
         </Link>
-        <DeleteProductButton productId={product.id} onDeleted={() => setRemoved(true)} />
+        <ToggleActiveButton productId={product.id} isActive={product.isActive !== false} />
       </div>
     </li>
   );
