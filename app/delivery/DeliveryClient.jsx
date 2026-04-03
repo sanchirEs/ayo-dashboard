@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { getBackendUrl } from "@/lib/api/env";
 import { formatOrderDate, formatPrice } from "@/lib/api/orders";
+import { exportToExcel } from "@/lib/exportToExcel";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants & helpers
@@ -249,6 +250,27 @@ export default function DeliveryClient() {
   // Render
   // ─────────────────────────────────────────────────────────────────────────
 
+  function handleExportExcel() {
+    const exportRows = rows.map(d => {
+      const papa = d.papaShipment;
+      return {
+        "Order ID": d.id,
+        "Customer": d.user ? `${d.user.firstName} ${d.user.lastName}` : "—",
+        "Phone": d.user?.telephone || "",
+        "Product": d.orderItems?.[0]?.product?.name || "—",
+        "Items": d.orderItems?.length || 0,
+        "Total": d.total,
+        "Papa Code": papa?.papaCode || "",
+        "Papa Status": papa?.papaStatus || "Not sent",
+        "Driver": papa?.driverName || "",
+        "Driver Phone": papa?.driverPhone || "",
+        "Date": d.createdAt ? new Date(d.createdAt).toLocaleString() : "",
+      };
+    });
+    const date = new Date().toISOString().slice(0, 10);
+    exportToExcel(exportRows, `delivery-${activeTab}-${date}`);
+  }
+
   const TABS = [
     { id: "dispatch", label: "Хүргэх",        count: dispatch.length,  dot: "#f59e0b" },
     { id: "transit",  label: "Хүргэлтэнд",    count: transit.length,   dot: "#3b82f6" },
@@ -355,6 +377,28 @@ export default function DeliveryClient() {
                 }}>×</button>
               )}
             </div>
+            <button
+              onClick={handleExportExcel}
+              disabled={loading || rows.length === 0}
+              title="Excel-рүү экспортлох"
+              style={{
+                padding: "6px 12px", borderRadius: 7, fontSize: 12, fontWeight: 600,
+                border: "1px solid #e5e7eb", backgroundColor: "#fff", color: "#374151",
+                cursor: (loading || rows.length === 0) ? "not-allowed" : "pointer",
+                opacity: (loading || rows.length === 0) ? 0.5 : 1,
+                display: "flex", alignItems: "center", gap: 5,
+                transition: "all 0.15s",
+              }}
+              onMouseEnter={e => { if (!loading && rows.length > 0) e.currentTarget.style.backgroundColor = "#f9fafb"; }}
+              onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#fff"; }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Excel
+            </button>
             <button
               onClick={fetchDeliveries}
               disabled={loading}

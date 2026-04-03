@@ -386,9 +386,7 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
                       {address.addressLine1 && <div>{address.addressLine1}</div>}
                       {address.addressLine2 && <div>{address.addressLine2}</div>}
-                      {(address.city || address.postalCode) && (
-                        <div>{[address.city, address.postalCode].filter(Boolean).join(", ")}</div>
-                      )}
+                      {address.city && <div>{address.city}</div>}
                       {address.country && <div>{address.country}</div>}
                       {address.mobile && (
                         <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {address.mobile}</div>
