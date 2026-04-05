@@ -122,15 +122,16 @@ export default async function OrderDetail({ params }) {
                     <span className="body-title-2">{formatPrice(subtotal)}</span>
                   </li>
                   <li className="divider" />
-                  {shippingCost > 0 && (
-                    <>
-                      <li className="cart-totals-item">
-                        <span className="body-text">Хүргэлт:</span>
-                        <span className="body-title-2">{formatPrice(shippingCost)}</span>
-                      </li>
-                      <li className="divider" />
-                    </>
-                  )}
+                  <li className="cart-totals-item">
+                    <span className="body-text">Хүргэлт:</span>
+                    <span className="body-title-2">
+                      {order.deliveryType === 'PICKUP'
+                        ? 'Дэлгүүрээс авах'
+                        : formatPrice(shippingCost)
+                      }
+                    </span>
+                  </li>
+                  <li className="divider" />
                   <li className="cart-totals-item">
                     <span className="body-title">Нийт дүн:</span>
                     <span className="body-title tf-color-1">{formatPrice(orderTotal)}</span>
@@ -203,30 +204,61 @@ export default async function OrderDetail({ params }) {
               </div>
             )}
 
-            {/* Shipping Information */}
+            {/* Shipping / Pickup Information */}
             {order.shipping && (
               <div className="wg-box mb-20 gap10">
-                <div className="body-title">Shipping Information</div>
-                <div className="summary-item">
-                  <div className="body-text">Method</div>
-                  <div className="body-title-2">{order.shipping.shippingMethod}</div>
+                <div className="body-title">
+                  {order.deliveryType === 'PICKUP' ? 'Салбараас авах мэдээлэл' : 'Shipping Information'}
                 </div>
-                {order.shipping.trackingNumber && (
-                  <div className="summary-item">
-                    <div className="body-text">Tracking</div>
-                    <div className="body-title-2">{order.shipping.trackingNumber}</div>
-                  </div>
+                {order.deliveryType === 'PICKUP' ? (
+                  <>
+                    <div className="summary-item">
+                      <div className="body-text">Төрөл</div>
+                      <div className="body-title-2" style={{ color: '#495D35' }}>Дэлгүүрээс авах</div>
+                    </div>
+                    {order.shipping.pickupStoreName && (
+                      <div className="summary-item">
+                        <div className="body-text">Салбар</div>
+                        <div className="body-title-2">{order.shipping.pickupStoreName}</div>
+                      </div>
+                    )}
+                    {order.shipping.addressLine1 && (
+                      <div className="summary-item">
+                        <div className="body-text">Хаяг</div>
+                        <div className="body-title-2">{order.shipping.addressLine1}</div>
+                      </div>
+                    )}
+                    {order.shipping.recipientPhone && (
+                      <div className="summary-item">
+                        <div className="body-text">Утас</div>
+                        <div className="body-title-2">{order.shipping.recipientPhone}</div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="summary-item">
+                      <div className="body-text">Method</div>
+                      <div className="body-title-2">{order.shipping.shippingMethod}</div>
+                    </div>
+                    {order.shipping.trackingNumber && (
+                      <div className="summary-item">
+                        <div className="body-text">Tracking</div>
+                        <div className="body-title-2">{order.shipping.trackingNumber}</div>
+                      </div>
+                    )}
+                    <div className="summary-item">
+                      <div className="body-text">Estimated Delivery</div>
+                      <div className="body-title-2 tf-color-2">
+                        {formatOrderDate(order.shipping.estimatedDelivery)}
+                      </div>
+                    </div>
+                    <div className="summary-item">
+                      <div className="body-text">Shipping Cost</div>
+                      <div className="body-title-2">{formatPrice(order.shipping.shippingCost)}</div>
+                    </div>
+                  </>
                 )}
-                <div className="summary-item">
-                  <div className="body-text">Estimated Delivery</div>
-                  <div className="body-title-2 tf-color-2">
-                    {formatOrderDate(order.shipping.estimatedDelivery)}
-                  </div>
-                </div>
-                <div className="summary-item">
-                  <div className="body-text">Shipping Cost</div>
-                  <div className="body-title-2">{formatPrice(order.shipping.shippingCost)}</div>
-                </div>
               </div>
             )}
 
