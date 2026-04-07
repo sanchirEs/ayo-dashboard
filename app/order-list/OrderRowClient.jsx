@@ -1,56 +1,66 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { getStatusBlockClass, formatOrderDate, formatPrice, translateStatus } from "@/lib/api/orders";
-import OrderRowActions from "./OrderRowActions";
 import OrderImage from "./OrderImage";
+import OrderQuickView from "./OrderQuickView";
 
-const PAPA_LABELS = {
-  NEW: "Жолооч дуудсан",
-  CONFIRM: "Жолооч дуудсан",
-  CREATING_SHIPPING: "Хүргэлтэнд",
-  START: "Хүргэлтэнд",
-  END: "Хүргэгдсэн",
-  COMPLETED: "Хүргэгдсэн",
-  CANCELLED: "Цуцалсан",
-};
+function DeliveryBadge({ order }) {
+  const isPickup = order.deliveryType === "PICKUP";
+  const papa = order.papaShipment?.papaStatus;
 
-const PAPA_COLORS = {
-  NEW: { bg: "#fffbeb", color: "#92400e" },
-  CONFIRM: { bg: "#eff6ff", color: "#1e40af" },
-  CREATING_SHIPPING: { bg: "#fff7ed", color: "#9a3412" },
-  START: { bg: "#fff7ed", color: "#9a3412" },
-  END: { bg: "#ecfdf5", color: "#065f46" },
-  COMPLETED: { bg: "#ecfdf5", color: "#065f46" },
-  CANCELLED: { bg: "#fef2f2", color: "#991b1b" },
-};
+  // If no papa shipment, just show delivery type
+  if (!papa) {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        padding: "3px 10px", borderRadius: 9999,
+        fontSize: 11, fontWeight: 600,
+        backgroundColor: isPickup ? "#fef3c7" : "#dbeafe",
+        color: isPickup ? "#92400e" : "#1e40af",
+      }}>
+        {isPickup ? "Ирж авах" : "Хүргэлт"}
+      </span>
+    );
+  }
 
-function PapaStatusMini({ status }) {
-  const label = PAPA_LABELS[status] || status;
-  const colors = PAPA_COLORS[status] || { bg: "#f9fafb", color: "#374151" };
+  // Papa shipment exists — show combined badge
+  const PAPA_CFG = {
+    NEW:              { label: "Жолооч дуудсан",    bg: "#fffbeb", color: "#92400e", dot: "#f59e0b" },
+    CONFIRM:          { label: "Жолооч дуудсан",    bg: "#eff6ff", color: "#1e40af", dot: "#3b82f6" },
+    CREATING_SHIPPING:{ label: "Хүргэлтэнд",        bg: "#fff7ed", color: "#9a3412", dot: "#f97316" },
+    START:            { label: "Хүргэлтэнд",        bg: "#fff7ed", color: "#9a3412", dot: "#f97316" },
+    END:              { label: "Хүргэгдсэн",        bg: "#ecfdf5", color: "#065f46", dot: "#10b981" },
+    COMPLETED:        { label: "Хүргэгдсэн",        bg: "#ecfdf5", color: "#065f46", dot: "#10b981" },
+    CANCELLED:        { label: "Цуцалсан",           bg: "#fef2f2", color: "#991b1b", dot: "#ef4444" },
+  };
+  const cfg = PAPA_CFG[papa] || { label: papa, bg: "#f9fafb", color: "#374151", dot: "#6b7280" };
+
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'center',
-      padding: '1px 7px', borderRadius: 9999,
-      fontSize: '10px', fontWeight: 600,
-      backgroundColor: colors.bg, color: colors.color,
+      display: "inline-flex", alignItems: "center", gap: 5,
+      padding: "3px 10px", borderRadius: 9999,
+      fontSize: 11, fontWeight: 600,
+      backgroundColor: cfg.bg, color: cfg.color,
     }}>
-      {label}
+      <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: cfg.dot, flexShrink: 0 }} />
+      {cfg.label}
     </span>
   );
 }
 
 export default function OrderRowClient({ order, isSelected, onSelect }) {
-  // Get the first product image for display
+  const [modalOpen, setModalOpen] = useState(false);
+
   const firstItem = order.orderItems?.[0];
   const productImage = firstItem?.product?.ProductImages?.[0]?.imageUrl;
-  const productName = firstItem?.product?.name || 'Multiple Products';
-  const customerName = order.user ? `${order.user.firstName} ${order.user.lastName}` : 'N/A';
-  
+  const productName = firstItem?.product?.name || "Бүтээгдэхүүн";
+  const customerName = order.user ? `${order.user.firstName} ${order.user.lastName}` : "—";
+
   return (
-    <li 
+    <li
       className="product-item gap14"
-      style={{ 
+      style={{
         transition: 'background-color 0.2s ease',
         borderBottom: '1px solid #f3f4f6',
         backgroundColor: isSelected ? '#eff6ff' : 'transparent'
@@ -73,42 +83,38 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
         />
       </div>
 
-      <OrderImage 
+      <OrderImage
         imageUrl={productImage}
         productName={productName}
       />
       <div className="flex items-center justify-between gap20 flex-grow">
         <div className="name">
-          <Link href={`/order-detail/${order.id}`} className="body-title-2">
-            {order.orderItems.length > 1 
-              ? `${productName} + ${order.orderItems.length - 1} more`
+          <button
+            onClick={() => setModalOpen(true)}
+            className="body-title-2"
+            style={{
+              background: "none", border: "none", padding: 0, margin: 0,
+              cursor: "pointer", textAlign: "left", font: "inherit",
+              color: "inherit", textDecoration: "none",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#3b82f6"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "inherit"; }}
+          >
+            {order.orderItems.length > 1
+              ? `${productName} + ${order.orderItems.length - 1}`
               : productName
             }
-          </Link>
+          </button>
         </div>
         <div className="body-text">#{order.id}</div>
         <div className="body-text">{customerName}</div>
         <div className="body-text">{formatPrice(order.total)}</div>
         <div className="body-text">{order.orderItems.length}</div>
         <div className="body-text">
-          {order.payment ? order.payment.provider : 'N/A'}
+          {order.payment ? order.payment.provider : '—'}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-start' }}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: '2px 8px',
-            borderRadius: '9999px',
-            fontSize: '11px',
-            fontWeight: 500,
-            backgroundColor: order.deliveryType === 'PICKUP' ? '#fef3c7' : '#dbeafe',
-            color: order.deliveryType === 'PICKUP' ? '#92400e' : '#1e40af',
-          }}>
-            {order.deliveryType === 'PICKUP' ? 'Ирж авах' : 'Хүргэлт'}
-          </span>
-          {order.papaShipment && (
-            <PapaStatusMini status={order.papaShipment.papaStatus} />
-          )}
+        <div>
+          <DeliveryBadge order={order} />
         </div>
         <div>
           <div className={getStatusBlockClass(order.status)}>
@@ -118,8 +124,19 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
         <div className="body-text text-sm">
           {formatOrderDate(order.createdAt)}
         </div>
-        <OrderRowActions order={order} />
+        <div className="list-icon-function">
+          <button
+            className="item eye"
+            onClick={() => setModalOpen(true)}
+            title="Дэлгэрэнгүй"
+          >
+            <i className="icon-eye" />
+          </button>
+        </div>
       </div>
+
+      {/* Modal */}
+      <OrderQuickView open={modalOpen} onOpenChange={setModalOpen} orderId={order.id} />
     </li>
   );
 }
