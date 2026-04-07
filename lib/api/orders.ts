@@ -32,14 +32,19 @@ export interface PaymentDetails {
 }
 
 export interface ShippingDetails {
-  id: number;
-  orderId: number;
+  id?: number;
+  orderId?: number;
   shippingMethod: string;
-  trackingNumber: string;
+  trackingNumber?: string;
   shippingCost: string;
-  estimatedDelivery: string;
-  createdAt: string;
-  modifiedAt: string;
+  estimatedDelivery?: string;
+  pickupStoreName?: string;
+  recipientPhone?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  district?: string;
+  createdAt?: string;
+  modifiedAt?: string;
 }
 
 export interface Order {
@@ -47,6 +52,7 @@ export interface Order {
   userId: number;
   total: string;
   status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  deliveryType?: 'DELIVERY' | 'PICKUP';
   createdAt: string;
   modifiedAt: string;
   couponId?: number;
@@ -91,6 +97,7 @@ export interface OrdersParams {
   dateTo?: string;
   paymentStatus?: string;
   paymentProvider?: string;
+  deliveryType?: string;
 }
 
 export async function getOrders(params: OrdersParams = {}): Promise<OrdersResponse> {
@@ -122,6 +129,7 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
     if (params.dateTo) searchParams.append('dateTo', params.dateTo);
     if (params.paymentStatus) searchParams.append('paymentStatus', params.paymentStatus);
     if (params.paymentProvider) searchParams.append('paymentProvider', params.paymentProvider);
+    if (params.deliveryType) searchParams.append('deliveryType', params.deliveryType);
     // Ensure createdAt sorting is used for recent orders
     searchParams.append('sortField', params.sortField || 'createdAt');
     searchParams.append('sortOrder', params.sortOrder || 'desc');

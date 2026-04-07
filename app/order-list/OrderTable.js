@@ -13,6 +13,7 @@ export default async function OrderTable({ searchParams }) {
   const dateTo = params.dateTo || '';
   const paymentStatus = params.paymentStatus || '';
   const paymentProvider = params.paymentProvider || '';
+  const deliveryType = params.deliveryType || '';
 
   try {
     const { data: orders, pagination } = await getOrders({
@@ -24,6 +25,7 @@ export default async function OrderTable({ searchParams }) {
       dateTo,
       paymentStatus,
       paymentProvider,
+      deliveryType,
       sortField: 'createdAt', // Sort by creation date to show recent orders first
       sortOrder: 'desc'
     });

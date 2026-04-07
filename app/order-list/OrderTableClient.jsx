@@ -41,7 +41,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
   }, [selectedOrders]);
   
   // Grid template for order table columns
-  const gridTemplate = '40px minmax(150px, 2fr) 90px 120px 100px 70px 90px 100px 140px 120px';
+  const gridTemplate = '40px minmax(150px, 2fr) 90px 120px 100px 70px 90px 90px 100px 140px 120px';
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -72,12 +72,17 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
       "Order ID": order.id,
       "Customer": order.user ? `${order.user.firstName} ${order.user.lastName}` : "—",
       "Email": order.user?.email || "",
-      "Phone": order.user?.telephone || "",
+      "Phone": order.shipping?.recipientPhone || order.user?.telephone || "",
       "Status": order.status,
       "Total": order.total,
       "Items": order.orderItems?.length || 0,
       "Payment Provider": order.payment?.provider || "",
       "Payment Status": order.payment?.status || "",
+      "Хүргэлтийн төрөл": order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт",
+      "Хаяг": order.deliveryType === "PICKUP"
+        ? (order.shipping?.pickupStoreName || "")
+        : [order.shipping?.addressLine1, order.shipping?.addressLine2].filter(Boolean).join(", "),
+      "Дүүрэг": order.shipping?.district || "",
       "Date": order.createdAt ? new Date(order.createdAt).toLocaleString() : "",
     }));
     const date = new Date().toISOString().slice(0, 10);
@@ -204,6 +209,9 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
           </li>
           <li>
             <div className="body-title">Payment</div>
+          </li>
+          <li>
+            <div className="body-title">Хүргэлт</div>
           </li>
           <li>
             <div className="body-title">Status</div>

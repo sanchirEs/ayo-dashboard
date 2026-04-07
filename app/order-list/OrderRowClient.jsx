@@ -59,6 +59,20 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
           {order.payment ? order.payment.provider : 'N/A'}
         </div>
         <div>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '2px 8px',
+            borderRadius: '9999px',
+            fontSize: '11px',
+            fontWeight: 500,
+            backgroundColor: order.deliveryType === 'PICKUP' ? '#fef3c7' : '#dbeafe',
+            color: order.deliveryType === 'PICKUP' ? '#92400e' : '#1e40af',
+          }}>
+            {order.deliveryType === 'PICKUP' ? 'Ирж авах' : 'Хүргэлт'}
+          </span>
+        </div>
+        <div>
           <div className={getStatusBlockClass(order.status)}>
             {translateStatus(order.status)}
           </div>
