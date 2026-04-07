@@ -89,22 +89,17 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
       />
       <div className="flex items-center justify-between gap20 flex-grow">
         <div className="name">
-          <button
-            onClick={() => setModalOpen(true)}
+          <a
+            onClick={(e) => { e.preventDefault(); setModalOpen(true); }}
+            href="#"
             className="body-title-2"
-            style={{
-              background: "none", border: "none", padding: 0, margin: 0,
-              cursor: "pointer", textAlign: "left", font: "inherit",
-              color: "inherit", textDecoration: "none",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#3b82f6"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "inherit"; }}
+            style={{ cursor: "pointer" }}
           >
             {order.orderItems.length > 1
               ? `${productName} + ${order.orderItems.length - 1}`
               : productName
             }
-          </button>
+          </a>
         </div>
         <div className="body-text">#{order.id}</div>
         <div className="body-text">{customerName}</div>
