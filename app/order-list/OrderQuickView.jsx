@@ -76,7 +76,7 @@ function MetaItem({ label, value }) {
 function Divider({ dashed }) {
   return (
     <div style={{
-      height: 0, margin: "0 -24px",
+      height: 0, margin: "0",
       borderTop: dashed ? "1.5px dashed #e5e7eb" : "1px solid #f3f4f6",
     }} />
   );
@@ -214,14 +214,14 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     : 0;
   const shipping = parseFloat(order?.shippingCost || 0);
   const total = parseFloat(order?.total || 0);
-  const canAct = order && order.status !== "CANCELLED" && order.status !== "DELIVERED";
+  const canAct = order && order.status !== "CANCELLED";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="p-0 overflow-hidden"
+        className="p-0"
         style={{
-          maxWidth: 620,
+          maxWidth: 720,
           width: "95vw",
           maxHeight: "92vh",
           borderRadius: 16,
@@ -229,12 +229,13 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
           display: "flex",
           flexDirection: "column",
           border: "none",
+          overflow: "hidden",
         }}
       >
         <DialogTitle className="sr-only">Order #{orderId}</DialogTitle>
 
         {/* ── Scrollable body ─────────────────────────────────────────────── */}
-        <div style={{ flex: 1, overflowY: "auto", backgroundColor: "#fff" }}>
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", backgroundColor: "#fff" }}>
 
           {loading && !order ? (
             <LoadingSkeleton />
@@ -375,26 +376,34 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                 </div>
               </div>
 
-              {/* ── Address ───────────────────────────────────────────────── */}
-              {address && (
-                <>
-                  <Divider />
-                  <div style={{ padding: "16px 24px" }}>
-                    <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>
-                      Хүргэлтийн хаяг
-                    </div>
-                    <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-                      {address.addressLine1 && <div>{address.addressLine1}</div>}
-                      {address.addressLine2 && <div>{address.addressLine2}</div>}
-                      {address.city && <div>{address.city}</div>}
-                      {address.country && <div>{address.country}</div>}
-                      {address.mobile && (
-                        <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {address.mobile}</div>
-                      )}
-                    </div>
+              {/* ── Delivery & Address ────────────────────────────────────── */}
+              <Divider />
+              <div style={{ padding: "16px 24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    Хүргэлт
                   </div>
-                </>
-              )}
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", padding: "2px 10px", borderRadius: 9999,
+                    fontSize: 11, fontWeight: 600,
+                    backgroundColor: order.deliveryType === "PICKUP" ? "#fef3c7" : "#dbeafe",
+                    color: order.deliveryType === "PICKUP" ? "#92400e" : "#1e40af",
+                  }}>
+                    {order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт"}
+                  </span>
+                </div>
+                {address && (
+                  <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+                    {address.addressLine1 && <div>{address.addressLine1}</div>}
+                    {address.addressLine2 && <div>{address.addressLine2}</div>}
+                    {address.district && <div>{address.district}</div>}
+                    {address.city && <div>{address.city}</div>}
+                    {address.mobile && (
+                      <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {address.mobile}</div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* ── Shipping tracking ─────────────────────────────────────── */}
               {order.shipping?.trackingNumber && (
@@ -523,6 +532,23 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                       }}
                     >
                       {updating ? "..." : "Хүргэсэн"}
+                    </button>
+                  )}
+                  {order.status === "DELIVERED" && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Захиалгыг PROCESSING руу буцаах уу?")) {
+                          handleStatusUpdate("PROCESSING");
+                        }
+                      }}
+                      disabled={updating}
+                      style={{
+                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                        border: "1px solid #f59e0b", backgroundColor: "#fffbeb", color: "#92400e",
+                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
+                      }}
+                    >
+                      {updating ? "..." : "Буцаах"}
                     </button>
                   )}
                 </>

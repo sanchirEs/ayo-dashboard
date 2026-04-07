@@ -154,7 +154,7 @@ export default function OrderFilters() {
             }}>
               <input
                 type="text"
-                placeholder="Search orders by customer name, order ID..."
+                placeholder="Хэрэглэгчийн нэр, захиалгын дугаараар хайх..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{
@@ -203,12 +203,12 @@ export default function OrderFilters() {
             maxWidth: '140px'
           }}
         >
-          <option value="">Date Range</option>
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="last7days">Last 7 days</option>
-          <option value="last30days">Last 30 days</option>
-          <option value="last90days">Last 90 days</option>
+          <option value="">Огноо</option>
+          <option value="today">Өнөөдөр</option>
+          <option value="yesterday">Өчигдөр</option>
+          <option value="last7days">Сүүлийн 7 хоног</option>
+          <option value="last30days">Сүүлийн 30 хоног</option>
+          <option value="last90days">Сүүлийн 90 хоног</option>
         </select>
 
         {/* Order Status Filter */}
@@ -226,7 +226,7 @@ export default function OrderFilters() {
             maxWidth: '140px'
           }}
         >
-          <option value="">All Status</option>
+          <option value="">Бүх статус</option>
           <option value="PENDING">Төлбөр төлөөгүй</option>
           <option value="PROCESSING">Төлбөр төлсөн</option>
           <option value="SHIPPED">Хүргэлтэнд гарсан</option>
@@ -249,14 +249,14 @@ export default function OrderFilters() {
             maxWidth: '160px'
           }}
         >
-          <option value="">Payment Status</option>
-          <option value="PENDING">Төлбөр Хүлээгдэж байна</option>
-          <option value="COMPLETED">Төлбөр төлсөн</option>
-          <option value="FAILED">Төлбөр амжилтгүй</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="EXPIRED">Expired</option>
-          <option value="CANCELLED">Төлбөр цуцалсан</option>
-          <option value="REFUNDED">Refunded</option>
+          <option value="">Төлбөр</option>
+          <option value="PENDING">Хүлээгдэж байна</option>
+          <option value="COMPLETED">Төлсөн</option>
+          <option value="FAILED">Амжилтгүй</option>
+          <option value="PROCESSING">Боловсруулж байна</option>
+          <option value="EXPIRED">Хугацаа дууссан</option>
+          <option value="CANCELLED">Цуцалсан</option>
+          <option value="REFUNDED">Буцаагдсан</option>
         </select>
 
         {/* Payment Provider Filter */}
@@ -274,7 +274,7 @@ export default function OrderFilters() {
             maxWidth: '130px'
           }}
         >
-          <option value="">Provider</option>
+          <option value="">Төлбөрийн хэрэгсэл</option>
           <option value="QPAY">QPAY</option>
           <option value="POCKET">POCKET</option>
           <option value="STOREPAY">STOREPAY</option>
@@ -300,6 +300,35 @@ export default function OrderFilters() {
           <option value="PICKUP">Ирж авах</option>
         </select>
 
+        {/* Export Excel */}
+        <button
+          onClick={() => window.dispatchEvent(new Event('export-orders-excel'))}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb',
+            fontSize: '13px',
+            fontWeight: 500,
+            backgroundColor: 'white',
+            color: '#374151',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+            marginLeft: 'auto',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Excel
+        </button>
+
         {/* Clear Filters */}
         {activeFiltersCount > 0 && (
           <button
@@ -315,16 +344,15 @@ export default function OrderFilters() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              marginLeft: 'auto'
             }}
             onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#fef2f2';
+              e.currentTarget.style.backgroundColor = '#fef2f2';
             }}
             onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'white';
+              e.currentTarget.style.backgroundColor = 'white';
             }}
           >
-            ✕ Clear ({activeFiltersCount})
+            ✕ Арилгах ({activeFiltersCount})
           </button>
         )}
       </div>

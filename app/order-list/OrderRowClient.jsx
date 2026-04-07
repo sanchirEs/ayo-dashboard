@@ -5,6 +5,41 @@ import { getStatusBlockClass, formatOrderDate, formatPrice, translateStatus } fr
 import OrderRowActions from "./OrderRowActions";
 import OrderImage from "./OrderImage";
 
+const PAPA_LABELS = {
+  NEW: "Жолооч дуудсан",
+  CONFIRM: "Жолооч дуудсан",
+  CREATING_SHIPPING: "Хүргэлтэнд",
+  START: "Хүргэлтэнд",
+  END: "Хүргэгдсэн",
+  COMPLETED: "Хүргэгдсэн",
+  CANCELLED: "Цуцалсан",
+};
+
+const PAPA_COLORS = {
+  NEW: { bg: "#fffbeb", color: "#92400e" },
+  CONFIRM: { bg: "#eff6ff", color: "#1e40af" },
+  CREATING_SHIPPING: { bg: "#fff7ed", color: "#9a3412" },
+  START: { bg: "#fff7ed", color: "#9a3412" },
+  END: { bg: "#ecfdf5", color: "#065f46" },
+  COMPLETED: { bg: "#ecfdf5", color: "#065f46" },
+  CANCELLED: { bg: "#fef2f2", color: "#991b1b" },
+};
+
+function PapaStatusMini({ status }) {
+  const label = PAPA_LABELS[status] || status;
+  const colors = PAPA_COLORS[status] || { bg: "#f9fafb", color: "#374151" };
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center',
+      padding: '1px 7px', borderRadius: 9999,
+      fontSize: '10px', fontWeight: 600,
+      backgroundColor: colors.bg, color: colors.color,
+    }}>
+      {label}
+    </span>
+  );
+}
+
 export default function OrderRowClient({ order, isSelected, onSelect }) {
   // Get the first product image for display
   const firstItem = order.orderItems?.[0];
@@ -58,7 +93,7 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
         <div className="body-text">
           {order.payment ? order.payment.provider : 'N/A'}
         </div>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', alignItems: 'flex-start' }}>
           <span style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -71,6 +106,9 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
           }}>
             {order.deliveryType === 'PICKUP' ? 'Ирж авах' : 'Хүргэлт'}
           </span>
+          {order.papaShipment && (
+            <PapaStatusMini status={order.papaShipment.papaStatus} />
+          )}
         </div>
         <div>
           <div className={getStatusBlockClass(order.status)}>

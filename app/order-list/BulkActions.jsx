@@ -62,8 +62,8 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
     }
 
     // Confirm action
-    const confirmMessage = `Are you ready to deliver ${validOrderIds.length} order(s)?\n\nThis will:\n• Create Papa shipments\n• Make them visible to drivers immediately\n• Driver will come to pick up the orders`;
-    
+    const confirmMessage = `${validOrderIds.length} захиалгад жолооч дуудах уу?\n\n• Papa-д хүргэлт үүсгэнэ\n• Жолооч нар шууд харах болно\n• Жолооч ирж барааг авна`;
+
     if (!confirm(confirmMessage)) {
       return;
     }
@@ -75,11 +75,11 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
       
       if (result.success) {
         const { succeeded, failed } = result.summary;
-        
+
         if (failed > 0) {
-          alert(`Delivery completed:\n✅ ${succeeded} orders delivered successfully\n❌ ${failed} orders failed\n\nCheck failed shipments page for details.`);
+          alert(`Жолооч дуудлага:\n${succeeded} амжилттай\n${failed} амжилтгүй`);
         } else {
-          alert(`🎉 Successfully delivered ${succeeded} order(s)!\n\nDrivers can now see these orders in Papa app and will come to pick them up.`);
+          alert(`${succeeded} захиалгад жолооч амжилттай дуудлаа!`);
         }
         
         onUpdateComplete?.();
@@ -140,12 +140,11 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
               borderRadius: '50%',
               animation: 'spin 0.6s linear infinite'
             }} />
-            Delivering...
+            Дуудаж байна...
           </>
         ) : (
           <>
-            <i className="icon-truck" style={{ fontSize: '14px' }} />
-            🚚 Deliver ({selectedOrders.size})
+            Жолооч дуудах ({selectedOrders.size})
           </>
         )}
       </button>
@@ -180,12 +179,12 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
               borderRadius: '50%',
               animation: 'spin 0.6s linear infinite'
             }} />
-            Updating...
+            Шинэчилж байна...
           </>
         ) : (
           <>
             <i className="icon-edit-3" style={{ fontSize: '12px' }} />
-              More Actions
+              Бусад
           </>
         )}
       </button>
@@ -225,12 +224,18 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px'
               }}>
-                Update Status
+                Статус өөрчлөх
               </div>
-              {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
+              {[
+                { value: 'PENDING', label: 'Хүлээгдэж байна', color: '#92400e' },
+                { value: 'PROCESSING', label: 'Баталгаажсан', color: '#1e40af' },
+                { value: 'SHIPPED', label: 'Илгээгдсэн', color: '#5b21b6' },
+                { value: 'DELIVERED', label: 'Хүргэгдсэн', color: '#065f46' },
+                { value: 'CANCELLED', label: 'Цуцлагдсан', color: '#ef4444' },
+              ].map(({ value, label, color }) => (
                 <button
-                  key={status}
-                  onClick={() => handleBulkStatusUpdate(status)}
+                  key={value}
+                  onClick={() => handleBulkStatusUpdate(value)}
                   disabled={isUpdating}
                   style={{
                     width: '100%',
@@ -240,7 +245,7 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
                     backgroundColor: 'transparent',
                     border: 'none',
                     cursor: isUpdating ? 'not-allowed' : 'pointer',
-                    color: status === 'CANCELLED' ? '#ef4444' : '#374151',
+                    color: color,
                     fontWeight: '500'
                   }}
                   onMouseEnter={(e) => {
@@ -250,7 +255,7 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
                     e.target.style.backgroundColor = 'transparent';
                   }}
                 >
-                  {status}
+                  {label}
                 </button>
               ))}
             </div>

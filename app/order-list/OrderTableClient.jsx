@@ -89,43 +89,18 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
     exportToExcel(rows, `orders-${date}`);
   };
 
+  // Register export handler so OrderFilters can trigger it
+  useEffect(() => {
+    const handler = () => handleExportExcel();
+    window.addEventListener('export-orders-excel', handler);
+    return () => window.removeEventListener('export-orders-excel', handler);
+  }, [orders]);
+
   const allSelected = orders.length > 0 && orders.every((order) => selectedOrders.has(order?.id));
   const someSelected = orders.some((order) => selectedOrders.has(order?.id));
 
   return (
     <>
-      {/* Export Button */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
-        <button
-          onClick={handleExportExcel}
-          disabled={orders.length === 0}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "6px",
-            border: "1px solid #e5e7eb",
-            fontSize: "13px",
-            fontWeight: 600,
-            backgroundColor: "#fff",
-            color: "#374151",
-            cursor: orders.length === 0 ? "not-allowed" : "pointer",
-            opacity: orders.length === 0 ? 0.5 : 1,
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={(e) => { if (orders.length > 0) e.currentTarget.style.backgroundColor = "#f9fafb"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "#fff"; }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Export Excel
-        </button>
-      </div>
-
       {/* Compact Selection Bar - Combines selection info and bulk actions */}
       {selectedOrders.size > 0 && (
         <div style={{
@@ -141,7 +116,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '13px', color: '#1e40af', fontWeight: '500' }}>
-              {selectedOrders.size} selected
+              {selectedOrders.size} сонгосон
             </span>
             <BulkActions 
               selectedOrders={selectedOrders}
@@ -172,7 +147,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
               e.target.style.textDecoration = 'none';
             }}
           >
-            ✕ Clear
+            ✕ Арилгах
           </button>
         </div>
       )}
