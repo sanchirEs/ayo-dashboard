@@ -12,12 +12,13 @@ import { exportToExcel } from "@/lib/exportToExcel";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PAPA_STATUS = {
-  NEW:       { label: "Баталгаажаагүй", dot: "#f59e0b", bg: "#fffbeb", text: "#92400e" },
-  CONFIRM:   { label: "Баталгаажсан",   dot: "#3b82f6", bg: "#eff6ff", text: "#1e40af" },
-  START:     { label: "Авсан",          dot: "#f97316", bg: "#fff7ed", text: "#9a3412" },
-  END:       { label: "Хүргэж байна",   dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
-  COMPLETED: { label: "Хүргэгдсэн",     dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
-  CANCELLED: { label: "Цуцлагдсан",     dot: "#ef4444", bg: "#fef2f2", text: "#991b1b" },
+  NEW:              { label: "Жолооч дуудсан",    dot: "#f59e0b", bg: "#fffbeb", text: "#92400e" },
+  CONFIRM:          { label: "Жолооч дуудсан",    dot: "#3b82f6", bg: "#eff6ff", text: "#1e40af" },
+  CREATING_SHIPPING:{ label: "Хүргэлтэнд гарсан", dot: "#f97316", bg: "#fff7ed", text: "#9a3412" },
+  START:            { label: "Хүргэлтэнд гарсан", dot: "#f97316", bg: "#fff7ed", text: "#9a3412" },
+  END:              { label: "Хүргэгдсэн",        dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
+  COMPLETED:        { label: "Хүргэгдсэн",        dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
+  CANCELLED:        { label: "Цуцалсан",           dot: "#ef4444", bg: "#fef2f2", text: "#991b1b" },
 };
 
 function PapaStatusBadge({ status }) {
@@ -90,9 +91,10 @@ function CopyBtn({ code }) {
 
 function EmptyState({ tab }) {
   const msgs = {
-    dispatch: { icon: "📦", title: "Хүргэх захиалга байхгүй", sub: "Бүх захиалга Papa руу илгээгдсэн байна." },
-    transit:  { icon: "🚚", title: "Идэвхтэй хүргэлт байхгүй", sub: "Одоогоор хүргэлтэнд гарсан захиалга алга." },
-    delivered:{ icon: "✅", title: "Хүргэгдсэн захиалга байхгүй", sub: "Хүргэлт дууссан захиалгууд энд харагдана." },
+    dispatch:  { icon: "📦", title: "Хүргэх захиалга байхгүй", sub: "Бүх захиалга Papa руу илгээгдсэн байна." },
+    transit:   { icon: "🚚", title: "Идэвхтэй хүргэлт байхгүй", sub: "Одоогоор хүргэлтэнд гарсан захиалга алга." },
+    delivered: { icon: "✅", title: "Хүргэгдсэн захиалга байхгүй", sub: "Хүргэлт дууссан захиалгууд энд харагдана." },
+    cancelled: { icon: "🚫", title: "Цуцалсан хүргэлт байхгүй", sub: "Цуцалсан хүргэлтүүд энд харагдана." },
   };
   const m = msgs[tab];
   return (
@@ -167,22 +169,29 @@ export default function DeliveryClient() {
 
   // ── Tab split ─────────────────────────────────────────────────────────────
 
-  const { dispatch, transit, delivered } = useMemo(() => {
-    const dispatch = [], transit = [], delivered = [];
+  const { dispatch, transit, delivered, cancelled } = useMemo(() => {
+    const dispatch = [], transit = [], delivered = [], cancelled = [];
     for (const d of deliveries) {
+      // Get the latest (most recent) non-cargo shipment
       const ps = d.papaShipment?.papaStatus;
       if (!d.papaShipment) {
+        // No shipment yet — ready to dispatch
         dispatch.push(d);
-      } else if (ps === "COMPLETED") {
+      } else if (ps === "CANCELLED") {
+        // Cancelled shipment — can re-call driver
+        cancelled.push(d);
+      } else if (ps === "END" || ps === "COMPLETED") {
+        // Delivered by Papa
         delivered.push(d);
       } else {
+        // NEW, CONFIRM, CREATING_SHIPPING, START — active/in transit
         transit.push(d);
       }
     }
-    return { dispatch, transit, delivered };
+    return { dispatch, transit, delivered, cancelled };
   }, [deliveries]);
 
-  const tabData = { dispatch, transit, delivered };
+  const tabData = { dispatch, transit, delivered, cancelled };
 
   // ── Filtered rows ─────────────────────────────────────────────────────────
 
@@ -272,9 +281,10 @@ export default function DeliveryClient() {
   }
 
   const TABS = [
-    { id: "dispatch", label: "Хүргэх",        count: dispatch.length,  dot: "#f59e0b" },
-    { id: "transit",  label: "Хүргэлтэнд",    count: transit.length,   dot: "#3b82f6" },
-    { id: "delivered",label: "Хүргэгдсэн",    count: delivered.length, dot: "#10b981" },
+    { id: "dispatch",  label: "Хүргэх",        count: dispatch.length,  dot: "#f59e0b", sub: "Papa руу илгээгдэх хүлээж байна" },
+    { id: "transit",   label: "Хүргэлтэнд",    count: transit.length,   dot: "#3b82f6", sub: "Жолооч дуудсан / хүргэлтэнд" },
+    { id: "delivered", label: "Хүргэгдсэн",    count: delivered.length, dot: "#10b981", sub: "Амжилттай хүргэсэн" },
+    { id: "cancelled", label: "Цуцалсан",      count: cancelled.length, dot: "#ef4444", sub: "Цуцалсан хүргэлтүүд" },
   ];
 
   return (
@@ -285,7 +295,7 @@ export default function DeliveryClient() {
       `}</style>
 
       {/* ── Stat cards ─────────────────────────────────────────────────────── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 20 }}>
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -307,8 +317,7 @@ export default function DeliveryClient() {
             <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 6 }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: tab.dot }} />
               <span style={{ fontSize: 11, color: "#6b7280" }}>
-                {tab.id === "dispatch" ? "Papa руу илгээгдэх хүлээж байна" :
-                 tab.id === "transit"  ? "Идэвхтэй хүргэлт" : "Амжилттай хүргэсэн"}
+                {tab.sub}
               </span>
             </div>
           </button>
@@ -583,7 +592,7 @@ export default function DeliveryClient() {
               <>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Нийт дүн", "Хүргэгдсэн огноо"].map(h => (
+                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Жолооч", "Нийт дүн", "Хүргэгдсэн огноо"].map(h => (
                       <th key={h} style={{ padding: "11px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
@@ -591,7 +600,69 @@ export default function DeliveryClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {loading ? <SkeletonRow cols={5} /> : rows.length === 0 ? <EmptyState tab="delivered" /> : rows.map(d => {
+                  {loading ? <SkeletonRow cols={6} /> : rows.length === 0 ? <EmptyState tab="delivered" /> : rows.map(d => {
+                    const papa = d.papaShipment;
+                    return (
+                      <tr key={d.id} className="del-row" style={{ borderBottom: "1px solid #f3f4f6", backgroundColor: "transparent", transition: "background 0.12s" }}>
+                        <td style={{ padding: "13px 12px" }}>
+                          <Link href={`/order-detail/${d.id}`} style={{ fontSize: 13, fontWeight: 700, color: "#111827", textDecoration: "none" }}>
+                            #{d.id}
+                          </Link>
+                        </td>
+                        <td style={{ padding: "13px 12px" }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                            {d.user ? `${d.user.firstName} ${d.user.lastName}` : "—"}
+                          </div>
+                          {d.user?.telephone && (
+                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{d.user.telephone}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: "13px 12px" }}>
+                          {papa?.papaCode
+                            ? <CopyBtn code={papa.papaCode} />
+                            : <span style={{ fontSize: 12, color: "#9ca3af" }}>—</span>
+                          }
+                        </td>
+                        <td style={{ padding: "13px 12px" }}>
+                          {papa?.driverName ? (
+                            <>
+                              <div style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{papa.driverName}</div>
+                              {papa.driverPhone && (
+                                <div style={{ fontSize: 11, color: "#9ca3af" }}>{papa.driverPhone}</div>
+                              )}
+                            </>
+                          ) : (
+                            <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "13px 12px", fontSize: 13, fontWeight: 600, color: "#111827" }}>
+                          {formatPrice(d.total)}
+                        </td>
+                        <td style={{ padding: "13px 12px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>
+                          {papa?.deliveredAt ? formatOrderDate(papa.deliveredAt) : formatOrderDate(d.createdAt)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </>
+            )}
+
+            {/* ── Cancelled ──────────────────────────────────────────────── */}
+            {activeTab === "cancelled" && (
+              <>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Нийт дүн", "Огноо", "Үйлдэл"].map(h => (
+                      <th key={h} style={{ padding: "11px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? <SkeletonRow cols={6} /> : rows.length === 0 ? <EmptyState tab="cancelled" /> : rows.map(d => {
+                    const rs = rowState[d.id] || {};
                     const papa = d.papaShipment;
                     return (
                       <tr key={d.id} className="del-row" style={{ borderBottom: "1px solid #f3f4f6", backgroundColor: "transparent", transition: "background 0.12s" }}>
@@ -618,7 +689,23 @@ export default function DeliveryClient() {
                           {formatPrice(d.total)}
                         </td>
                         <td style={{ padding: "13px 12px", fontSize: 12, color: "#6b7280", whiteSpace: "nowrap" }}>
-                          {papa?.deliveredAt ? formatOrderDate(papa.deliveredAt) : formatOrderDate(d.createdAt)}
+                          {formatOrderDate(d.createdAt)}
+                        </td>
+                        <td style={{ padding: "13px 12px" }}>
+                          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                            {rs.error && (
+                              <span style={{ fontSize: 11, color: "#dc2626", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={rs.error}>
+                                ⚠ {rs.error}
+                              </span>
+                            )}
+                            <ActionBtn
+                              onClick={() => handleSendToPapa(d.id)}
+                              loading={rs.creating}
+                              variant="blue"
+                            >
+                              Дахин жолооч дуудах
+                            </ActionBtn>
+                          </div>
                         </td>
                       </tr>
                     );

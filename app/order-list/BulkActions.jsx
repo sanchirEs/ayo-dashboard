@@ -19,8 +19,16 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
     const validOrderIds = Array.from(selectedOrders);
 
     if (validOrderIds.length === 0) {
-      alert('Cannot update CANCELLED or DELIVERED orders');
+      alert('Cannot update CANCELLED orders');
       return;
+    }
+
+    // Serious confirmation for DELIVERED status
+    if (newStatus === 'DELIVERED') {
+      const confirmed = confirm(
+        `⚠️ АНХААРУУЛГА!\n\n${validOrderIds.length} захиалгыг "Хүргэгдсэн" болгох гэж байна.\n\nЭнэ үйлдлийг зөвхөн бараа бодитоор хүргэгдсэн тохиолдолд хийнэ үү.\n\nИтгэлтэй байна уу?`
+      );
+      if (!confirmed) return;
     }
 
     setIsUpdating(true);
