@@ -76,6 +76,10 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
       "Status": order.status,
       "Total": order.total,
       "Items": order.orderItems?.length || 0,
+      "Бүтээгдэхүүн": order.orderItems?.map(item => {
+        const name = item.product?.name || "Бүтээгдэхүүн";
+        return item.quantity > 1 ? `${name} x${item.quantity}` : name;
+      }).join(", ") || "",
       "Payment Provider": order.payment?.provider || "",
       "Payment Status": order.payment?.status || "",
       "Хүргэлтийн төрөл": order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт",
