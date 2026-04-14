@@ -259,7 +259,7 @@ export default function DeliveryClient() {
   // Render
   // ─────────────────────────────────────────────────────────────────────────
 
-  function handleExportExcel() {
+  async function handleExportExcel() {
     const exportRows = rows.map(d => {
       const papa = d.papaShipment;
       return {
@@ -277,7 +277,7 @@ export default function DeliveryClient() {
       };
     });
     const date = new Date().toISOString().slice(0, 10);
-    exportToExcel(exportRows, `delivery-${activeTab}-${date}`);
+    await exportToExcel(exportRows, `delivery-${activeTab}-${date}`);
   }
 
   const TABS = [

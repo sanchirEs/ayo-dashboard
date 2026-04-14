@@ -67,7 +67,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
     setSelectedOrders(new Set());
   };
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const rows = orders.map(order => ({
       "Order ID": order.id,
       "Customer": order.user ? `${order.user.firstName} ${order.user.lastName}` : "—",
@@ -90,7 +90,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
       "Date": order.createdAt ? new Date(order.createdAt).toLocaleString() : "",
     }));
     const date = new Date().toISOString().slice(0, 10);
-    exportToExcel(rows, `orders-${date}`);
+    await exportToExcel(rows, `orders-${date}`);
   };
 
   // Register export handler so OrderFilters can trigger it
