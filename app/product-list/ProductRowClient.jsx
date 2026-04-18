@@ -6,9 +6,10 @@ import ProductImage from "./ProductImage";
 import QuickViewAction from "./QuickViewActionClient";
 import ToggleActiveButton from "./ToggleActiveButton.jsx";
 
-export default function ProductRowClient({ product, gridTemplate }) {
+export default function ProductRowClient({ product, gridTemplate, onToggleActive }) {
   const [removed, setRemoved] = useState(false);
-  const inactive = product.isActive === false;
+  const [isActive, setIsActive] = useState(product.isActive !== false);
+  const inactive = !isActive;
 
   if (removed) return null;
 
@@ -169,7 +170,11 @@ export default function ProductRowClient({ product, gridTemplate }) {
         <Link href={`/edit-product/${product.id}`} className="item edit">
           <i className="icon-edit-3" />
         </Link>
-        <ToggleActiveButton productId={product.id} isActive={product.isActive !== false} />
+        <ToggleActiveButton
+          productId={product.id}
+          isActive={isActive}
+          onToggle={(v) => { setIsActive(v); onToggleActive?.(v); }}
+        />
       </div>
     </li>
   );

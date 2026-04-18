@@ -3,12 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ToggleActiveButton({ productId, isActive: initialActive }) {
+export default function ToggleActiveButton({ productId, isActive: initialActive, onToggle }) {
   const router = useRouter();
   const [isActive, setIsActive] = useState(initialActive);
   const [isPending, startTransition] = useTransition();
 
-  const handleToggle = () => {
+  const handleToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     startTransition(async () => {
       try {
         const res = await fetch(`/api/product-actions/toggle-active?id=${productId}`, {
@@ -20,7 +22,9 @@ export default function ToggleActiveButton({ productId, isActive: initialActive 
           return;
         }
         const data = await res.json();
-        setIsActive(data?.data?.isActive ?? !isActive);
+        const newActive = data?.data?.isActive ?? !isActive;
+        setIsActive(newActive);
+        onToggle?.(newActive);
         router.refresh();
       } catch (e) {
         console.error("Network error while toggling product status");
@@ -31,17 +35,51 @@ export default function ToggleActiveButton({ productId, isActive: initialActive 
   return (
     <button
       type="button"
-      className="item"
       onClick={handleToggle}
       disabled={isPending}
       title={isActive ? "Идэвхгүй болгох" : "Идэвхжүүлэх"}
       style={{
-        opacity: isPending ? 0.5 : 1,
-        cursor: isPending ? "not-allowed" : "pointer",
-        color: isActive ? "#10b981" : "#9ca3af",
+        display: 'inline-flex',
+        alignItems: 'center',
+        cursor: isPending ? 'not-allowed' : 'pointer',
+        background: 'none',
+        border: 'none',
+        padding: '4px',
+        borderRadius: '4px',
+        opacity: isPending ? 0.6 : 1,
+        transition: 'opacity 0.15s',
       }}
+      aria-label={isActive ? "Идэвхгүй болгох" : "Идэвхжүүлэх"}
+      aria-pressed={isActive}
     >
-      <i className={isPending ? "icon-loader" : isActive ? "icon-eye" : "icon-eye-off"} />
+      {/* Toggle track */}
+      <span
+        style={{
+          position: 'relative',
+          display: 'inline-block',
+          width: 36,
+          height: 20,
+          borderRadius: 10,
+          backgroundColor: isPending ? '#d1d5db' : isActive ? '#10b981' : '#d1d5db',
+          transition: 'background-color 0.22s cubic-bezier(0.4,0,0.2,1)',
+          flexShrink: 0,
+        }}
+      >
+        {/* Toggle thumb */}
+        <span
+          style={{
+            position: 'absolute',
+            top: 2,
+            left: isActive ? 18 : 2,
+            width: 16,
+            height: 16,
+            borderRadius: '50%',
+            backgroundColor: 'white',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+            transition: 'left 0.22s cubic-bezier(0.4,0,0.2,1)',
+          }}
+        />
+      </span>
     </button>
   );
 }

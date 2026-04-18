@@ -148,7 +148,11 @@ export async function getProducts(searchParams: Record<string, string> = {}): Pr
     // Always include categories, brands, variants, and hierarchical tags for dashboard display
     params.set('include', 'categories,brand,variants,inventory');
     params.set('fields', 'detailed'); // Need detailed to get hierarchical tags
-    
+    // Admin dashboard needs both active and inactive products
+    if (!params.has('isActive')) {
+      params.set('isActive', 'all');
+    }
+
     // Set limit to maximum (100) if not already set, so we fetch all available products
     // Dashboard needs to show all products, not just the default 20
     if (!params.has('limit')) {

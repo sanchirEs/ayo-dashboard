@@ -12,6 +12,7 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [filters, setFilters] = useState({
+    activeStatus: 'all',
     brand: '',
     category: '',
     stockStatus: '',
@@ -20,7 +21,6 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
     deliveryType: ''
   });
 
-  // Extract unique brands and categories for filter dropdowns
   const uniqueBrands = useMemo(() => {
     const brands = [...new Set(initialProducts
       .filter(p => p.brand)
@@ -40,7 +40,9 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
     return [...categories].sort();
   }, [initialProducts]);
 
-  // Sort function
+  const totalActive = useMemo(() => initialProducts.filter(p => p.isActive !== false).length, [initialProducts]);
+  const totalInactive = useMemo(() => initialProducts.filter(p => p.isActive === false).length, [initialProducts]);
+
   const handleSort = (key) => {
     let direction = 'asc';
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -49,11 +51,16 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
     setSortConfig({ key, direction });
   };
 
-  // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = [...initialProducts];
 
-    // Apply filters
+    // Active/inactive filter
+    if (filters.activeStatus === 'active') {
+      filtered = filtered.filter(p => p.isActive !== false);
+    } else if (filters.activeStatus === 'inactive') {
+      filtered = filtered.filter(p => p.isActive === false);
+    }
+
     if (filters.brand) {
       filtered = filtered.filter(p => p.brand?.name === filters.brand);
     }
@@ -78,14 +85,10 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
       filtered = filtered.filter(p => {
         const stock = getStock(p);
         switch (filters.stockStatus) {
-          case 'inStock':
-            return stock > 10;
-          case 'lowStock':
-            return stock > 0 && stock <= 10;
-          case 'outOfStock':
-            return stock === 0;
-          default:
-            return true;
+          case 'inStock':    return stock > 10;
+          case 'lowStock':   return stock > 0 && stock <= 10;
+          case 'outOfStock': return stock === 0;
+          default:           return true;
         }
       });
     }
@@ -103,25 +106,18 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
       filtered = filtered.filter(p => {
         const isImported = p.delivery?.isImported || p.isImportedProduct;
         const deliveryDays = p.delivery?.estimatedDays || p.estimatedDeliveryDays || 7;
-        
         switch (filters.deliveryType) {
-          case 'fast':
-            return deliveryDays <= 3;
-          case 'standard':
-            return !isImported && deliveryDays > 3 && deliveryDays <= 14;
-          case 'imported':
-            return isImported;
-          default:
-            return true;
+          case 'fast':     return deliveryDays <= 3;
+          case 'standard': return !isImported && deliveryDays > 3 && deliveryDays <= 14;
+          case 'imported': return isImported;
+          default:         return true;
         }
       });
     }
 
-    // Apply sorting
     if (sortConfig.key) {
       filtered.sort((a, b) => {
         let aValue, bValue;
-
         switch (sortConfig.key) {
           case 'name':
             aValue = a.name.toLowerCase();
@@ -132,7 +128,7 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
             bValue = b.price || 0;
             break;
           case 'stock':
-            aValue = a.variants?.length > 0 
+            aValue = a.variants?.length > 0
               ? a.variants.reduce((total, variant) => total + (variant.inventory?.quantity || 0), 0)
               : (a.stock || 0);
             bValue = b.variants?.length > 0
@@ -146,13 +142,8 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
           default:
             return 0;
         }
-
-        if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
-        }
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
     }
@@ -160,24 +151,27 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
     return filtered;
   }, [initialProducts, sortConfig, filters]);
 
-  // Calculate pagination
   const totalItems = filteredAndSortedProducts.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = filteredAndSortedProducts.slice(startIndex, startIndex + itemsPerPage);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [filters]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Sort indicator component
+  // Optimistic toggle: update local product state immediately
+  const handleProductToggle = (productId, newActive) => {
+    setProducts(prev =>
+      prev.map(p => p.id === productId ? { ...p, isActive: newActive } : p)
+    );
+  };
+
   const SortIndicator = ({ column }) => {
     if (sortConfig.key !== column) {
       return <span style={{ opacity: 0.3, marginLeft: '4px' }}>⇅</span>;
@@ -195,18 +189,20 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
 
   return (
     <>
-      <ProductFilters 
+      <ProductFilters
         filters={filters}
         setFilters={setFilters}
         uniqueBrands={uniqueBrands}
         uniqueCategories={uniqueCategories}
+        totalActive={totalActive}
+        totalInactive={totalInactive}
       />
-      
+
       <div className="wg-table table-product-list">
-        <ul className="table-title mb-14" style={{ 
-          display: 'grid', 
-          gridTemplateColumns: gridTemplate, 
-          alignItems: 'center', 
+        <ul className="table-title mb-14" style={{
+          display: 'grid',
+          gridTemplateColumns: gridTemplate,
+          alignItems: 'center',
           columnGap: 12,
           padding: '0.75rem 1.25rem',
           position: 'sticky',
@@ -216,57 +212,46 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
           borderBottom: '1px solid #e5e7eb'
         }}>
           <li>
-            <div 
-              className="body-title" 
-              style={{ cursor: 'pointer', userSelect: 'none' }}
-              onClick={() => handleSort('name')}
-            >
+            <div className="body-title" style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => handleSort('name')}>
               Product <SortIndicator column="name" />
             </div>
           </li>
           <li>
-            <div 
-              className="body-title"
-              style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'center' }}
-              onClick={() => handleSort('sku')}
-            >
+            <div className="body-title" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'center' }} onClick={() => handleSort('sku')}>
               SKU <SortIndicator column="sku" />
             </div>
           </li>
           <li>
-            <div 
-              className="body-title"
-              style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }}
-              onClick={() => handleSort('price')}
-            >
+            <div className="body-title" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'right' }} onClick={() => handleSort('price')}>
               Price <SortIndicator column="price" />
             </div>
           </li>
           <li>
-            <div 
-              className="body-title"
-              style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'center' }}
-              onClick={() => handleSort('stock')}
-            >
+            <div className="body-title" style={{ cursor: 'pointer', userSelect: 'none', textAlign: 'center' }} onClick={() => handleSort('stock')}>
               Stock <SortIndicator column="stock" />
             </div>
           </li>
           <li><div className="body-title">Tags</div></li>
           <li><div className="body-title">Brand</div></li>
           <li><div className="body-title">Category</div></li>
-          <li><div className="body-title">Action</div></li>
+          <li><div className="body-title" style={{ textAlign: 'center' }}>Action</div></li>
         </ul>
         <ul className="flex flex-column">
           {paginatedProducts.map((product) => (
-            <ProductRowClient key={product.id} product={product} gridTemplate={gridTemplate} />
+            <ProductRowClient
+              key={product.id}
+              product={product}
+              gridTemplate={gridTemplate}
+              onToggleActive={(newActive) => handleProductToggle(product.id, newActive)}
+            />
           ))}
         </ul>
       </div>
-      
+
       {filteredAndSortedProducts.length === 0 && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '3rem', 
+        <div style={{
+          textAlign: 'center',
+          padding: '3rem',
           color: '#6b7280',
           fontSize: '14px'
         }}>
@@ -274,11 +259,10 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginTop: '2rem',
           padding: '1rem 0',
@@ -303,28 +287,19 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
             >
               ← Өмнөх
             </button>
-            
+
             {[...Array(totalPages)].map((_, index) => {
               const page = index + 1;
               const isCurrentPage = page === currentPage;
-              
-              // Show first page, last page, current page, and pages around current
-              const showPage = page === 1 || 
-                              page === totalPages || 
-                              (page >= currentPage - 1 && page <= currentPage + 1);
-              
+              const showPage = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+
               if (!showPage) {
-                // Show ellipsis
                 if (page === currentPage - 2 || page === currentPage + 2) {
-                  return (
-                    <span key={page} style={{ padding: '8px 4px', color: '#9ca3af' }}>
-                      ...
-                    </span>
-                  );
+                  return <span key={page} style={{ padding: '8px 4px', color: '#9ca3af' }}>...</span>;
                 }
                 return null;
               }
-              
+
               return (
                 <button
                   key={page}
@@ -344,7 +319,7 @@ export default function ProductTableClient({ products: initialProducts, gridTemp
                 </button>
               );
             })}
-            
+
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
