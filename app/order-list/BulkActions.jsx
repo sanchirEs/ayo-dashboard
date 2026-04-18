@@ -232,6 +232,7 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
                 { value: 'SHIPPED', label: 'Илгээгдсэн', color: '#5b21b6' },
                 { value: 'DELIVERED', label: 'Хүргэгдсэн', color: '#065f46' },
                 { value: 'CANCELLED', label: 'Цуцлагдсан', color: '#ef4444' },
+                { value: 'RETURNED', label: 'Буцаагдсан', color: '#7c3aed' },
               ].map(({ value, label, color }) => (
                 <button
                   key={value}
