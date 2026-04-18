@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Server-side filters: date range + order status only.
-// Product/user name search is handled client-side inside the table component.
 export default function ProductOrdersFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const [search, setSearch] = useState(searchParams.get('search') || '');
   const [status, setStatus] = useState(searchParams.get('status') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
@@ -41,9 +40,10 @@ export default function ProductOrdersFilters() {
   };
 
   const buildParams = (overrides = {}) => {
-    const current = { status, dateFrom, dateTo };
+    const current = { search, status, dateFrom, dateTo };
     const merged = { ...current, ...overrides };
     const params = new URLSearchParams();
+    if (merged.search) params.set('search', merged.search);
     if (merged.status) params.set('status', merged.status);
     if (merged.dateFrom) params.set('dateFrom', merged.dateFrom);
     if (merged.dateTo) params.set('dateTo', merged.dateTo);
@@ -55,6 +55,11 @@ export default function ProductOrdersFilters() {
     router.push(`/product-orders${qs ? '?' + qs : ''}`);
   };
 
+  const handleSearch = (e) => {
+    e.preventDefault();
+    push();
+  };
+
   const handleDatePreset = (val) => {
     setDatePreset(val);
     if (!val) { setDateFrom(''); setDateTo(''); push({ dateFrom: '', dateTo: '' }); }
@@ -64,11 +69,11 @@ export default function ProductOrdersFilters() {
   const handleStatus = (val) => { setStatus(val); push({ status: val }); };
 
   const clearFilters = () => {
-    setStatus(''); setDateFrom(''); setDateTo(''); setDatePreset('');
+    setSearch(''); setStatus(''); setDateFrom(''); setDateTo(''); setDatePreset('');
     router.push('/product-orders');
   };
 
-  const activeFiltersCount = [status, dateFrom, dateTo].filter(v => v).length;
+  const activeFiltersCount = [search, status, dateFrom, dateTo].filter(v => v).length;
 
   const selectStyle = (active) => ({
     padding: '8px 12px',
@@ -84,6 +89,30 @@ export default function ProductOrdersFilters() {
   return (
     <div style={{ marginBottom: '1.5rem' }}>
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {/* Phone / name search */}
+        <div style={{ flex: '1 1 260px', minWidth: '220px' }}>
+          <form onSubmit={handleSearch} style={{ width: '100%' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type="text"
+                placeholder="Нэр, утас, и-мэйл, захиалгын дугаараар хайх..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '8px 40px 8px 12px',
+                  borderRadius: '6px', border: '1px solid #e5e7eb',
+                  fontSize: '13px', backgroundColor: 'white', outline: 'none',
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3730a3'}
+                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+              />
+              <button type="submit" style={{ position: 'absolute', right: '8px', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#6b7280' }}>
+                <i className="icon-search" />
+              </button>
+            </div>
+          </form>
+        </div>
+
         {/* Date preset */}
         <select value={datePreset} onChange={(e) => handleDatePreset(e.target.value)} style={selectStyle(!!datePreset)}>
           <option value="">Огноо</option>

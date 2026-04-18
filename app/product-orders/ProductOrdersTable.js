@@ -144,6 +144,7 @@ function aggregateByUser(orders) {
 export default async function ProductOrdersTable({ searchParams }) {
     const params = searchParams instanceof Promise ? await searchParams : searchParams;
 
+    const search = params?.search || '';
     const status = params?.status || '';
     const dateFrom = params?.dateFrom || '';
     const dateTo = params?.dateTo || '';
@@ -153,6 +154,7 @@ export default async function ProductOrdersTable({ searchParams }) {
         const { data: orders } = await getOrders({
             page: 1,
             limit: 500,
+            search,
             status,
             dateFrom,
             dateTo,

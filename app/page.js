@@ -109,7 +109,6 @@ const STATUS_CONFIG = {
   PROCESSING: { label: 'Боловсруулж байна', color: '#3B82F6', css: styles.sProcessing },
   SHIPPED:    { label: 'Илгээсэн', color: '#14B8A6', css: styles.sShipped },
   DELIVERED:  { label: 'Хүргэсэн', color: '#10B981', css: styles.sDelivered },
-  CANCELLED:  { label: 'Цуцалсан', color: '#EF4444', css: styles.sCancelled },
 };
 
 // ─── Sub-components (server, no "use client") ─────────────────────────────────
@@ -283,7 +282,7 @@ function OrderStatusWidget({ orders }) {
     return <div className={styles.empty}>Захиалгын мэдээлэл байхгүй</div>;
   }
   const { byStatus, total } = orders;
-  const statuses = ['DELIVERED', 'SHIPPED', 'PROCESSING', 'PENDING', 'CANCELLED'];
+  const statuses = ['DELIVERED', 'SHIPPED', 'PROCESSING', 'PENDING'];
   return (
     <>
       {/* Segmented bar */}

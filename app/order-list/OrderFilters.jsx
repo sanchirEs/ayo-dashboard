@@ -154,7 +154,7 @@ export default function OrderFilters() {
             }}>
               <input
                 type="text"
-                placeholder="Хэрэглэгчийн нэр, захиалгын дугаараар хайх..."
+                placeholder="Нэр, утас, и-мэйл, захиалгын дугаараар хайх..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{
@@ -231,7 +231,6 @@ export default function OrderFilters() {
           <option value="PROCESSING">Төлбөр төлсөн</option>
           <option value="SHIPPED">Хүргэлтэнд гарсан</option>
           <option value="DELIVERED">Хүргэгдсэн</option>
-          <option value="CANCELLED">Цуцлагдсан</option>
         </select>
 
         {/* Payment Status Filter */}
