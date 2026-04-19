@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { loginSchema } from "@/schemas/userSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition, useEffect, useRef } from "react";
@@ -240,16 +239,24 @@ export default function Login() {
           padding: 20px 16px 8px;
           font-family: 'Plus Jakarta Sans', sans-serif;
           font-size: 14.5px;
-          font-weight: 400;
-          color: rgba(255,255,255,0.9);
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.07);
+          font-weight: 500;
+          color: #ffffff;
+          -webkit-text-fill-color: #ffffff;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.1);
           border-radius: 14px;
           outline: none;
           transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
           caret-color: #6b8afd;
         }
         .field input::placeholder { color: transparent; }
+        .field input:-webkit-autofill,
+        .field input:-webkit-autofill:hover,
+        .field input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #ffffff;
+          -webkit-box-shadow: 0 0 0 1000px rgba(30,30,50,0.95) inset;
+          transition: background-color 5000s ease-in-out 0s;
+        }
 
         .field input:hover {
           background: rgba(255,255,255,0.06);
@@ -392,22 +399,6 @@ export default function Login() {
         }
         @keyframes fadeIn { to { opacity:1; } }
 
-        .forgot {
-          display: block;
-          text-align: center;
-          margin-top: 22px;
-          font-size: 12.5px;
-          color: rgba(255,255,255,0.25);
-          text-decoration: none;
-          cursor: pointer;
-          transition: color 0.2s ease;
-          opacity: 0;
-        }
-        .card.visible .forgot {
-          opacity: 1;
-          transition: opacity 0.5s ease 0.85s, color 0.2s ease;
-        }
-        .forgot:hover { color: rgba(107,138,253,0.7); }
 
         .foot {
           position: absolute;
@@ -515,9 +506,6 @@ export default function Login() {
             </div>
           </form>
 
-          <Link href="/reset-password" className="forgot">
-            Forgot password?
-          </Link>
         </div>
 
         <div className="foot">© 2026 AIM TRENDSETT LLC</div>
