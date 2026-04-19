@@ -23,6 +23,8 @@ export interface ImportProduct {
   imageUrl: string | null;
   counts: {
     waiting: number;
+    leftKorea: number;
+    inCustoms: number;
     arrived: number;
     dispatched: number;
     total: number;
@@ -34,7 +36,7 @@ export interface ImportOrderItem {
   productId: number;
   quantity: number;
   price: string;
-  importStatus: 'WAITING' | 'ARRIVED' | 'DISPATCHED';
+  importStatus: 'WAITING' | 'LEFT_KOREA' | 'IN_CUSTOMS' | 'ARRIVED' | 'DISPATCHED';
   importArrivedAt: string | null;
   importNote: string | null;
   product: {
@@ -74,6 +76,8 @@ export interface ImportOrder {
     totalImportItems: number;
     localItems: number;
     waiting: number;
+    leftKorea: number;
+    inCustoms: number;
     arrived: number;
     dispatched: number;
     allArrived: boolean;
@@ -83,6 +87,8 @@ export interface ImportOrder {
 
 export interface ImportStats {
   waiting: number;
+  leftKorea: number;
+  inCustoms: number;
   arrived: number;
   dispatched: number;
   total: number;
@@ -120,7 +126,7 @@ export async function getImportStats(
   } catch (error) {
     const e = handleApiError(error);
     logApiError('getImportStats', e, {});
-    return { success: false, data: { waiting: 0, arrived: 0, dispatched: 0, total: 0 }, error: e.message };
+    return { success: false, data: { waiting: 0, leftKorea: 0, inCustoms: 0, arrived: 0, dispatched: 0, total: 0 }, error: e.message };
   }
 }
 
@@ -163,11 +169,37 @@ export async function markProductArrived(
   }
 }
 
+export async function advanceProductStatus(
+  productId: number,
+  fromStatus: string,
+  toStatus: string,
+  message: string,
+  token?: string | null
+): Promise<{ success: boolean; message?: string; data?: any; error?: string }> {
+  try {
+    const headers = await authHeaders(token);
+    const res = await fetchWithAuthHandling(
+      `${base()}/products/${productId}/advance-status`,
+      { method: 'POST', headers, body: JSON.stringify({ fromStatus, toStatus, message }) },
+      'advanceProductStatus'
+    );
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  } catch (error) {
+    const e = handleApiError(error);
+    logApiError('advanceProductStatus', e, { productId, fromStatus, toStatus });
+    return { success: false, error: e.message };
+  }
+}
+
 export async function getImportOrders(
   params: {
     page?: number;
     limit?: number;
-    importStatus?: 'waiting' | 'arrived' | 'dispatched' | 'mixed' | '';
+    importStatus?: 'waiting' | 'leftKorea' | 'inCustoms' | 'arrived' | 'dispatched' | '';
     search?: string;
   } = {},
   token?: string | null
