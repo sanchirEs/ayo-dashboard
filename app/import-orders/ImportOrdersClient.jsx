@@ -387,16 +387,28 @@ function OrdersTab({ filterStatus, onRefresh, token }) {
                       ⏳ {s.waiting} хүлээж байна
                     </span>
                   )}
+                  {s.leftKorea > 0 && (
+                    <span style={{ background: "#fdf4ff", color: "#7e22ce", border: "1px solid #e9d5ff",
+                      borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
+                      🛫 {s.leftKorea} солонгосоос гарсан
+                    </span>
+                  )}
+                  {s.inCustoms > 0 && (
+                    <span style={{ background: "#fffbeb", color: "#b45309", border: "1px solid #fde68a",
+                      borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
+                      🛃 {s.inCustoms} гаальд
+                    </span>
+                  )}
                   {s.arrived > 0 && (
                     <span style={{ background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
-                      ✅ {s.arrived} ирсэн
+                      📦 {s.arrived} монголд ирсэн
                     </span>
                   )}
                   {s.dispatched > 0 && (
                     <span style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 600 }}>
-                      🚚 {s.dispatched} хүргэгдсэн
+                      ✅ {s.dispatched} хүлээлгэж өгсөн
                     </span>
                   )}
                   {s.localItems > 0 && (
