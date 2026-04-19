@@ -45,12 +45,114 @@ function Badge({ status }) {
 
 // ==================== BY PRODUCT TAB ====================
 
+const TRANSITIONS = [
+  {
+    from: "WAITING",
+    to:   "LEFT_KOREA",
+    emoji: "🛫",
+    label: "Солонгосоос гарсан",
+    countKey: "waiting",
+    defaultMsg: (name) => `Таны "${name}" бараа Солонгосоос гарлаа! Удахгүй Монголд ирнэ.`,
+  },
+  {
+    from: "LEFT_KOREA",
+    to:   "IN_CUSTOMS",
+    emoji: "🛃",
+    label: "Гаальд шалгагдаж байна",
+    countKey: "leftKorea",
+    defaultMsg: (name) => `Таны "${name}" бараа Монголын гаалиар шалгагдаж байна.`,
+  },
+  {
+    from: "IN_CUSTOMS",
+    to:   "ARRIVED",
+    emoji: "📦",
+    label: "Монголд ирсэн",
+    countKey: "inCustoms",
+    defaultMsg: (name) => `Таны "${name}" бараа Монголд ирлээ! Тун удахгүй хүргэнэ.`,
+  },
+];
+
+function AdvanceModal({ modal, onClose, onConfirm }) {
+  const [msgText, setMsgText] = useState(modal.defaultMessage);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  const handleSubmit = async () => {
+    if (!msgText.trim()) return;
+    setLoading(true);
+    setError(null);
+    const err = await onConfirm(modal.productId, modal.fromStatus, modal.toStatus, msgText);
+    if (err) {
+      setLoading(false);
+      setError(err);
+    }
+  };
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
+      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000,
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 12, padding: 28, width: "100%", maxWidth: 480,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+      }}>
+        <div style={{ fontWeight: 700, fontSize: 16, color: "#111827", marginBottom: 8 }}>
+          SMS илгээх үү?
+        </div>
+        <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 16 }}>
+          <strong>{modal.count}</strong> хэрэглэгчид дараах мессеж явуулна:
+        </div>
+
+        <textarea
+          value={msgText}
+          onChange={(e) => setMsgText(e.target.value)}
+          rows={4}
+          style={{
+            width: "100%", border: "1px solid #d1d5db", borderRadius: 8,
+            padding: "10px 12px", fontSize: 13, resize: "vertical",
+            fontFamily: "inherit", boxSizing: "border-box",
+          }}
+        />
+
+        {error && (
+          <div style={{ color: "#dc2626", fontSize: 12, marginTop: 8 }}>❌ {error}</div>
+        )}
+
+        <div style={{ display: "flex", gap: 8, marginTop: 16, justifyContent: "flex-end" }}>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            style={{
+              background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db",
+              borderRadius: 8, padding: "9px 18px", fontSize: 13, cursor: "pointer",
+            }}
+          >
+            Болих
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !msgText.trim()}
+            style={{
+              background: loading ? "#d1d5db" : "#15803d", color: "#fff",
+              border: "none", borderRadius: 8, padding: "9px 18px",
+              fontSize: 13, fontWeight: 600,
+              cursor: loading || !msgText.trim() ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "Явуулж байна..." : "✅ Илгээх"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ProductsTab({ onRefresh, token }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [actionState, setActionState] = useState({}); // productId → { loading, done, error }
-  const [confirmId, setConfirmId] = useState(null);
-  const [noteText, setNoteText] = useState("");
+  const [products, setProducts]   = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [modal, setModal]         = useState(null);
+  const [doneState, setDoneState] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,21 +163,20 @@ function ProductsTab({ onRefresh, token }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleMarkArrived = async (productId, productName) => {
-    setActionState((s) => ({ ...s, [productId]: { loading: true } }));
-    const res = await markProductArrived(productId, noteText, token);
+  const handleConfirm = async (productId, fromStatus, toStatus, message) => {
+    const res = await advanceProductStatus(productId, fromStatus, toStatus, message, token);
     if (res.success) {
-      setActionState((s) => ({ ...s, [productId]: { loading: false, done: true, message: res.message } }));
-      setConfirmId(null);
-      setNoteText("");
+      const key = `${productId}-${toStatus}`;
+      setDoneState((s) => ({ ...s, [key]: { done: true, message: res.message } }));
+      setModal(null);
       setTimeout(() => {
-        setActionState((s) => ({ ...s, [productId]: undefined }));
+        setDoneState((s) => { const n = { ...s }; delete n[key]; return n; });
         load();
         onRefresh();
-      }, 2000);
-    } else {
-      setActionState((s) => ({ ...s, [productId]: { loading: false, error: res.error } }));
+      }, 2500);
+      return null;
     }
+    return res.error || "Алдаа гарлаа";
   };
 
   if (loading) return (
@@ -91,120 +192,104 @@ function ProductsTab({ onRefresh, token }) {
   );
 
   return (
-    <div>
-      {products.map((product) => {
-        const state = actionState[product.id] || {};
-        const isConfirming = confirmId === product.id;
+    <>
+      {modal && (
+        <AdvanceModal
+          modal={modal}
+          onClose={() => setModal(null)}
+          onConfirm={handleConfirm}
+        />
+      )}
 
-        return (
-          <div key={product.id} style={{
-            background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
-            padding: "16px 20px", marginBottom: 12,
-            display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-          }}>
-            {/* Image */}
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name}
-                style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
-            ) : (
-              <div style={{ width: 56, height: 56, background: "#f3f4f6", borderRadius: 8, flexShrink: 0,
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
-                📦
-              </div>
-            )}
-
-            {/* Product info */}
-            <div style={{ flex: 1, minWidth: 160 }}>
-              <div style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>{product.name}</div>
-              <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>SKU: {product.sku}</div>
-              {product.deliveryNote && (
-                <div style={{ color: "#9ca3af", fontSize: 11, marginTop: 2 }}>{product.deliveryNote}</div>
-              )}
-            </div>
-
-            {/* Count badges */}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#c2410c" }}>{product.counts.waiting}</div>
-                <div style={{ fontSize: 10, color: "#9ca3af" }}>Хүлээж байна</div>
-              </div>
-              <div style={{ width: 1, background: "#e5e7eb" }} />
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#15803d" }}>{product.counts.arrived}</div>
-                <div style={{ fontSize: 10, color: "#9ca3af" }}>Ирсэн</div>
-              </div>
-              <div style={{ width: 1, background: "#e5e7eb" }} />
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#1d4ed8" }}>{product.counts.dispatched}</div>
-                <div style={{ fontSize: 10, color: "#9ca3af" }}>Хүргэгдсэн</div>
-              </div>
-            </div>
-
-            {/* Action */}
-            <div style={{ minWidth: 200 }}>
-              {state.done ? (
-                <div style={{ color: "#15803d", fontSize: 13, fontWeight: 600 }}>
-                  ✅ {state.message}
-                </div>
-              ) : state.error ? (
-                <div style={{ color: "#dc2626", fontSize: 12 }}>❌ {state.error}</div>
-              ) : product.counts.waiting === 0 ? (
-                <span style={{ color: "#9ca3af", fontSize: 12 }}>Хүлээж буй захиалга байхгүй</span>
-              ) : isConfirming ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <div style={{ fontSize: 12, color: "#374151" }}>
-                    <strong>{product.counts.waiting}</strong> хэрэглэгчид SMS явуулах уу?
-                  </div>
-                  <input
-                    placeholder="Нэмэлт тэмдэглэл (заавал биш)"
-                    value={noteText}
-                    onChange={(e) => setNoteText(e.target.value)}
-                    style={{
-                      border: "1px solid #d1d5db", borderRadius: 6, padding: "6px 10px",
-                      fontSize: 12, width: "100%",
-                    }}
-                  />
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      onClick={() => handleMarkArrived(product.id, product.name)}
-                      disabled={state.loading}
-                      style={{
-                        background: state.loading ? "#d1d5db" : "#15803d", color: "#fff",
-                        border: "none", borderRadius: 6, padding: "7px 14px",
-                        fontSize: 12, fontWeight: 600, cursor: state.loading ? "not-allowed" : "pointer",
-                        flex: 1,
-                      }}
-                    >
-                      {state.loading ? "Явуулж байна..." : "✅ Тийм, SMS явуул"}
-                    </button>
-                    <button
-                      onClick={() => { setConfirmId(null); setNoteText(""); }}
-                      style={{
-                        background: "#f3f4f6", color: "#374151", border: "1px solid #d1d5db",
-                        borderRadius: 6, padding: "7px 12px", fontSize: 12, cursor: "pointer",
-                      }}
-                    >
-                      Болих
-                    </button>
-                  </div>
-                </div>
+      <div>
+        {products.map((product) => {
+          return (
+            <div key={product.id} style={{
+              background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
+              padding: "16px 20px", marginBottom: 12,
+              display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
+            }}>
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name}
+                  style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, flexShrink: 0 }} />
               ) : (
-                <button
-                  onClick={() => setConfirmId(product.id)}
-                  style={{
-                    background: "#166534", color: "#fff", border: "none",
-                    borderRadius: 8, padding: "8px 16px", fontSize: 13,
-                    fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
-                  }}
-                >
-                  📦 Монголд ирсэн ({product.counts.waiting})
-                </button>
+                <div style={{ width: 56, height: 56, background: "#f3f4f6", borderRadius: 8, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>
+                  📦
+                </div>
               )}
+
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <div style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>{product.name}</div>
+                <div style={{ color: "#6b7280", fontSize: 12, marginTop: 2 }}>SKU: {product.sku}</div>
+                {product.deliveryNote && (
+                  <div style={{ color: "#9ca3af", fontSize: 11, marginTop: 2 }}>{product.deliveryNote}</div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                {[
+                  { key: "waiting",    label: "Хүлээж байна",      color: "#c2410c" },
+                  { key: "leftKorea",  label: "Солонгосоос гарсан", color: "#7e22ce" },
+                  { key: "inCustoms",  label: "Гаальд",             color: "#b45309" },
+                  { key: "arrived",    label: "Монголд ирсэн",      color: "#15803d" },
+                  { key: "dispatched", label: "Хүлээлгэж өгсөн",    color: "#1d4ed8" },
+                ].map(({ key, label, color }, i, arr) => (
+                  <div key={key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color }}>{product.counts[key]}</div>
+                      <div style={{ fontSize: 10, color: "#9ca3af" }}>{label}</div>
+                    </div>
+                    {i < arr.length - 1 && <div style={{ width: 1, height: 28, background: "#e5e7eb" }} />}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 180 }}>
+                {TRANSITIONS.map((t) => {
+                  const count = product.counts[t.countKey];
+                  if (count === 0) return null;
+                  const doneKey = `${product.id}-${t.to}`;
+                  const done = doneState[doneKey];
+                  if (done?.done) {
+                    return (
+                      <div key={t.to} style={{ color: "#15803d", fontSize: 12, fontWeight: 600 }}>
+                        ✅ {done.message}
+                      </div>
+                    );
+                  }
+                  return (
+                    <button
+                      key={t.to}
+                      onClick={() => setModal({
+                        productId: product.id,
+                        productName: product.name,
+                        fromStatus: t.from,
+                        toStatus: t.to,
+                        count,
+                        defaultMessage: t.defaultMsg(product.name),
+                      })}
+                      style={{
+                        background: "#1e293b", color: "#fff", border: "none",
+                        borderRadius: 8, padding: "7px 14px", fontSize: 12,
+                        fontWeight: 600, cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: 6,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {t.emoji} {t.label} ({count})
+                    </button>
+                  );
+                })}
+                {TRANSITIONS.every((t) => product.counts[t.countKey] === 0) && (
+                  <span style={{ color: "#9ca3af", fontSize: 12 }}>Хүлээж буй захиалга байхгүй</span>
+                )}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
 
