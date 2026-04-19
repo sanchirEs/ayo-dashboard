@@ -9,51 +9,43 @@ export default function OrderFilters() {
   
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [status, setStatus] = useState(searchParams.get('status') || '');
-  const [paymentStatus, setPaymentStatus] = useState(searchParams.get('paymentStatus') || '');
   const [paymentProvider, setPaymentProvider] = useState(searchParams.get('paymentProvider') || '');
   const [deliveryType, setDeliveryType] = useState(searchParams.get('deliveryType') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
   const [datePreset, setDatePreset] = useState('');
 
+  const localDateStr = (d) => {
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+
   const getPresetDates = (presetValue) => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
+
     switch (presetValue) {
       case 'today':
-        return {
-          from: today.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'yesterday':
+        return { from: localDateStr(today), to: localDateStr(today) };
+      case 'yesterday': {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        return {
-          from: yesterday.toISOString().split('T')[0],
-          to: yesterday.toISOString().split('T')[0]
-        };
-      case 'last7days':
+        return { from: localDateStr(yesterday), to: localDateStr(yesterday) };
+      }
+      case 'last7days': {
         const last7 = new Date(today);
         last7.setDate(last7.getDate() - 7);
-        return {
-          from: last7.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'last30days':
+        return { from: localDateStr(last7), to: localDateStr(today) };
+      }
+      case 'last30days': {
         const last30 = new Date(today);
         last30.setDate(last30.getDate() - 30);
-        return {
-          from: last30.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
-      case 'last90days':
+        return { from: localDateStr(last30), to: localDateStr(today) };
+      }
+      case 'last90days': {
         const last90 = new Date(today);
         last90.setDate(last90.getDate() - 90);
-        return {
-          from: last90.toISOString().split('T')[0],
-          to: today.toISOString().split('T')[0]
-        };
+        return { from: localDateStr(last90), to: localDateStr(today) };
+      }
       default:
         return { from: '', to: '' };
     }
@@ -75,14 +67,13 @@ export default function OrderFilters() {
   };
 
   const buildParams = (overrides = {}) => {
-    const current = { search, status, dateFrom, dateTo, paymentStatus, paymentProvider, deliveryType };
+    const current = { search, status, dateFrom, dateTo, paymentProvider, deliveryType };
     const merged = { ...current, ...overrides };
     const params = new URLSearchParams();
     if (merged.search) params.set('search', merged.search);
     if (merged.status) params.set('status', merged.status);
     if (merged.dateFrom) params.set('dateFrom', merged.dateFrom);
     if (merged.dateTo) params.set('dateTo', merged.dateTo);
-    if (merged.paymentStatus) params.set('paymentStatus', merged.paymentStatus);
     if (merged.paymentProvider) params.set('paymentProvider', merged.paymentProvider);
     if (merged.deliveryType) params.set('deliveryType', merged.deliveryType);
     params.set('page', '1');
@@ -98,11 +89,6 @@ export default function OrderFilters() {
   const handleStatusChange = (newStatus) => {
     setStatus(newStatus);
     router.push(`/order-list?${buildParams({ status: newStatus }).toString()}`);
-  };
-
-  const handlePaymentStatusChange = (newPaymentStatus) => {
-    setPaymentStatus(newPaymentStatus);
-    router.push(`/order-list?${buildParams({ paymentStatus: newPaymentStatus }).toString()}`);
   };
 
   const handlePaymentProviderChange = (newPaymentProvider) => {
@@ -123,7 +109,6 @@ export default function OrderFilters() {
   const clearFilters = () => {
     setSearch('');
     setStatus('');
-    setPaymentStatus('');
     setPaymentProvider('');
     setDeliveryType('');
     setDateFrom('');
@@ -132,7 +117,7 @@ export default function OrderFilters() {
     router.push('/order-list');
   };
 
-  const activeFiltersCount = [search, status, paymentStatus, paymentProvider, deliveryType, dateFrom, dateTo].filter(v => v).length;
+  const activeFiltersCount = [search, status, paymentProvider, deliveryType, dateFrom, dateTo].filter(v => v).length;
 
   return (
     <div style={{ marginBottom: '1.5rem' }}>
@@ -231,31 +216,6 @@ export default function OrderFilters() {
           <option value="PROCESSING">Төлбөр төлсөн</option>
           <option value="SHIPPED">Хүргэлтэнд гарсан</option>
           <option value="DELIVERED">Хүргэгдсэн</option>
-        </select>
-
-        {/* Payment Status Filter */}
-        <select
-          value={paymentStatus}
-          onChange={(e) => handlePaymentStatusChange(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: paymentStatus ? '#f3f4f6' : 'white',
-            cursor: 'pointer',
-            minWidth: '120px',
-            maxWidth: '160px'
-          }}
-        >
-          <option value="">Төлбөр</option>
-          <option value="PENDING">Хүлээгдэж байна</option>
-          <option value="COMPLETED">Төлсөн</option>
-          <option value="FAILED">Амжилтгүй</option>
-          <option value="PROCESSING">Боловсруулж байна</option>
-          <option value="EXPIRED">Хугацаа дууссан</option>
-          <option value="CANCELLED">Цуцалсан</option>
-          <option value="REFUNDED">Буцаагдсан</option>
         </select>
 
         {/* Payment Provider Filter */}

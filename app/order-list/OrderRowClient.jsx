@@ -55,7 +55,8 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
   const firstItem = order.orderItems?.[0];
   const productImage = firstItem?.product?.ProductImages?.[0]?.imageUrl;
   const productName = firstItem?.product?.name || "Бүтээгдэхүүн";
-  const customerName = order.user ? `${order.user.firstName} ${order.user.lastName}` : "—";
+  const customerPhone = order.shipping?.recipientPhone || order.user?.telephone || "—";
+  const district = order.shipping?.district || "—";
 
   return (
     <li
@@ -63,8 +64,10 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
       style={{
         transition: 'background-color 0.2s ease',
         borderBottom: '1px solid #f3f4f6',
-        backgroundColor: isSelected ? '#eff6ff' : 'transparent'
+        backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+        cursor: 'pointer',
       }}
+      onClick={() => setModalOpen(true)}
       onMouseEnter={(e) => {
         if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
       }}
@@ -73,12 +76,14 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
       }}
     >
       {/* Checkbox Column */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <input
           type="checkbox"
           checked={isSelected}
           onChange={onSelect}
-          onClick={(e) => e.stopPropagation()}
           style={{ cursor: 'pointer', width: '18px', height: '18px' }}
         />
       </div>
@@ -89,25 +94,21 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
       />
       <div className="flex items-center justify-between gap20 flex-grow">
         <div className="name">
-          <a
-            onClick={(e) => { e.preventDefault(); setModalOpen(true); }}
-            href="#"
-            className="body-title-2"
-            style={{ cursor: "pointer" }}
-          >
+          <span className="body-title-2">
             {order.orderItems.length > 1
               ? `${productName} + ${order.orderItems.length - 1}`
               : productName
             }
-          </a>
+          </span>
         </div>
         <div className="body-text">#{order.id}</div>
-        <div className="body-text">{customerName}</div>
+        <div className="body-text">{customerPhone}</div>
         <div className="body-text">{formatPrice(order.total)}</div>
         <div className="body-text">{order.orderItems.length}</div>
         <div className="body-text">
           {order.payment ? order.payment.provider : '—'}
         </div>
+        <div className="body-text">{district}</div>
         <div>
           <DeliveryBadge order={order} />
         </div>
@@ -118,15 +119,6 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
         </div>
         <div className="body-text text-sm">
           {formatOrderDate(order.createdAt)}
-        </div>
-        <div className="list-icon-function">
-          <button
-            className="item eye"
-            onClick={() => setModalOpen(true)}
-            title="Дэлгэрэнгүй"
-          >
-            <i className="icon-eye" />
-          </button>
         </div>
       </div>
 

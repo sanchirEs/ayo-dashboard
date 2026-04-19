@@ -190,6 +190,9 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
             <div className="body-title">Payment</div>
           </li>
           <li>
+            <div className="body-title">Дүүрэг</div>
+          </li>
+          <li>
             <div className="body-title">Хүргэлт</div>
           </li>
           <li>
@@ -197,9 +200,6 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
           </li>
           <li>
             <div className="body-title">Date</div>
-          </li>
-          <li>
-            <div className="body-title">Action</div>
           </li>
         </ul>
         <ul className="flex flex-column">
