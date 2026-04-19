@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { TrendingUp, ShoppingCart, Users, Package } from 'lucide-react';
 import Layout from '@/components/layout/Layout';
 import getToken from '@/lib/GetTokenServer';
 import {
@@ -154,12 +155,12 @@ function Sparkline({ series, color }) {
   );
 }
 
-function KpiCard({ label, value, sub, trend, sparkline, sparkColor, accent }) {
+function KpiCard({ label, value, sub, trend, sparkline, sparkColor, accent, icon: Icon }) {
   return (
     <div className={`${styles.kpiCard} ${styles[accent]}`}>
-      <div className={styles.kpiLabel}>
-        <span className={styles.kpiIconDot} />
-        {label}
+      <div className={styles.kpiTop}>
+        <span className={styles.kpiLabel}>{label}</span>
+        {Icon && <Icon size={18} className={styles.kpiIcon} strokeWidth={1.75} />}
       </div>
       <div className={styles.kpiBody}>
         <div className={styles.kpiValue}>{value}</div>
@@ -494,6 +495,7 @@ export default async function DashboardPage({ searchParams }) {
             sparkline={overview?.revenue?.sparkline}
             sparkColor="#6366F1"
             accent="accentIndigo"
+            icon={TrendingUp}
           />
           <KpiCard
             label="Өнөөдрийн захиалга"
@@ -503,6 +505,7 @@ export default async function DashboardPage({ searchParams }) {
             sparkline={overview?.orders?.sparkline}
             sparkColor="#F59E0B"
             accent="accentAmber"
+            icon={ShoppingCart}
           />
           <KpiCard
             label="Нийт харилцагч"
@@ -510,6 +513,7 @@ export default async function DashboardPage({ searchParams }) {
             sub={`+${overview?.customers?.newToday ?? 0} өнөөдөр нэмэгдсэн`}
             sparkColor="#10B981"
             accent="accentEmerald"
+            icon={Users}
           />
           <KpiCard
             label="Идэвхтэй бараа"
@@ -517,6 +521,7 @@ export default async function DashboardPage({ searchParams }) {
             sub={`Нийт ${formatNumber(overview?.products?.total)} бараанаас`}
             sparkColor="#3B82F6"
             accent="accentBlue"
+            icon={Package}
           />
         </div>
 
