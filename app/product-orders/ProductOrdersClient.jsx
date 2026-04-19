@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/api/env";
+import { exportToExcel } from "@/lib/exportToExcel";
 
 // ─── Status badge helpers (same pattern as order-list) ───────────────────────
 const STATUS_MAP = {
@@ -398,6 +399,50 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
       {label}<SortIcon field={field} />
     </div>
   );
+
+  const exportProductsToExcel = async () => {
+    const rows = filtered.map((group) => ({
+      "Бүтээгдэхүүний ID": group.productId,
+      "Бүтээгдэхүүн": group.productName,
+      "Захиалгын тоо": group.orderCount,
+      "Нийт ширхэг": group.totalQty,
+      "Орлого": group.totalRevenue,
+      "Сүүлд захиалсан": formatDate(group.lastOrderedAt),
+      "Вариант SKU": group.variantSkus.join(", "),
+    }));
+
+    const date = new Date().toISOString().slice(0, 10);
+    await exportToExcel(rows, `product-orders-paid-successful-${date}`);
+  };
+
+  const exportUsersToExcel = async () => {
+    const rows = userGroups.map((group) => ({
+      "Хэрэглэгчийн ID": group.userId,
+      "Нэр": group.customerName,
+      "И-мэйл": group.email,
+      "Утас": group.phone,
+      "Захиалгын тоо": group.orderCount,
+      "Нийт ширхэг": group.totalQty,
+      "Нийт дүн": group.totalSpent,
+      "Сүүлд захиалсан": formatDate(group.lastOrderedAt),
+    }));
+
+    const date = new Date().toISOString().slice(0, 10);
+    await exportToExcel(rows, `product-orders-users-paid-successful-${date}`);
+  };
+
+  useEffect(() => {
+    const handler = () => {
+      if (activeTab === 'users') {
+        void exportUsersToExcel();
+        return;
+      }
+      void exportProductsToExcel();
+    };
+
+    window.addEventListener('export-product-orders-excel', handler);
+    return () => window.removeEventListener('export-product-orders-excel', handler);
+  }, [activeTab, filtered, userGroups]);
 
   return (
     <div>

@@ -130,8 +130,35 @@ export default function ProductOrdersFilters() {
           <option value="PROCESSING">Төлбөр төлсөн</option>
           <option value="SHIPPED">Хүргэлтэнд гарсан</option>
           <option value="DELIVERED">Хүргэгдсэн</option>
-          <option value="CANCELLED">Цуцлагдсан</option>
         </select>
+
+        <button
+          onClick={() => window.dispatchEvent(new Event('export-product-orders-excel'))}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #e5e7eb',
+            fontSize: '13px',
+            fontWeight: 500,
+            backgroundColor: 'white',
+            color: '#374151',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+            marginLeft: 'auto',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Excel
+        </button>
 
         {activeFiltersCount > 0 && (
           <button

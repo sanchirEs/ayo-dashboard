@@ -1,6 +1,19 @@
 import { getOrders } from "@/lib/api/orders";
 import ProductOrdersClient from "./ProductOrdersClient";
 
+function isPaidSuccessfulOrder(order) {
+    if (!order) return false;
+
+    const orderStatus = String(order.status || "").toUpperCase();
+    if (orderStatus === "CANCELLED" || orderStatus === "CANCELED") return false;
+
+    const paymentStatus = String(order.payment?.status || "").toUpperCase();
+    const paidPaymentStatuses = new Set(["COMPLETED", "PAID", "SUCCESS", "SUCCEEDED", "SUCCESSFUL"]);
+    const paidOrderStatuses = new Set(["PROCESSING", "SHIPPED", "DELIVERED"]);
+
+    return paidPaymentStatuses.has(paymentStatus) || paidOrderStatuses.has(orderStatus);
+}
+
 /**
  * Aggregates order items by product across all fetched orders.
  * Returns an array of product groups sorted by total qty desc.
@@ -162,8 +175,10 @@ export default async function ProductOrdersTable({ searchParams }) {
             sortOrder: 'desc',
         });
 
-        const groups = aggregateByProduct(orders || []);
-        const userGroups = aggregateByUser(orders || []);
+        const successfulOrders = (orders || []).filter(isPaidSuccessfulOrder);
+
+        const groups = aggregateByProduct(successfulOrders);
+        const userGroups = aggregateByUser(successfulOrders);
 
         // Summary stats
         const totalProducts = groups.length;

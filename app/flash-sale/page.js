@@ -10,7 +10,7 @@ export const metadata = { title: 'Flash Sale Scheduler — Dashboard' };
 
 export default async function FlashSalePage() {
   const token = await GetTokenServer();
-  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || '';
+  const frontendUrl = 'https://ayocosmetics.mn' || '';
   const shareLink = `${frontendUrl}/flashsale`;
 
   return (
