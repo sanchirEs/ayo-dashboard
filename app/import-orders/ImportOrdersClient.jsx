@@ -5,14 +5,16 @@ import { useSession } from "next-auth/react";
 import {
   getImportProducts,
   getImportOrders,
-  markProductArrived,
+  advanceProductStatus,
   dispatchArrivedItems,
 } from "@/lib/api/importOrders";
 
 const STATUS_COLORS = {
-  WAITING:    { bg: "#fff7ed", text: "#c2410c", border: "#fed7aa", label: "Хүлээж байна" },
-  ARRIVED:    { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0", label: "Ирсэн"        },
-  DISPATCHED: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe", label: "Хүргэгдсэн"  },
+  WAITING:    { bg: "#fff7ed", text: "#c2410c", border: "#fed7aa", label: "Хүлээж байна"            },
+  LEFT_KOREA: { bg: "#fdf4ff", text: "#7e22ce", border: "#e9d5ff", label: "Солонгосоос гарсан"       },
+  IN_CUSTOMS: { bg: "#fffbeb", text: "#b45309", border: "#fde68a", label: "Гаальд шалгагдаж байна"   },
+  ARRIVED:    { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0", label: "Монголд ирсэн"            },
+  DISPATCHED: { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe", label: "Хүлээлгэж өгсөн"         },
 };
 
 function StatCard({ label, value, color, sub }) {
@@ -448,10 +450,12 @@ const TABS = [
 ];
 
 const ORDER_FILTERS = [
-  { key: "",           label: "Бүгд"         },
-  { key: "waiting",    label: "⏳ Хүлээж байна" },
-  { key: "arrived",    label: "✅ Ирсэн"      },
-  { key: "dispatched", label: "🚚 Хүргэгдсэн" },
+  { key: "",           label: "Бүгд"                        },
+  { key: "waiting",    label: "⏳ Хүлээж байна"             },
+  { key: "leftKorea",  label: "🛫 Солонгосоос гарсан"       },
+  { key: "inCustoms",  label: "🛃 Гаальд шалгагдаж байна"  },
+  { key: "arrived",    label: "📦 Монголд ирсэн"            },
+  { key: "dispatched", label: "✅ Хүлээлгэж өгсөн"          },
 ];
 
 export default function ImportOrdersClient({ initialStats }) {
@@ -471,14 +475,12 @@ export default function ImportOrdersClient({ initialStats }) {
   return (
     <div>
       {/* Stats */}
-      <div style={{ display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" }}>
-        <StatCard label="Хүлээж байна" value={stats.waiting} color="#c2410c"
-          sub="Монголд ирээгүй" />
-        <StatCard label="Монголд ирсэн" value={stats.arrived} color="#15803d"
-          sub="Papa руу явуулахад бэлэн" />
-        <StatCard label="Хүргэгдсэн" value={stats.dispatched} color="#1d4ed8"
-          sub="Papa руу явуулсан" />
-        <StatCard label="Нийт" value={stats.total} color="#6b7280" />
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }}>
+        <StatCard label="Хүлээж байна"          value={stats.waiting}    color="#c2410c" sub="Захиалагдсан" />
+        <StatCard label="Солонгосоос гарсан"     value={stats.leftKorea}  color="#7e22ce" sub="Замдаа" />
+        <StatCard label="Гаальд шалгагдаж байна" value={stats.inCustoms}  color="#b45309" sub="Гаалийн шалгалт" />
+        <StatCard label="Монголд ирсэн"          value={stats.arrived}    color="#15803d" sub="Papa руу явуулахад бэлэн" />
+        <StatCard label="Хүлээлгэж өгсөн"        value={stats.dispatched} color="#1d4ed8" sub="Papa руу явуулсан" />
       </div>
 
       {/* Tabs */}
