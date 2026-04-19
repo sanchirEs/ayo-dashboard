@@ -1,6 +1,8 @@
+import Layout from "@/components/layout/Layout";
 import GetTokenServer from "@/lib/GetTokenServer";
 import FlashSaleForm from "./FlashSaleForm";
 import FlashSaleList from "./FlashSaleList";
+import CopyLinkButton from "./CopyLinkButton";
 
 export const metadata = { title: 'Flash Sale Scheduler — Dashboard' };
 
@@ -10,7 +12,7 @@ export default async function FlashSalePage() {
   const shareLink = `${frontendUrl}/flashsale`;
 
   return (
-    <div className="main-content-wrap">
+    <Layout breadcrumbTitleParent="Маркетинг" breadcrumbTitle="Flash Sale">
       <div className="flex items-center justify-between gap10 flex-wrap mb-20">
         <div>
           <h3 className="text-title">⚡ Flash Sale</h3>
@@ -26,41 +28,11 @@ export default async function FlashSalePage() {
             </a>
           </p>
         </div>
-        <button
-          id="flash-copy-btn"
-          style={{
-            padding: '8px 16px',
-            borderRadius: 6,
-            border: '1px solid #e2e8f0',
-            background: 'white',
-            cursor: 'pointer',
-            fontSize: 13,
-            color: '#374151'
-          }}
-        >
-          📋 Линк хуулах
-        </button>
+        <CopyLinkButton shareLink={shareLink} />
       </div>
 
       <FlashSaleForm token={token} />
       <FlashSaleList />
-
-      {/* Inline copy-to-clipboard — avoids a dedicated Client Component wrapper */}
-      <script dangerouslySetInnerHTML={{
-        __html: `
-          document.getElementById('flash-copy-btn')?.addEventListener('click', function() {
-            navigator.clipboard.writeText(${JSON.stringify(shareLink)}).then(function() {
-              var btn = document.getElementById('flash-copy-btn');
-              btn.textContent = '✓ Хуулагдлаа!';
-              btn.style.color = '#10b981';
-              setTimeout(function() {
-                btn.textContent = '📋 Линк хуулах';
-                btn.style.color = '#374151';
-              }, 2000);
-            });
-          });
-        `
-      }} />
-    </div>
+    </Layout>
   );
 }
