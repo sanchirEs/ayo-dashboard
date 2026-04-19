@@ -14,15 +14,11 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const { register, handleSubmit, formState: { errors }, watch } =
-    useForm({
-      resolver: zodResolver(loginSchema),
-      defaultValues: { identifier: "", password: "" },
-      mode: "onSubmit",
-    });
-
-  const identifier = watch("identifier");
-  const password = watch("password");
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { identifier: "", password: "" },
+    mode: "onSubmit",
+  });
 
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
@@ -45,467 +41,372 @@ export default function Login() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
-        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         .scene {
           min-height: 100vh;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0a0a0f;
-          font-family: 'Plus Jakarta Sans', sans-serif;
+          background: #07070e;
+          font-family: 'Outfit', sans-serif;
           -webkit-font-smoothing: antialiased;
           overflow: hidden;
           position: relative;
         }
 
+        /* ── Orbs ── */
         .orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.5;
-          will-change: transform;
+          filter: blur(90px);
+          pointer-events: none;
         }
-        .orb-1 {
-          width: 500px; height: 500px;
-          background: radial-gradient(circle, #1a3a5c 0%, #0d1f3c 40%, transparent 70%);
-          top: -10%; left: -8%;
-          animation: drift1 14s ease-in-out infinite alternate;
+        .orb-a {
+          width: 560px; height: 560px;
+          background: radial-gradient(circle, rgba(79,70,229,0.18) 0%, transparent 70%);
+          top: -15%; left: -10%;
+          animation: floatA 18s ease-in-out infinite alternate;
         }
-        .orb-2 {
-          width: 450px; height: 450px;
-          background: radial-gradient(circle, #2d1b4e 0%, #1a0e30 40%, transparent 70%);
-          bottom: -12%; right: -6%;
-          animation: drift2 16s ease-in-out infinite alternate;
+        .orb-b {
+          width: 480px; height: 480px;
+          background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+          bottom: -15%; right: -8%;
+          animation: floatB 22s ease-in-out infinite alternate;
         }
-        .orb-3 {
-          width: 350px; height: 350px;
-          background: radial-gradient(circle, #0e2a3d 0%, #091a28 40%, transparent 70%);
-          top: 40%; left: 55%;
-          animation: drift3 18s ease-in-out infinite alternate;
+        .orb-c {
+          width: 300px; height: 300px;
+          background: radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%);
+          top: 50%; left: 60%;
+          animation: floatC 15s ease-in-out infinite alternate;
         }
-        .orb-4 {
-          width: 250px; height: 250px;
-          background: radial-gradient(circle, rgba(100,140,200,0.15) 0%, transparent 70%);
-          top: 15%; right: 20%;
-          animation: drift4 12s ease-in-out infinite alternate;
-        }
+        @keyframes floatA { 0%{transform:translate(0,0)} 100%{transform:translate(50px,60px)} }
+        @keyframes floatB { 0%{transform:translate(0,0)} 100%{transform:translate(-40px,-50px)} }
+        @keyframes floatC { 0%{transform:translate(0,0)} 100%{transform:translate(-60px,40px)} }
 
-        @keyframes drift1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(60px,40px) scale(1.15)} }
-        @keyframes drift2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-50px,-30px) scale(1.1)} }
-        @keyframes drift3 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-40px,50px) scale(0.9)} }
-        @keyframes drift4 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(30px,-40px) scale(1.2)} }
-
+        /* ── Noise ── */
         .noise {
-          position: absolute;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-          background-repeat: repeat;
-          background-size: 256px 256px;
-          pointer-events: none;
-          z-index: 1;
+          position: absolute; inset: 0; pointer-events: none; z-index: 1;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+          background-size: 200px 200px;
         }
 
-        .grid-lines {
-          position: absolute;
-          inset: 0;
-          background-image:
-            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-          background-size: 60px 60px;
-          pointer-events: none;
-          z-index: 1;
-        }
-
+        /* ── Card ── */
         .card {
-          width: 400px;
           position: relative;
           z-index: 10;
-          padding: 52px 44px 44px;
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.04);
-          backdrop-filter: blur(24px) saturate(150%);
-          -webkit-backdrop-filter: blur(24px) saturate(150%);
-          border: 1px solid rgba(255, 255, 255, 0.08);
+          width: 420px;
+          padding: 48px 44px 44px;
+          border-radius: 20px;
+          background: rgba(255,255,255,0.035);
+          backdrop-filter: blur(32px) saturate(140%);
+          -webkit-backdrop-filter: blur(32px) saturate(140%);
+          border: 1px solid rgba(255,255,255,0.07);
           box-shadow:
-            0 0 0 0.5px rgba(255,255,255,0.06) inset,
-            0 24px 80px -12px rgba(0, 0, 0, 0.5),
-            0 4px 20px rgba(0, 0, 0, 0.3);
+            0 0 0 0.5px rgba(255,255,255,0.04) inset,
+            0 32px 100px -20px rgba(0,0,0,0.7),
+            0 8px 32px rgba(0,0,0,0.4);
           opacity: 0;
-          transform: translateY(20px) scale(0.97);
-          transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+          transform: translateY(24px) scale(0.97);
+          transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
         }
-        .card.visible {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-        .card.shake {
-          animation: cardShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
-        @keyframes cardShake {
-          10%,90%{transform:translateX(-2px)}
-          20%,80%{transform:translateX(3px)}
-          30%,50%,70%{transform:translateX(-4px)}
-          40%,60%{transform:translateX(4px)}
-        }
-
+        .card.visible { opacity: 1; transform: translateY(0) scale(1); }
         .card::before {
           content: '';
           position: absolute;
-          top: 0; left: 20%; right: 20%;
-          height: 1px;
-          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-          border-radius: 50%;
+          top: 0; left: 25%; right: 25%; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+        .card.shake { animation: shk 0.5s cubic-bezier(.36,.07,.19,.97); }
+        @keyframes shk {
+          15%,85%{transform:translateX(-3px)}
+          30%,70%{transform:translateX(4px)}
+          45%,55%{transform:translateX(-4px)}
+          60%{transform:translateX(3px)}
         }
 
-        .icon-wrap {
-          width: 52px; height: 52px;
-          margin: 0 auto 32px;
-          border-radius: 14px;
-          background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-          border: 1px solid rgba(255,255,255,0.06);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          opacity: 0;
-          transform: scale(0.7);
-          transition: all 0.6s cubic-bezier(0.34,1.56,0.64,1);
-          transition-delay: 0.3s;
+        /* ── Header ── */
+        .card-icon {
+          width: 44px; height: 44px;
+          margin: 0 auto 28px;
+          border-radius: 12px;
+          background: rgba(99,102,241,0.15);
+          border: 1px solid rgba(99,102,241,0.2);
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; transform: scale(0.6);
+          transition: opacity 0.5s ease 0.25s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.25s;
         }
-        .card.visible .icon-wrap {
-          opacity: 1;
-          transform: scale(1);
-        }
-        .icon-wrap svg {
-          width: 22px; height: 22px;
-          stroke: rgba(255,255,255,0.45);
-          stroke-width: 1.5;
-          fill: none;
-        }
+        .card.visible .card-icon { opacity: 1; transform: scale(1); }
+        .card-icon svg { width: 20px; height: 20px; stroke: rgba(99,102,241,0.9); stroke-width: 1.6; fill: none; }
 
-        .heading {
+        .card-title {
           text-align: center;
-          margin-bottom: 8px;
-          font-size: 22px;
+          font-size: 24px;
           font-weight: 600;
-          color: rgba(255,255,255,0.9);
-          letter-spacing: -0.4px;
-          opacity: 0;
-          transition: opacity 0.6s ease;
-          transition-delay: 0.4s;
+          color: rgba(255,255,255,0.92);
+          letter-spacing: -0.5px;
+          margin-bottom: 6px;
+          opacity: 0; transition: opacity 0.5s ease 0.35s;
         }
-        .card.visible .heading { opacity: 1; }
+        .card.visible .card-title { opacity: 1; }
 
-        .subheading {
+        .card-sub {
           text-align: center;
-          font-size: 13.5px;
-          font-weight: 400;
-          color: rgba(255,255,255,0.3);
-          margin-bottom: 36px;
-          letter-spacing: 0.2px;
-          opacity: 0;
-          transition: opacity 0.6s ease;
-          transition-delay: 0.5s;
-        }
-        .card.visible .subheading { opacity: 1; }
-
-        .divider {
-          width: 40px;
-          height: 1px;
-          background: rgba(255,255,255,0.06);
-          margin: 0 auto 32px;
-          opacity: 0;
-          transition: opacity 0.5s ease;
-          transition-delay: 0.45s;
-        }
-        .card.visible .divider { opacity: 1; }
-
-        .field {
-          position: relative;
-          margin-bottom: 18px;
-          opacity: 0;
-          transform: translateY(8px);
-          transition: all 0.5s ease;
-        }
-        .card.visible .field-1 { opacity:1; transform:translateY(0); transition-delay:0.55s; }
-        .card.visible .field-2 { opacity:1; transform:translateY(0); transition-delay:0.65s; }
-
-        .field input {
-          width: 100%;
-          height: 54px;
-          padding: 20px 16px 8px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14.5px;
-          font-weight: 500;
-          color: #ffffff;
-          -webkit-text-fill-color: #ffffff;
-          background: rgba(255,255,255,0.07);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 14px;
-          outline: none;
-          transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-          caret-color: #6b8afd;
-        }
-        .field input::placeholder { color: transparent; }
-        .field input:-webkit-autofill,
-        .field input:-webkit-autofill:hover,
-        .field input:-webkit-autofill:focus {
-          -webkit-text-fill-color: #ffffff;
-          -webkit-box-shadow: 0 0 0 1000px rgba(30,30,50,0.95) inset;
-          transition: background-color 5000s ease-in-out 0s;
-        }
-
-        .field input:hover {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(255,255,255,0.12);
-        }
-        .field input:focus {
-          background: rgba(255,255,255,0.06);
-          border-color: rgba(107,138,253,0.5);
-          box-shadow: 0 0 0 3px rgba(107,138,253,0.1), 0 0 20px rgba(107,138,253,0.05);
-        }
-        .field input.has-error {
-          border-color: rgba(255,107,107,0.4);
-        }
-        .field input.has-error:focus {
-          border-color: rgba(255,107,107,0.6);
-          box-shadow: 0 0 0 3px rgba(255,107,107,0.08);
-        }
-
-        .field label {
-          position: absolute;
-          left: 17px;
-          top: 17px;
           font-size: 14px;
-          color: rgba(255,255,255,0.25);
-          pointer-events: none;
-          transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
           font-weight: 400;
+          color: rgba(255,255,255,0.28);
+          margin-bottom: 36px;
+          opacity: 0; transition: opacity 0.5s ease 0.42s;
         }
+        .card.visible .card-sub { opacity: 1; }
 
-        .field input:focus + label,
-        .field input:not(:placeholder-shown) + label,
-        .field input:-webkit-autofill + label {
-          top: 8px;
-          font-size: 10px;
-          color: rgba(107,138,253,0.7);
-          letter-spacing: 0.5px;
+        /* ── Fields ── */
+        .fields { display: flex; flex-direction: column; gap: 14px; }
+
+        .field-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          opacity: 0;
+          transform: translateY(10px);
+          transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+        .card.visible .field-wrap:nth-child(1) { opacity:1; transform:none; transition-delay: 0.5s; }
+        .card.visible .field-wrap:nth-child(2) { opacity:1; transform:none; transition-delay: 0.6s; }
+
+        .field-label {
+          font-size: 12px;
           font-weight: 500;
+          letter-spacing: 0.6px;
           text-transform: uppercase;
-        }
-        .field input.has-error:focus + label,
-        .field input.has-error:not(:placeholder-shown) + label,
-        .field input.has-error:-webkit-autofill + label {
-          color: rgba(255,107,107,0.7);
+          color: rgba(255,255,255,0.35);
+          padding-left: 2px;
         }
 
-        .field-err {
-          font-size: 11.5px;
-          color: rgba(255,107,107,0.7);
-          margin-top: 6px;
-          padding-left: 4px;
+        .field-input-wrap { position: relative; }
+
+        .field-input {
+          width: 100%;
+          height: 50px;
+          padding: 0 16px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px;
           font-weight: 400;
+          /* Solid background — autofill can be perfectly matched */
+          background: #111120 !important;
+          color: #f0f0ff !important;
+          -webkit-text-fill-color: #f0f0ff !important;
+          border: 1px solid rgba(255,255,255,0.09);
+          border-radius: 12px;
+          outline: none;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+          caret-color: #818cf8;
+        }
+        .field-input::placeholder {
+          color: rgba(255,255,255,0.2);
+          -webkit-text-fill-color: rgba(255,255,255,0.2);
+        }
+        .field-input:hover {
+          border-color: rgba(255,255,255,0.15);
+        }
+        .field-input:focus {
+          border-color: rgba(99,102,241,0.55);
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+        }
+        .field-input.err {
+          border-color: rgba(239,68,68,0.5);
+        }
+        .field-input.err:focus {
+          box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
+        }
+        /* ── Autofill override ── */
+        .field-input:-webkit-autofill,
+        .field-input:-webkit-autofill:hover,
+        .field-input:-webkit-autofill:focus,
+        .field-input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px #111120 inset !important;
+          -webkit-text-fill-color: #f0f0ff !important;
+          caret-color: #818cf8 !important;
+          border-color: rgba(99,102,241,0.35) !important;
+          transition: background-color 9999s ease 9999s;
         }
 
         .pass-toggle {
           position: absolute;
-          right: 14px;
-          top: 50%;
+          right: 14px; top: 50%;
           transform: translateY(-50%);
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: rgba(255,255,255,0.2);
-          padding: 4px;
-          display: flex;
-          border-radius: 8px;
+          background: none; border: none; cursor: pointer;
+          color: rgba(255,255,255,0.22);
+          display: flex; align-items: center;
+          padding: 4px; border-radius: 6px;
           transition: color 0.2s;
         }
-        .pass-toggle:hover { color: rgba(255,255,255,0.4); }
-        .pass-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .pass-toggle:hover { color: rgba(255,255,255,0.5); }
+        .pass-toggle svg { width: 17px; height: 17px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        .submit-wrap {
-          margin-top: 28px;
-          opacity: 0;
-          transform: translateY(8px);
-          transition: all 0.5s ease;
-          transition-delay: 0.75s;
+        .field-err {
+          font-size: 12px;
+          color: rgba(239,68,68,0.8);
+          padding-left: 2px;
+          font-weight: 400;
         }
-        .card.visible .submit-wrap { opacity:1; transform:translateY(0); }
+
+        /* ── Submit ── */
+        .submit-wrap {
+          margin-top: 26px;
+          opacity: 0; transform: translateY(10px);
+          transition: opacity 0.45s ease 0.7s, transform 0.45s ease 0.7s;
+        }
+        .card.visible .submit-wrap { opacity: 1; transform: none; }
 
         .submit-btn {
-          width: 100%;
-          height: 52px;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 14.5px;
-          font-weight: 600;
-          color: white;
-          background: linear-gradient(135deg, #6b8afd 0%, #5a6ff0 50%, #7c5ce7 100%);
-          border: none;
-          border-radius: 14px;
-          cursor: pointer;
-          position: relative;
-          overflow: hidden;
-          transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-          letter-spacing: 0.2px;
+          width: 100%; height: 50px;
+          font-family: 'Outfit', sans-serif;
+          font-size: 15px; font-weight: 600;
+          color: #fff; letter-spacing: 0.2px;
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 60%, #7c3aed 100%);
+          border: none; border-radius: 12px;
+          cursor: pointer; position: relative; overflow: hidden;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
         }
-        .submit-btn::before {
+        .submit-btn::after {
           content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+          position: absolute; inset: 0;
+          background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 60%);
           pointer-events: none;
         }
         .submit-btn:hover:not(:disabled) {
           transform: translateY(-1px);
-          box-shadow: 0 8px 30px rgba(107,138,253,0.3), 0 2px 8px rgba(107,138,253,0.2);
+          box-shadow: 0 10px 36px rgba(99,102,241,0.35), 0 2px 10px rgba(99,102,241,0.2);
         }
-        .submit-btn:active:not(:disabled) {
-          transform: translateY(0);
-          box-shadow: 0 2px 10px rgba(107,138,253,0.2);
-        }
-        .submit-btn:disabled {
-          opacity: 0.25;
-          cursor: default;
-        }
-        .submit-btn.loading {
-          color: transparent;
-          pointer-events: none;
-        }
-
+        .submit-btn:active:not(:disabled) { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.3; cursor: default; }
+        .submit-btn.loading { color: transparent; pointer-events: none; }
         .spinner {
-          position: absolute;
-          top: 50%; left: 50%;
+          position: absolute; top: 50%; left: 50%;
           transform: translate(-50%,-50%);
-          width: 20px; height: 20px;
+          width: 18px; height: 18px;
           border: 2px solid rgba(255,255,255,0.25);
-          border-top-color: white;
+          border-top-color: #fff;
           border-radius: 50%;
-          animation: spin 0.65s linear infinite;
+          animation: spin 0.6s linear infinite;
         }
-        @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+        @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
 
-        .err {
-          text-align: center;
+        /* ── Global error ── */
+        .global-err {
           font-size: 13px;
-          color: #ff6b6b;
-          margin-top: 14px;
-          opacity: 0;
-          animation: fadeIn 0.3s ease forwards;
-          font-weight: 400;
-        }
-        @keyframes fadeIn { to { opacity:1; } }
-
-
-        .foot {
-          position: absolute;
-          bottom: 28px;
-          left: 0; right: 0;
+          color: rgba(239,68,68,0.85);
           text-align: center;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 11px;
-          color: rgba(255,255,255,0.1);
-          letter-spacing: 0.5px;
-          z-index: 5;
+          margin-top: 14px;
+          font-weight: 400;
+          animation: fadeUp 0.3s ease;
+        }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+
+        /* ── Footer ── */
+        .foot {
+          position: absolute; bottom: 24px; left: 0; right: 0;
+          text-align: center;
+          font-family: 'Outfit', sans-serif;
+          font-size: 11px; color: rgba(255,255,255,0.08);
+          letter-spacing: 0.6px; z-index: 5;
         }
 
-        @media (max-width: 440px) {
-          .card {
-            width: calc(100% - 24px);
-            padding: 40px 28px 36px;
-            border-radius: 20px;
-          }
+        @media (max-width: 460px) {
+          .card { width: calc(100% - 28px); padding: 40px 28px 36px; }
         }
       `}</style>
 
       <div className="scene">
-        <div className="orb orb-1" />
-        <div className="orb orb-2" />
-        <div className="orb orb-3" />
-        <div className="orb orb-4" />
+        <div className="orb orb-a" />
+        <div className="orb orb-b" />
+        <div className="orb orb-c" />
         <div className="noise" />
-        <div className="grid-lines" />
 
         <div className={`card ${mounted ? "visible" : ""} ${shake ? "shake" : ""}`}>
-          <div className="icon-wrap">
+          <div className="card-icon">
             <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
             </svg>
           </div>
 
-          <div className="heading">Welcome back</div>
-          <div className="subheading">Sign in to your dashboard</div>
-          <div className="divider" />
+          <div className="card-title">Welcome back</div>
+          <div className="card-sub">Sign in to your dashboard</div>
 
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="field field-1">
-              <input
-                type="text"
-                placeholder=" "
-                className={errors.identifier ? "has-error" : ""}
-                autoComplete="username"
-                spellCheck="false"
-                autoFocus
-                {...register("identifier")}
-              />
-              <label>Email or Username</label>
-            </div>
-            {errors.identifier && (
-              <div className="field-err">{errors.identifier.message}</div>
-            )}
-
-            <div className="field field-2">
-              <input
-                type={showPass ? "text" : "password"}
-                placeholder=" "
-                className={errors.password ? "has-error" : ""}
-                autoComplete="current-password"
-                style={{ paddingRight: 44 }}
-                {...register("password")}
-              />
-              <label>Password</label>
-              <button
-                className="pass-toggle"
-                onClick={() => setShowPass(!showPass)}
-                tabIndex={-1}
-                type="button"
-              >
-                {showPass ? (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
+            <div className="fields">
+              <div className="field-wrap">
+                <label className="field-label">Email or Username</label>
+                <div className="field-input-wrap">
+                  <input
+                    className={`field-input${errors.identifier ? " err" : ""}`}
+                    type="text"
+                    placeholder="admin@example.com"
+                    autoComplete="username"
+                    spellCheck="false"
+                    autoFocus
+                    {...register("identifier")}
+                  />
+                </div>
+                {errors.identifier && (
+                  <span className="field-err">{errors.identifier.message}</span>
                 )}
-              </button>
-            </div>
-            {errors.password && (
-              <div className="field-err">{errors.password.message}</div>
-            )}
+              </div>
 
-            {error && <div className="err">{error}</div>}
+              <div className="field-wrap">
+                <label className="field-label">Password</label>
+                <div className="field-input-wrap">
+                  <input
+                    className={`field-input${errors.password ? " err" : ""}`}
+                    type={showPass ? "text" : "password"}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    style={{ paddingRight: 44 }}
+                    {...register("password")}
+                  />
+                  <button
+                    className="pass-toggle"
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowPass(v => !v)}
+                  >
+                    {showPass ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <span className="field-err">{errors.password.message}</span>
+                )}
+              </div>
+            </div>
 
             <div className="submit-wrap">
               <button
                 type="submit"
-                className={`submit-btn ${isPending ? "loading" : ""}`}
-                disabled={!identifier?.trim() || !password?.trim()}
+                className={`submit-btn${isPending ? " loading" : ""}`}
+                disabled={isPending}
               >
                 {isPending && <div className="spinner" />}
                 Sign In
               </button>
             </div>
-          </form>
 
+            {error && <div className="global-err">{error}</div>}
+          </form>
         </div>
 
         <div className="foot">© 2026 AIM TRENDSETT LLC</div>
