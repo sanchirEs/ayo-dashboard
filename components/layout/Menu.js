@@ -44,6 +44,7 @@ export default function Menu() {
       "/campaigns": 11,
       "/new-campaign": 11,
       "/discounts": 8,
+      "/flash-sale": 8,
       "/sales": 9,
       "/all-user": 10,
       "/add-new-user": 10,
@@ -514,6 +515,19 @@ export default function Menu() {
                   <i className="icon-percent" />
                 </div>
                 <div className="text">Хөнгөлөлт</div>
+              </Link>
+            </li>
+            <li
+              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
+            >
+              <Link
+                href="/flash-sale"
+                className={isSubMenuItemActive("/flash-sale") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-zap" />
+                </div>
+                <div className="text">⚡ Flash Sale</div>
               </Link>
             </li>
             {/** Removed from sidebar as requested
