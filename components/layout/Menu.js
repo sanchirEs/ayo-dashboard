@@ -248,6 +248,19 @@ export default function Menu() {
               </ul>
             </li>
             <li
+              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
+            >
+              <Link
+                href="/flash-sale"
+                className={isSubMenuItemActive("/flash-sale") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-zap" />
+                </div>
+                <div className="text">⚡ Flash Sale</div>
+              </Link>
+            </li>
+            <li
               className={`menu-item has-children ${
                 activeAccordion === 13 ? "active" : ""
               }`}
@@ -462,6 +475,7 @@ export default function Menu() {
                 </li>
               </ul>
             </li>
+            {false && (
             <li
               className={`menu-item has-children ${
                 activeAccordion === 11 ? "active" : ""
@@ -504,6 +518,8 @@ export default function Menu() {
                 </li>
               </ul>
             </li>
+            )}
+            {false && (
             <li
               className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
             >
@@ -517,19 +533,7 @@ export default function Menu() {
                 <div className="text">Хөнгөлөлт</div>
               </Link>
             </li>
-            <li
-              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
-            >
-              <Link
-                href="/flash-sale"
-                className={isSubMenuItemActive("/flash-sale") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-zap" />
-                </div>
-                <div className="text">⚡ Flash Sale</div>
-              </Link>
-            </li>
+            )}
             {/** Removed from sidebar as requested
              *  Sales (/sales)
              */}
@@ -672,6 +676,7 @@ export default function Menu() {
                 <div className="text">Gallery</div>
               </Link>
             </li> */}
+            {false && (
             <li className={`menu-item ${router === "/report" ? "active" : ""}`}>
               <Link
                 href="/report"
@@ -683,9 +688,11 @@ export default function Menu() {
                 <div className="text">Тайлан</div>
               </Link>
             </li>
+            )}
           </ul>
         </div>
       </div>
+      {false && (
       <div className="center-item">
         <div className="center-heading">Setting</div>
         <ul className="menu-list">
@@ -743,6 +750,7 @@ export default function Menu() {
           </li> */}
         </ul>
       </div>
+      )}
       <div className="center-item">
         <div className="center-heading">Компонентууд</div>
         <ul className="menu-list">
@@ -764,6 +772,7 @@ export default function Menu() {
       <div className="center-item">
         <div className="center-heading">Дэмжлэг</div>
         <ul className="menu-list">
+          {false && (
           <li className={`menu-item`}>
             <Link href="#">
               <div className="icon">
@@ -772,6 +781,7 @@ export default function Menu() {
               <div className="text">Тусламжийн төв</div>
             </Link>
           </li>
+          )}
           {/* <li className={`menu-item`}>
             <Link href="#">
               <div className="icon">
