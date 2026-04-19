@@ -2,12 +2,13 @@
 import { useState, useTransition } from "react";
 import { createFlashSale, cancelFlashSale } from "@/lib/api/flashSale";
 import { useSession } from "next-auth/react";
+import ProductCombobox from "./ProductCombobox";
 
 const DURATIONS = [
-  { label: '10 минут', minutes: 10 },
-  { label: '15 минут', minutes: 15 },
-  { label: '20 минут', minutes: 20 },
-  { label: '30 минут', minutes: 30 },
+  { label: '10 мин', minutes: 10 },
+  { label: '15 мин', minutes: 15 },
+  { label: '30 мин', minutes: 30 },
+  { label: '1 цаг', minutes: 60 },
 ];
 
 // mode="create" | mode="cancel"
@@ -15,8 +16,8 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
   const { data: session } = useSession();
   const token = serverToken || session?.user?.accessToken;
 
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [form, setForm] = useState({
-    productId: '',
     startDate: '',
     startTime: '12:00',
     duration: 10,
@@ -30,8 +31,8 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
 
   const handleCreate = () => {
     setError(null);
-    if (!form.productId || !form.startDate || !form.startTime) {
-      setError('Бүх талбарыг бөглөнө үү');
+    if (!selectedProduct || !form.startDate || !form.startTime) {
+      setError('Бараа сонгоод бүх талбарыг бөглөнө үү');
       return;
     }
     startTransition(async () => {
@@ -39,7 +40,7 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
         const start = new Date(`${form.startDate}T${form.startTime}:00`);
         const end = new Date(start.getTime() + form.duration * 60 * 1000);
         await createFlashSale({
-          productId: Number(form.productId),
+          productId: selectedProduct.id,
           startDate: start.toISOString(),
           endDate: end.toISOString(),
           discountPct: Number(form.discountPct)
@@ -122,24 +123,9 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
       <div className="flex flex-column gap20">
         <div>
           <label className="body-title" style={{ display: 'block', marginBottom: 6 }}>
-            Product ID
+            Бараа сонгох
           </label>
-          <input
-            type="number"
-            value={form.productId}
-            onChange={e => set('productId', e.target.value)}
-            placeholder="e.g. 123"
-            style={{
-              width: 200,
-              padding: '8px 12px',
-              border: '1px solid #e2e8f0',
-              borderRadius: 6,
-              fontSize: 14
-            }}
-          />
-          <div style={{ color: '#6b7280', fontSize: 12, marginTop: 4 }}>
-            Products хуудаснаас ID-г олно уу
-          </div>
+          <ProductCombobox value={selectedProduct} onSelect={setSelectedProduct} />
         </div>
 
         <div className="flex gap20">
