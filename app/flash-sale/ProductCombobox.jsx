@@ -15,10 +15,10 @@ export default function ProductCombobox({ value, onSelect }) {
   // Fetch all products once when token is available
   useEffect(() => {
     const token = session?.user?.accessToken;
-    if (!token || allProducts.length > 0) return;
+    if (!token) return;
     setLoading(true);
     getDiscountableProducts(token)
-      .then(setAllProducts)
+      .then((products) => setAllProducts((prev) => prev.length > 0 ? prev : products))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [session?.user?.accessToken]);
@@ -38,7 +38,7 @@ export default function ProductCombobox({ value, onSelect }) {
     ? allProducts.filter(
         (p) =>
           p.name.toLowerCase().includes(query.toLowerCase()) ||
-          p.sku.toLowerCase().includes(query.toLowerCase())
+          (p.sku ?? "").toLowerCase().includes(query.toLowerCase())
       ).slice(0, 6)
     : [];
 
