@@ -4,150 +4,40 @@ import { loginSchema } from "@/schemas/userSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, useTransition, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import Head from "next/head";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import LoadingButton from "@/components/customui/LoadingButton";
-import { PasswordInput } from "@/components/customui/PasswordInput";
 import { login } from "@/components/auth/actions/login";
 
-// Force dynamic rendering to prevent SSR issues with browser APIs
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function Login() {
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [shake, setShake] = useState(false);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
-  const [currentTime, setCurrentTime] = useState("");
-  const [greeting, setGreeting] = useState("");
-  const canvasRef = useRef(null);
-  const animationRef = useRef(null);
-  
-  const form = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      identifier: "",
-      password: "",
-    },
-  });
+
+  const { register, handleSubmit, formState: { errors, isValid }, watch } =
+    useForm({
+      resolver: zodResolver(loginSchema),
+      defaultValues: { identifier: "", password: "" },
+      mode: "onChange",
+    });
+
+  const identifier = watch("identifier");
+  const password = watch("password");
 
   useEffect(() => {
-    setIsClient(true);
-    
-    // Update time and greeting
-    const updateTime = () => {
-      const now = new Date();
-      const timeString = now.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: true 
-      });
-      setCurrentTime(timeString);
-      
-      const hour = now.getHours();
-      if (hour < 12) setGreeting("Good Morning");
-      else if (hour < 17) setGreeting("Good Afternoon");
-      else setGreeting("Good Evening");
-    };
-    
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    
-    // Animated background
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      let particles = [];
-      
-      const resizeCanvas = () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      };
-      
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-      
-      class Particle {
-        constructor() {
-          this.x = Math.random() * canvas.width;
-          this.y = Math.random() * canvas.height;
-          this.vx = (Math.random() - 0.5) * 0.5;
-          this.vy = (Math.random() - 0.5) * 0.5;
-          this.size = Math.random() * 2 + 1;
-          this.opacity = Math.random() * 0.5 + 0.1;
-        }
-        
-        update() {
-          this.x += this.vx;
-          this.y += this.vy;
-          
-          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-        }
-        
-        draw() {
-          ctx.save();
-          ctx.globalAlpha = this.opacity;
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-      
-      // Initialize particles
-      for (let i = 0; i < 50; i++) {
-        particles.push(new Particle());
-      }
-      
-      const animate = () => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        particles.forEach(particle => {
-          particle.update();
-          particle.draw();
-        });
-        
-        animationRef.current = requestAnimationFrame(animate);
-      };
-      
-      animate();
-    }
-    
-    return () => {
-      clearInterval(interval);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
+    requestAnimationFrame(() => setMounted(true));
   }, []);
 
-  if (!isClient) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white"></div>
-      </div>
-    );
-  }
-
   async function onSubmit(values) {
-    setError(undefined);
+    setError("");
     startTransition(async () => {
       const result = await login(values);
-      
       if (result?.error) {
         setError(result.error);
+        setShake(true);
+        setTimeout(() => setShake(false), 600);
       } else if (result?.success) {
-        // Successful login - redirect to the specified page
         window.location.href = result.redirectTo || "/";
       }
     });
@@ -155,240 +45,482 @@ export default function Login() {
 
   return (
     <>
-      <Head>
-        <link rel="stylesheet" href="/css/luxury-login.css" />
-      </Head>
-             <div className="min-h-screen relative overflow-hidden" style={{
-         background: `
-           radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-           radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
-           radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.3) 0%, transparent 50%),
-           linear-gradient(135deg, #1e293b 0%, #7c3aed 25%, #ec4899 50%, #3b82f6 75%, #06b6d4 100%)
-         `
-       }}>
-      {/* Animated Background */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full opacity-30"
-        style={{ zIndex: 1 }}
-      />
-      
-      {/* Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-purple-900/60 to-slate-900/80" style={{ zIndex: 2 }} />
-      
-             {/* Enhanced Geometric Patterns */}
-       <div className="absolute inset-0" style={{ zIndex: 3 }}>
-         <div className="absolute top-20 left-20 w-64 h-64 rounded-full blur-3xl animate-pulse" style={{
-           background: 'radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 100%)'
-         }}></div>
-         <div className="absolute bottom-20 right-20 w-96 h-96 rounded-full blur-3xl animate-pulse" style={{
-           background: 'radial-gradient(circle, rgba(236, 72, 153, 0.2) 0%, rgba(6, 182, 212, 0.1) 50%, transparent 100%)',
-           animationDelay: '2s'
-         }}></div>
-         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl animate-pulse" style={{
-           background: 'radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 100%)',
-           animationDelay: '4s'
-         }}></div>
-       </div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
-             {/* Main Content */}
-       <div className="relative z-10 min-h-screen flex items-center justify-center p-6">
-         <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          
-                     {/* Left Side - Brand & Value Proposition */}
-           <div className="text-white space-y-10">
-            {/* Time and Greeting */}
-            <div className="space-y-2">
-              <div className="text-4xl font-light tracking-wider">{currentTime}</div>
-              <div className="text-2xl font-medium">{greeting}, Business Owner</div>
-            </div>
-            
-                         {/* Main Headline */}
-             <div className="space-y-6">
-               <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                 Power Your
-                 <span className="block gradient-text" style={{
-                   background: 'linear-gradient(45deg, #8B5CF6, #A855F7, #EC4899, #3B82F6, #06B6D4, #8B5CF6)',
-                   backgroundSize: '300% 300%',
-                   animation: 'gradientShift 4s ease-in-out infinite'
-                 }}>
-                   E-commerce Empire
-                 </span>
-               </h1>
-               <p className="text-2xl text-gray-300 leading-relaxed max-w-lg">
-                 Access the most sophisticated dashboard designed for serious entrepreneurs. 
-                 Where data meets design, and success becomes inevitable.
-               </p>
-             </div>
-            
-                                        {/* Enhanced Value Proposition */}
-               <div className="pt-10">
-                 <p className="text-xl text-gray-300 leading-relaxed max-w-lg">
-                   Experience the future of e-commerce management with our cutting-edge platform designed for ambitious entrepreneurs.
-                 </p>
-               </div>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        .scene {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #0a0a0f;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          overflow: hidden;
+          position: relative;
+        }
+
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.5;
+          will-change: transform;
+        }
+        .orb-1 {
+          width: 500px; height: 500px;
+          background: radial-gradient(circle, #1a3a5c 0%, #0d1f3c 40%, transparent 70%);
+          top: -10%; left: -8%;
+          animation: drift1 14s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+          width: 450px; height: 450px;
+          background: radial-gradient(circle, #2d1b4e 0%, #1a0e30 40%, transparent 70%);
+          bottom: -12%; right: -6%;
+          animation: drift2 16s ease-in-out infinite alternate;
+        }
+        .orb-3 {
+          width: 350px; height: 350px;
+          background: radial-gradient(circle, #0e2a3d 0%, #091a28 40%, transparent 70%);
+          top: 40%; left: 55%;
+          animation: drift3 18s ease-in-out infinite alternate;
+        }
+        .orb-4 {
+          width: 250px; height: 250px;
+          background: radial-gradient(circle, rgba(100,140,200,0.15) 0%, transparent 70%);
+          top: 15%; right: 20%;
+          animation: drift4 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes drift1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(60px,40px) scale(1.15)} }
+        @keyframes drift2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-50px,-30px) scale(1.1)} }
+        @keyframes drift3 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-40px,50px) scale(0.9)} }
+        @keyframes drift4 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(30px,-40px) scale(1.2)} }
+
+        .noise {
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+          background-repeat: repeat;
+          background-size: 256px 256px;
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .grid-lines {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+          background-size: 60px 60px;
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .card {
+          width: 400px;
+          position: relative;
+          z-index: 10;
+          padding: 52px 44px 44px;
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.04);
+          backdrop-filter: blur(24px) saturate(150%);
+          -webkit-backdrop-filter: blur(24px) saturate(150%);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow:
+            0 0 0 0.5px rgba(255,255,255,0.06) inset,
+            0 24px 80px -12px rgba(0, 0, 0, 0.5),
+            0 4px 20px rgba(0, 0, 0, 0.3);
+          opacity: 0;
+          transform: translateY(20px) scale(0.97);
+          transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+        }
+        .card.visible {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+        .card.shake {
+          animation: cardShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes cardShake {
+          10%,90%{transform:translateX(-2px)}
+          20%,80%{transform:translateX(3px)}
+          30%,50%,70%{transform:translateX(-4px)}
+          40%,60%{transform:translateX(4px)}
+        }
+
+        .card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 20%; right: 20%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+          border-radius: 50%;
+        }
+
+        .icon-wrap {
+          width: 52px; height: 52px;
+          margin: 0 auto 32px;
+          border-radius: 14px;
+          background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+          border: 1px solid rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          opacity: 0;
+          transform: scale(0.7);
+          transition: all 0.6s cubic-bezier(0.34,1.56,0.64,1);
+          transition-delay: 0.3s;
+        }
+        .card.visible .icon-wrap {
+          opacity: 1;
+          transform: scale(1);
+        }
+        .icon-wrap svg {
+          width: 22px; height: 22px;
+          stroke: rgba(255,255,255,0.45);
+          stroke-width: 1.5;
+          fill: none;
+        }
+
+        .heading {
+          text-align: center;
+          margin-bottom: 8px;
+          font-size: 22px;
+          font-weight: 600;
+          color: rgba(255,255,255,0.9);
+          letter-spacing: -0.4px;
+          opacity: 0;
+          transition: opacity 0.6s ease;
+          transition-delay: 0.4s;
+        }
+        .card.visible .heading { opacity: 1; }
+
+        .subheading {
+          text-align: center;
+          font-size: 13.5px;
+          font-weight: 400;
+          color: rgba(255,255,255,0.3);
+          margin-bottom: 36px;
+          letter-spacing: 0.2px;
+          opacity: 0;
+          transition: opacity 0.6s ease;
+          transition-delay: 0.5s;
+        }
+        .card.visible .subheading { opacity: 1; }
+
+        .divider {
+          width: 40px;
+          height: 1px;
+          background: rgba(255,255,255,0.06);
+          margin: 0 auto 32px;
+          opacity: 0;
+          transition: opacity 0.5s ease;
+          transition-delay: 0.45s;
+        }
+        .card.visible .divider { opacity: 1; }
+
+        .field {
+          position: relative;
+          margin-bottom: 18px;
+          opacity: 0;
+          transform: translateY(8px);
+          transition: all 0.5s ease;
+        }
+        .card.visible .field-1 { opacity:1; transform:translateY(0); transition-delay:0.55s; }
+        .card.visible .field-2 { opacity:1; transform:translateY(0); transition-delay:0.65s; }
+
+        .field input {
+          width: 100%;
+          height: 54px;
+          padding: 20px 16px 8px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 14.5px;
+          font-weight: 400;
+          color: rgba(255,255,255,0.9);
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 14px;
+          outline: none;
+          transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+          caret-color: #6b8afd;
+        }
+        .field input::placeholder { color: transparent; }
+
+        .field input:hover {
+          background: rgba(255,255,255,0.06);
+          border-color: rgba(255,255,255,0.12);
+        }
+        .field input:focus {
+          background: rgba(255,255,255,0.06);
+          border-color: rgba(107,138,253,0.5);
+          box-shadow: 0 0 0 3px rgba(107,138,253,0.1), 0 0 20px rgba(107,138,253,0.05);
+        }
+        .field input.has-error {
+          border-color: rgba(255,107,107,0.4);
+        }
+        .field input.has-error:focus {
+          border-color: rgba(255,107,107,0.6);
+          box-shadow: 0 0 0 3px rgba(255,107,107,0.08);
+        }
+
+        .field label {
+          position: absolute;
+          left: 17px;
+          top: 17px;
+          font-size: 14px;
+          color: rgba(255,255,255,0.25);
+          pointer-events: none;
+          transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+          font-weight: 400;
+        }
+
+        .field input:focus + label,
+        .field input:not(:placeholder-shown) + label {
+          top: 8px;
+          font-size: 10px;
+          color: rgba(107,138,253,0.7);
+          letter-spacing: 0.5px;
+          font-weight: 500;
+          text-transform: uppercase;
+        }
+        .field input.has-error:focus + label,
+        .field input.has-error:not(:placeholder-shown) + label {
+          color: rgba(255,107,107,0.7);
+        }
+
+        .field-err {
+          font-size: 11.5px;
+          color: rgba(255,107,107,0.7);
+          margin-top: 6px;
+          padding-left: 4px;
+          font-weight: 400;
+        }
+
+        .pass-toggle {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: rgba(255,255,255,0.2);
+          padding: 4px;
+          display: flex;
+          border-radius: 8px;
+          transition: color 0.2s;
+        }
+        .pass-toggle:hover { color: rgba(255,255,255,0.4); }
+        .pass-toggle svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+        .submit-wrap {
+          margin-top: 28px;
+          opacity: 0;
+          transform: translateY(8px);
+          transition: all 0.5s ease;
+          transition-delay: 0.75s;
+        }
+        .card.visible .submit-wrap { opacity:1; transform:translateY(0); }
+
+        .submit-btn {
+          width: 100%;
+          height: 52px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 14.5px;
+          font-weight: 600;
+          color: white;
+          background: linear-gradient(135deg, #6b8afd 0%, #5a6ff0 50%, #7c5ce7 100%);
+          border: none;
+          border-radius: 14px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+          letter-spacing: 0.2px;
+        }
+        .submit-btn::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+          pointer-events: none;
+        }
+        .submit-btn:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 8px 30px rgba(107,138,253,0.3), 0 2px 8px rgba(107,138,253,0.2);
+        }
+        .submit-btn:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 10px rgba(107,138,253,0.2);
+        }
+        .submit-btn:disabled {
+          opacity: 0.25;
+          cursor: default;
+        }
+        .submit-btn.loading {
+          color: transparent;
+          pointer-events: none;
+        }
+
+        .spinner {
+          position: absolute;
+          top: 50%; left: 50%;
+          transform: translate(-50%,-50%);
+          width: 20px; height: 20px;
+          border: 2px solid rgba(255,255,255,0.25);
+          border-top-color: white;
+          border-radius: 50%;
+          animation: spin 0.65s linear infinite;
+        }
+        @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg); } }
+
+        .err {
+          text-align: center;
+          font-size: 13px;
+          color: #ff6b6b;
+          margin-top: 14px;
+          opacity: 0;
+          animation: fadeIn 0.3s ease forwards;
+          font-weight: 400;
+        }
+        @keyframes fadeIn { to { opacity:1; } }
+
+        .forgot {
+          display: block;
+          text-align: center;
+          margin-top: 22px;
+          font-size: 12.5px;
+          color: rgba(255,255,255,0.25);
+          text-decoration: none;
+          cursor: pointer;
+          transition: color 0.2s ease;
+          opacity: 0;
+        }
+        .card.visible .forgot {
+          opacity: 1;
+          transition: opacity 0.5s ease 0.85s, color 0.2s ease;
+        }
+        .forgot:hover { color: rgba(107,138,253,0.7); }
+
+        .foot {
+          position: absolute;
+          bottom: 28px;
+          left: 0; right: 0;
+          text-align: center;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 11px;
+          color: rgba(255,255,255,0.1);
+          letter-spacing: 0.5px;
+          z-index: 5;
+        }
+
+        @media (max-width: 440px) {
+          .card {
+            width: calc(100% - 24px);
+            padding: 40px 28px 36px;
+            border-radius: 20px;
+          }
+        }
+      `}</style>
+
+      <div className="scene">
+        <div className="orb orb-1" />
+        <div className="orb orb-2" />
+        <div className="orb orb-3" />
+        <div className="orb orb-4" />
+        <div className="noise" />
+        <div className="grid-lines" />
+
+        <div className={`card ${mounted ? "visible" : ""} ${shake ? "shake" : ""}`}>
+          <div className="icon-wrap">
+            <svg viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
           </div>
-          
-                     {/* Right Side - Login Form */}
-           <div className="flex justify-center lg:justify-end">
-             <div className="w-full max-w-lg">
-               {/* Glass-morphism Login Card */}
-               <div className="luxury-glass rounded-3xl p-10 shadow-2xl animate-[scaleIn_0.6s_ease-out]">
-                                 {/* Logo/Brand */}
-                 <div className="text-center mb-10">
-                   <div className="w-20 h-20 rounded-2xl mx-auto mb-6 flex items-center justify-center" style={{
-                   background: 'linear-gradient(135deg, #8B5CF6 0%, #A855F7 25%, #EC4899 50%, #3B82F6 75%, #06B6D4 100%)'
-                 }}>
-                     <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                     </svg>
-                   </div>
-                   <h2 className="text-3xl font-bold text-white mb-3">Welcome Back</h2>
-                   <p className="text-gray-300 text-lg">Access your business dashboard</p>
-                 </div>
-                
-                                 {/* Login Form */}
-                 <Form {...form}>
-                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                                         {error && (
-                       <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-6 text-red-200 text-center text-lg">
-                         {error}
-                       </div>
-                     )}
-                    
-                    <FormField
-                      control={form.control}
-                      name="identifier"
-                      render={({ field }) => (
-                        <FormItem>
-                                                     <FormLabel className="text-white font-semibold text-lg">
-                             Email or Username
-                           </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                                                             <Input
-                                 className="premium-input h-16 text-white placeholder-gray-400 rounded-xl transition-all duration-300 text-lg"
-                                 placeholder="Enter your email or username"
-                                 {...field}
-                               />
-                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                              </div>
-                            </div>
-                          </FormControl>
-                          <FormMessage className="text-red-300 text-base" />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white font-semibold text-lg">
-                            Password
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <PasswordInput
-                                className="premium-input h-16 text-white placeholder-gray-400 rounded-xl transition-all duration-300 pr-12 text-lg"
-                                placeholder="Enter your password"
-                                {...field}
-                              />
-                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                              </div>
-                            </div>
-                          </FormControl>
-                          <FormMessage className="text-red-300 text-base" />
-                        </FormItem>
-                      )}
-                    />
-                    
-                                         {/* Forgot Password */}
-                     <div className="flex justify-end">
-                       <Link href="/reset-password" className="text-purple-400 hover:text-purple-300 text-base transition-colors font-medium">
-                         Forgot password?
-                       </Link>
-                     </div>
-                    
-                    {/* Login Button */}
-                                         <LoadingButton
-                       loading={isPending}
-                       type="submit"
-                       className="luxury-button w-full h-16 text-white font-bold text-lg rounded-xl"
-                     >
-                      {isPending ? (
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span>Authenticating...</span>
-                        </div>
-                      ) : (
-                        <span>Access Dashboard</span>
-                      )}
-                    </LoadingButton>
-                  </form>
-                </Form>
-                
-                
-              </div>
+
+          <div className="heading">Welcome back</div>
+          <div className="subheading">Sign in to your dashboard</div>
+          <div className="divider" />
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className="field field-1">
+              <input
+                type="text"
+                placeholder="Email or Username"
+                className={errors.identifier ? "has-error" : ""}
+                autoComplete="username"
+                spellCheck="false"
+                autoFocus
+                style={password ? { paddingRight: 16 } : {}}
+                {...register("identifier")}
+              />
+              <label>Email or Username</label>
             </div>
-          </div>
+            {errors.identifier && (
+              <div className="field-err">{errors.identifier.message}</div>
+            )}
+
+            <div className="field field-2">
+              <input
+                type={showPass ? "text" : "password"}
+                placeholder="Password"
+                className={errors.password ? "has-error" : ""}
+                autoComplete="current-password"
+                style={{ paddingRight: 44 }}
+                {...register("password")}
+              />
+              <label>Password</label>
+              <button
+                className="pass-toggle"
+                onClick={() => setShowPass(!showPass)}
+                tabIndex={-1}
+                type="button"
+              >
+                {showPass ? (
+                  <svg viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                )}
+              </button>
+            </div>
+            {errors.password && (
+              <div className="field-err">{errors.password.message}</div>
+            )}
+
+            {error && <div className="err">{error}</div>}
+
+            <div className="submit-wrap">
+              <button
+                type="submit"
+                className={`submit-btn ${isPending ? "loading" : ""}`}
+                disabled={!identifier?.trim() || !password}
+              >
+                {isPending && <div className="spinner" />}
+                Sign In
+              </button>
+            </div>
+          </form>
+
+          <Link href="/reset-password" className="forgot">
+            Forgot password?
+          </Link>
         </div>
+
+        <div className="foot">© 2026 AIM TRENDSETT LLC</div>
       </div>
-      
-      {/* Footer */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-center text-gray-400 text-sm z-10">
-        <p>© 2024 AIM TRENDSETT LLC. All rights reserved. | Enterprise-grade e-commerce platform</p>
-      </div>
-      
-             {/* Dashboard Preview */}
-       <div className="absolute top-1/2 right-20 transform -translate-y-1/2 z-10 hidden xl:block">
-         <div className="luxury-glass rounded-2xl p-6 w-80 floating-element">
-           <div className="text-white text-sm">
-             <div className="font-semibold text-lg mb-4">Dashboard Preview</div>
-             <div className="space-y-3">
-               <div className="flex justify-between items-center">
-                 <span className="text-gray-300">Today's Sales</span>
-                 <span className="text-purple-400 font-semibold">$24,580</span>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-gray-300">Orders</span>
-                 <span className="text-pink-400 font-semibold">1,247</span>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-gray-300">Conversion Rate</span>
-                 <span className="text-cyan-400 font-semibold">3.2%</span>
-               </div>
-               <div className="w-full bg-gray-700 rounded-full h-2 mt-2">
-                 <div className="h-2 rounded-full" style={{ 
-                   width: '75%',
-                   background: 'linear-gradient(90deg, #8B5CF6 0%, #A855F7 25%, #EC4899 50%, #3B82F6 75%, #06B6D4 100%)'
-                 }}></div>
-               </div>
-             </div>
-           </div>
-         </div>
-       </div>
-       
-       {/* Floating Elements */}
-       <div className="absolute top-10 right-10 z-10">
-         <div className="luxury-glass rounded-2xl p-4">
-           <div className="text-white text-sm">
-             <div className="font-semibold">Live Status</div>
-             <div className="flex items-center space-x-2 mt-1">
-               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-               <span className="text-gray-300">All systems operational</span>
-             </div>
-           </div>
-         </div>
-       </div>
-     </div>
-     </>
-   );
- }
+    </>
+  );
+}
