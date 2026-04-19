@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Layout from "@/components/layout/Layout";
 import GetTokenServer from "@/lib/GetTokenServer";
 import FlashSaleForm from "./FlashSaleForm";
