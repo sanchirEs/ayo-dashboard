@@ -15,11 +15,11 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const { register, handleSubmit, formState: { errors, isValid }, watch } =
+  const { register, handleSubmit, formState: { errors }, watch } =
     useForm({
       resolver: zodResolver(loginSchema),
       defaultValues: { identifier: "", password: "" },
-      mode: "onChange",
+      mode: "onSubmit",
     });
 
   const identifier = watch("identifier");
@@ -280,7 +280,8 @@ export default function Login() {
         }
 
         .field input:focus + label,
-        .field input:not(:placeholder-shown) + label {
+        .field input:not(:placeholder-shown) + label,
+        .field input:-webkit-autofill + label {
           top: 8px;
           font-size: 10px;
           color: rgba(107,138,253,0.7);
@@ -289,7 +290,8 @@ export default function Login() {
           text-transform: uppercase;
         }
         .field input.has-error:focus + label,
-        .field input.has-error:not(:placeholder-shown) + label {
+        .field input.has-error:not(:placeholder-shown) + label,
+        .field input.has-error:-webkit-autofill + label {
           color: rgba(255,107,107,0.7);
         }
 
@@ -452,12 +454,11 @@ export default function Login() {
             <div className="field field-1">
               <input
                 type="text"
-                placeholder="Email or Username"
+                placeholder=" "
                 className={errors.identifier ? "has-error" : ""}
                 autoComplete="username"
                 spellCheck="false"
                 autoFocus
-                style={password ? { paddingRight: 16 } : {}}
                 {...register("identifier")}
               />
               <label>Email or Username</label>
@@ -469,7 +470,7 @@ export default function Login() {
             <div className="field field-2">
               <input
                 type={showPass ? "text" : "password"}
-                placeholder="Password"
+                placeholder=" "
                 className={errors.password ? "has-error" : ""}
                 autoComplete="current-password"
                 style={{ paddingRight: 44 }}
@@ -506,7 +507,7 @@ export default function Login() {
               <button
                 type="submit"
                 className={`submit-btn ${isPending ? "loading" : ""}`}
-                disabled={!identifier?.trim() || !password}
+                disabled={!identifier?.trim() || !password?.trim()}
               >
                 {isPending && <div className="spinner" />}
                 Sign In
