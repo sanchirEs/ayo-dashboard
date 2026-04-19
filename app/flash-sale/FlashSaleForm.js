@@ -60,7 +60,7 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
         await cancelFlashSale(campaignId, token);
         window.location.reload();
       } catch (e) {
-        alert(e.message);
+        setError(e.message);
       }
     });
   };
@@ -101,6 +101,8 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
   const previewEnd = previewStart
     ? new Date(previewStart.getTime() + form.duration * 60 * 1000)
     : null;
+
+  const durationLabel = DURATIONS.find(d => d.minutes === form.duration)?.label ?? `${form.duration} мин`;
 
   return (
     <div className="wg-box">
@@ -212,7 +214,7 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
           }}>
             <strong>Preview:</strong>{' '}
             {previewStart.toLocaleString('mn-MN')} → {previewEnd.toLocaleString('mn-MN')}
-            {' '}({form.duration} мин, <strong>{form.discountPct}%</strong> хямдрал)
+            {' '}({durationLabel}, <strong>{form.discountPct}%</strong> хямдрал)
           </div>
         )}
 
