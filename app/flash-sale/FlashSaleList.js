@@ -12,7 +12,7 @@ function getStatus(item) {
 }
 
 function fmt(iso) {
-  return new Date(iso).toLocaleString('mn-MN', { dateStyle: 'short', timeStyle: 'short' });
+  return new Date(iso).toLocaleString('mn-MN', { timeZone: 'Asia/Ulaanbaatar', dateStyle: 'short', timeStyle: 'short' });
 }
 
 export default async function FlashSaleList() {
