@@ -381,7 +381,7 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
               <div style={{ padding: "16px 24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                    Хүргэлт
+                    {order.deliveryType === "PICKUP" ? "Авах дэлгүүр" : "Хүргэлтийн хаяг"}
                   </div>
                   <span style={{
                     display: "inline-flex", alignItems: "center", padding: "2px 10px", borderRadius: 9999,
@@ -392,7 +392,18 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     {order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт"}
                   </span>
                 </div>
-                {address && (
+                {order.deliveryType === "PICKUP" ? (
+                  <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
+                    {order.shipping?.pickupStoreName && (
+                      <div style={{ fontWeight: 600 }}>{order.shipping.pickupStoreName}</div>
+                    )}
+                    {order.shipping?.addressLine1 && <div>{order.shipping.addressLine1}</div>}
+                    {order.shipping?.district && <div style={{ color: "#6b7280" }}>{order.shipping.district}</div>}
+                    {order.shipping?.recipientPhone && (
+                      <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {order.shipping.recipientPhone}</div>
+                    )}
+                  </div>
+                ) : address && (
                   <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
                     {address.addressLine1 && <div>{address.addressLine1}</div>}
                     {address.addressLine2 && <div>{address.addressLine2}</div>}
