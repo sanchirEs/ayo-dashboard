@@ -184,7 +184,7 @@ export default function DeliveryBulkActions({ selectedOrders, selectedDeliveries
             >
               <span style={{ fontSize: "14px" }}>⚠️</span>
               <p style={{ fontSize: "13px", color: "#92400e", margin: 0, lineHeight: "1.5" }}>
-                Нийт <strong>{selectedOrders.size} захиалга</strong> × ₮6,000 = <strong>₮{(selectedOrders.size * 6000).toLocaleString()}</strong> суутгагдана.
+                Нийт <strong>{selectedOrders.size} захиалга</strong> Papa руу илгээгдэнэ.
               </p>
             </div>
 

@@ -106,7 +106,7 @@ export default function DeliveryQuickView({ open, onOpenChange, delivery }) {
               <div>
                 <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "3px" }}>Жолоочийн төлбөр</div>
                 <div style={{ fontWeight: "600" }}>
-                  ₮{(papaShipment.shippingAmount ?? 6000).toLocaleString()}
+                  {papaShipment.shippingAmount != null ? `₮${Number(papaShipment.shippingAmount).toLocaleString()}` : "—"}
                 </div>
               </div>
             </div>

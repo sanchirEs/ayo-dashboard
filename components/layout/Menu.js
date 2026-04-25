@@ -58,6 +58,7 @@ export default function Menu() {
       // '/states': 8,
       // '/cities': 8,
       "/setting": 0,
+      "/store-settings": 0,
       // '/list-page': 9,
       // '/new-page': 9,
       // '/edit-page': 9,
@@ -691,6 +692,22 @@ export default function Menu() {
             )}
           </ul>
         </div>
+      </div>
+      <div className="center-item">
+        <div className="center-heading">Тохиргоо</div>
+        <ul className="menu-list">
+          <li className={`menu-item ${router === "/store-settings" ? "active" : ""}`}>
+            <Link
+              href="/store-settings"
+              className={isSubMenuItemActive("/store-settings") ? "active" : ""}
+            >
+              <div className="icon">
+                <i className="icon-settings" />
+              </div>
+              <div className="text">Дэлгүүрийн тохиргоо</div>
+            </Link>
+          </li>
+        </ul>
       </div>
       {false && (
       <div className="center-item">
