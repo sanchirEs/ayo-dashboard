@@ -16,7 +16,7 @@ export default function ImageUploadField({
   onBlur, // Form onBlur handler
   disabled = false,
   maxFiles = 10,
-  maxFileSize = 5 * 1024 * 1024, // 5MB
+  maxFileSize = 10 * 1024 * 1024, // 10MB
   acceptedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
   folder = 'products',
   type = 'products',

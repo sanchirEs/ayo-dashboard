@@ -59,13 +59,13 @@ export async function POST(request) {
               folder: `ayo-dashboard/${folder}`,
               resource_type: 'image',
               transformation: [
-                { width: 1200, height: 1200, crop: 'limit' },
+                { width: 2000, height: 2000, crop: 'limit' },
                 { quality: 'auto', fetch_format: 'auto' }
               ],
               // Generate additional sizes
               eager: [
                 { width: 300, height: 300, crop: 'fill' }, // Thumbnail
-                { width: 600, height: 600, crop: 'limit' }, // Medium
+                { width: 1000, height: 1000, crop: 'limit' }, // Medium
               ],
             },
             (error, result) => {

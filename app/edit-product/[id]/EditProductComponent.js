@@ -1079,7 +1079,7 @@ export default function EditProductComponent({ id }) {
                           onBlur={field.onBlur}
                           disabled={isPending}
                           maxFiles={10}
-                          maxFileSize={5 * 1024 * 1024} // 5MB
+                          maxFileSize={10 * 1024 * 1024} // 10MB
                           acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
                           folder="products"
                           type="products"
