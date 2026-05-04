@@ -48,6 +48,7 @@ export default function Menu() {
       "/sales": 9,
       "/all-user": 10,
       "/add-new-user": 10,
+      "/sms-broadcast": 0,
       "/login": 10,
       "/sign-up": 10,
       // '/all-roles': 7,
@@ -59,6 +60,8 @@ export default function Menu() {
       // '/cities': 8,
       "/setting": 0,
       "/store-settings": 0,
+      "/store-locations": 0,
+      "/store-locations/new": 0,
       // '/list-page': 9,
       // '/new-page': 9,
       // '/edit-page': 9,
@@ -259,6 +262,19 @@ export default function Menu() {
                   <i className="icon-zap" />
                 </div>
                 <div className="text">⚡ Flash Sale</div>
+              </Link>
+            </li>
+            <li
+              className={`menu-item ${router === "/sms-broadcast" ? "active" : ""}`}
+            >
+              <Link
+                href="/sms-broadcast"
+                className={isSubMenuItemActive("/sms-broadcast") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-message-square" />
+                </div>
+                <div className="text">📢 SMS Илгээх</div>
               </Link>
             </li>
             <li
@@ -705,6 +721,17 @@ export default function Menu() {
                 <i className="icon-settings" />
               </div>
               <div className="text">Дэлгүүрийн тохиргоо</div>
+            </Link>
+          </li>
+          <li className={`menu-item ${router.startsWith("/store-locations") ? "active" : ""}`}>
+            <Link
+              href="/store-locations"
+              className={router.startsWith("/store-locations") ? "active" : ""}
+            >
+              <div className="icon">
+                <i className="icon-map-pin" />
+              </div>
+              <div className="text">Салбарууд</div>
             </Link>
           </li>
         </ul>
