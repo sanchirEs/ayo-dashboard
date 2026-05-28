@@ -36,7 +36,7 @@ export default async function StoreLocationTable() {
       <ul className="flex flex-column">
         {locations.length ? (
           locations.map((loc) => (
-            <li key={loc.id} className="wg-product item-row gap20">
+            <li key={loc.id} className="attribute-item flex items-start gap20">
               <div style={{ width: "60px", flexShrink: 0 }}>
                 {loc.image ? (
                   <Image
