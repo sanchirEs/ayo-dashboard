@@ -42,13 +42,24 @@ function FontLoader() {
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
       * { box-sizing: border-box; }
-      .pp-row-verified { background: ${T.greenBg} !important; }
-      .pp-row-delivery { opacity: 0.4; }
+      /* Row states */
+      .pp-row-verified td { background: ${T.greenBg}; }
+      .pp-row-delivery td { color: #B0AEA8 !important; }
+      .pp-row-delivery .pp-amount { color: #C8C4BC !important; }
+      tbody tr { border-bottom: 1px solid ${T.border}; transition: background 0.12s; }
+      tbody tr:last-child { border-bottom: none; }
+      tbody tr:hover td { background: #F7F5F0; }
+      .pp-row-verified:hover td { background: #DCF4E8 !important; }
+      /* Phone edit pencil: hide until row hover */
+      .pp-edit-btn { opacity: 0; transition: opacity 0.15s; }
+      tr:hover .pp-edit-btn { opacity: 1; }
+      /* Pin input */
       .pp-pin-box:focus { border-color: ${T.accent} !important; background: ${T.accentBg} !important; }
+      /* Buttons */
       .pp-btn-primary:hover:not(:disabled) { background: #B85E06 !important; }
       .pp-btn-ghost:hover { background: ${T.border} !important; }
       .pp-tab-active { background: ${T.surface} !important; color: ${T.text} !important; box-shadow: ${T.shadow} !important; }
-      .pp-select-row:hover { background: #F2F1ED !important; }
+      /* Animations */
       @keyframes pp-fade-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
       @keyframes pp-scale-in { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
       @keyframes pp-spin { to { transform: rotate(360deg); } }
@@ -249,20 +260,13 @@ function PickupRow({ record: init, token, onUpdate }) {
   });
   const amount = Number(record.amount).toLocaleString("mn-MN");
 
-  // Left border color per status
-  const borderColors = { PENDING: "transparent", PIN_SENT: T.accent, VERIFIED: T.green, CANCELLED: "#D1D5DB" };
-
   return (
     <tr
       className={[
         isDelivery ? "pp-row-delivery" : "",
         record.status === "VERIFIED" ? "pp-row-verified" : "",
         verified ? "pp-verified-pop" : "",
-      ].join(" ")}
-      style={{
-        borderLeft: `3px solid ${isDelivery ? "transparent" : (borderColors[record.status] || "transparent")}`,
-        transition: "background 0.4s ease",
-      }}
+      ].filter(Boolean).join(" ")}
     >
       {/* Time */}
       <td style={{ padding: "10px 14px", fontFamily: T.mono, fontSize: 12, color: T.muted, whiteSpace: "nowrap" }}>
@@ -305,6 +309,7 @@ function PickupRow({ record: init, token, onUpdate }) {
                 {record.status === "PENDING" && (
                   <button
                     onClick={() => { setPhoneVal(record.customerPhone || ""); setEditPhone(true); }}
+                    className="pp-edit-btn"
                     style={{ background: "none", border: "none", cursor: "pointer", color: T.muted, fontSize: 11, padding: 0, lineHeight: 1 }}
                     title="Засах"
                   >✎</button>
@@ -341,7 +346,7 @@ function PickupRow({ record: init, token, onUpdate }) {
 
       {/* Amount */}
       <td style={{ padding: "10px 14px", textAlign: "right", whiteSpace: "nowrap" }}>
-        <span style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 500, color: T.green }}>
+        <span className="pp-amount" style={{ fontFamily: T.mono, fontSize: 13, fontWeight: 500, color: T.green }}>
           {amount}₮
         </span>
       </td>
