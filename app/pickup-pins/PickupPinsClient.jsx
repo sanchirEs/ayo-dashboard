@@ -289,7 +289,10 @@ function PickupRow({ record: init, token, onUpdate }) {
       {/* Phone */}
       <td style={{ padding: "10px 14px", minWidth: 130 }}>
         {isDelivery ? (
-          <span style={{ fontFamily: T.sans, fontSize: 11, color: T.muted }}>—</span>
+          <span style={{
+            fontFamily: T.sans, fontSize: 10, fontWeight: 600, letterSpacing: "0.06em",
+            color: "#B0AEA8", textTransform: "uppercase",
+          }}>хүргэлт</span>
         ) : editPhone ? (
           <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
             <input
@@ -510,7 +513,17 @@ function ImportModal({ token, onImported, onClose }) {
                 background: dragging ? T.accentBg : "#FAFAF8",
               }}
             >
-              <div style={{ fontSize: 36, marginBottom: 10 }}>{file ? "📄" : "📂"}</div>
+              <div style={{ marginBottom: 12 }}>
+                {file ? (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="16 13 12 17 8 13"/><line x1="12" y1="17" x2="12" y2="9"/>
+                  </svg>
+                ) : (
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={dragging ? T.accent : T.muted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="16 17 12 21 8 17"/><line x1="12" y1="21" x2="12" y2="3"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/>
+                  </svg>
+                )}
+              </div>
               {file ? (
                 <>
                   <div style={{ fontFamily: T.sans, fontWeight: 600, color: T.text }}>{file.name}</div>
@@ -551,7 +564,11 @@ function ImportModal({ token, onImported, onClose }) {
         ) : (
           /* Success state */
           <div style={{ textAlign: "center", animation: "pp-scale-in 0.25s ease" }}>
-            <div style={{ fontSize: 52, marginBottom: 12 }}>✅</div>
+            <div style={{ marginBottom: 16 }}>
+              <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke={T.green} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+              </svg>
+            </div>
             <div style={{ fontFamily: T.sans, fontSize: 17, fontWeight: 700, color: T.text, marginBottom: 20 }}>
               Амжилттай оруулав!
             </div>
@@ -745,7 +762,11 @@ export default function PickupPinsClient() {
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: "60px 24px", textAlign: "center" }}>
-            <div style={{ fontSize: 42, marginBottom: 14 }}>📋</div>
+            <div style={{ marginBottom: 16, opacity: 0.3 }}>
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
             <div style={{ fontFamily: T.sans, fontWeight: 600, color: T.text, marginBottom: 6 }}>
               {imports.length === 0 ? "Excel файл оруулаагүй байна" : "Мөр олдсонгүй"}
             </div>
