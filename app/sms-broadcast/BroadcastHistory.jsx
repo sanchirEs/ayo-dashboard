@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, Fragment } from "react";
-import { getBroadcastDetail, testSmsSend } from "@/lib/api/smsBroadcast";
+import { getBroadcastDetail } from "@/lib/api/smsBroadcast";
 
 function StatusBadge({ stats = {} }) {
   const pending = stats.PENDING || 0;
@@ -33,75 +33,6 @@ function StatusBadge({ stats = {} }) {
   );
 }
 
-function TestSmsPanel({ token }) {
-  const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("Ayo test мессеж");
-  const [state, setState] = useState("idle");
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-
-  async function handleTest() {
-    if (!phone || !message) return;
-    setState("sending");
-    setError(null);
-    setResult(null);
-    const res = await testSmsSend({ phone, message }, token);
-    if (res.success) {
-      setState("done");
-      setResult(res.data);
-    } else {
-      setState("error");
-      const detail = res.providerStatus
-        ? `HTTP ${res.providerStatus} — ${JSON.stringify(res.providerData) || res.error}`
-        : (res.error || "Алдаа гарлаа");
-      setError(detail);
-    }
-  }
-
-  return (
-    <div style={{ border: "1px solid #fef3c7", borderRadius: "10px", background: "#fffbeb", padding: "16px 20px", marginBottom: "20px" }}>
-      <div style={{ fontWeight: 700, fontSize: "13px", color: "#92400e", marginBottom: "12px" }}>
-        🔧 SMS тест илгээх (алдааг оношлох)
-      </div>
-      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "flex-end" }}>
-        <div>
-          <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}>Утасны дугаар</div>
-          <input
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            placeholder="94000000"
-            style={{ padding: "7px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "13px", width: "140px" }}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: "200px" }}>
-          <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}>Мессеж</div>
-          <input
-            value={message}
-            onChange={e => setMessage(e.target.value)}
-            style={{ padding: "7px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "13px", width: "100%" }}
-          />
-        </div>
-        <button
-          onClick={handleTest}
-          disabled={state === "sending" || !phone}
-          style={{ padding: "7px 16px", borderRadius: "6px", background: state === "sending" ? "#9ca3af" : "#d97706", color: "#fff", fontWeight: 600, fontSize: "13px", border: "none", cursor: state === "sending" ? "not-allowed" : "pointer" }}
-        >
-          {state === "sending" ? "Илгээж байна…" : "Тест илгээх"}
-        </button>
-      </div>
-      {state === "done" && (
-        <div style={{ marginTop: "10px", padding: "8px 12px", background: "#dcfce7", borderRadius: "6px", fontSize: "12px", color: "#166534" }}>
-          ✅ Амжилттай илгээгдлээ — {JSON.stringify(result)}
-        </div>
-      )}
-      {state === "error" && (
-        <div style={{ marginTop: "10px", padding: "8px 12px", background: "#fee2e2", borderRadius: "6px", fontSize: "12px", color: "#991b1b" }}>
-          ❌ Алдаа: {error}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function BroadcastDetail({ broadcastId, token }) {
   const [detail, setDetail] = useState(null);
@@ -184,8 +115,6 @@ export default function BroadcastHistory({ broadcasts, onRefresh, token }) {
           <span>↻</span> Шинэчлэх
         </button>
       </div>
-
-      <TestSmsPanel token={token} />
 
       {broadcasts.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 16px" }}>
