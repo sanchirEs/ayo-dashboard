@@ -177,7 +177,7 @@ export async function getBroadcastDetail(
 export async function testSmsSend(
   payload: { phone: string; message: string },
   token?: string | null
-): Promise<{ success: boolean; data?: Record<string, unknown>; error?: string }> {
+): Promise<{ success: boolean; data?: Record<string, unknown>; error?: string; providerStatus?: number; providerData?: unknown }> {
   try {
     const headers = await authHeaders(token);
     const res = await fetchWithAuthHandling(
@@ -185,9 +185,8 @@ export async function testSmsSend(
       { method: 'POST', headers, body: JSON.stringify(payload) },
       'testSmsSend'
     );
-    const body = await res.json().catch(() => ({})) as { message?: string; success?: boolean; data?: Record<string, unknown> };
-    if (!res.ok) throw new Error(body.message || `HTTP ${res.status}`);
-    return body as { success: boolean; data?: Record<string, unknown>; error?: string };
+    // Backend always returns 200 for this endpoint — parse body directly
+    return res.json();
   } catch (error) {
     const e = handleApiError(error);
     logApiError('testSmsSend', e, payload);

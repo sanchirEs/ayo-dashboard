@@ -51,7 +51,10 @@ function TestSmsPanel({ token }) {
       setResult(res.data);
     } else {
       setState("error");
-      setError(res.error || "Алдаа гарлаа");
+      const detail = res.providerStatus
+        ? `HTTP ${res.providerStatus} — ${JSON.stringify(res.providerData) || res.error}`
+        : (res.error || "Алдаа гарлаа");
+      setError(detail);
     }
   }
 
