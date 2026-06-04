@@ -171,9 +171,72 @@
   .product-item {
     font-size: 13px;
   }
-  
+
   .tag-pill {
     font-size: 9px;
     padding: 2px 6px;
   }
 }
+
+/* ===== Overlay Sidebar: same slide-in experience on all screen sizes ===== */
+
+/* Sidebar always hidden by default — matches mobile behavior */
+.layout-wrap .section-menu-left {
+  left: -100% !important;
+}
+.layout-wrap .section-menu-left > .box-logo {
+  left: -100% !important;
+}
+
+/* When sidebar is open, slide it in as a fixed overlay */
+.layout-wrap.full-width .section-menu-left {
+  left: 0 !important;
+  z-index: 100 !important;
+}
+.layout-wrap.full-width .section-menu-left > .box-logo {
+  left: 0 !important;
+  z-index: 101 !important;
+}
+
+/* Content and header always take full width — no sidebar offset */
+.layout-wrap .section-content-right .main-content {
+  padding-left: 0 !important;
+}
+.header-dashboard {
+  width: 100% !important;
+  left: 0 !important;
+}
+
+/* Show logo in header on desktop (sidebar no longer holds it permanently) */
+.header-dashboard .wrap .header-left > a {
+  display: block !important;
+}
+
+/* Show hamburger button in header on desktop */
+.header-dashboard .wrap .header-left .button-show-hide {
+  display: block !important;
+}
+
+/* Hamburger direction: closed = arrow points right (open), open = arrow points left (close) */
+.layout-wrap:not(.full-width) .header-dashboard .wrap .header-left .button-show-hide {
+  transform: rotate(180deg) !important;
+}
+.layout-wrap.full-width .header-dashboard .wrap .header-left .button-show-hide {
+  transform: rotate(0deg) !important;
+}
+.layout-wrap.full-width .header-dashboard .wrap .header-left .button-show-hide i {
+  color: var(--Main, #2377FC) !important;
+}
+
+/* Backdrop that appears behind the open sidebar */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  cursor: pointer;
+}
+/* ===== End overlay sidebar ===== */

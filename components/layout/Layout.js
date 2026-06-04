@@ -55,12 +55,15 @@ export default function Layout({
       <div id="wrapper">
         <div id="page">
           <div
-            className={`layout-wrap 
+            className={`layout-wrap
                     ${boxed ? "layout-width-boxed" : ""}
                     menu-style-icon-default
                     ${isSidebar ? "full-width" : ""}
                     `}
           >
+            {isSidebar && (
+              <div className="sidebar-backdrop" onClick={handleSidebar} />
+            )}
             <Sidebar handleSidebar={handleSidebar} />
             <div className="section-content-right">
               <Header1
