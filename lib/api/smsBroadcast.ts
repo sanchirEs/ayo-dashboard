@@ -42,6 +42,22 @@ export interface BroadcastTemplate {
   template: string;
 }
 
+export interface SmsLog {
+  id: number;
+  phone: string;
+  status: string;
+  attempts: number;
+  errorMessage: string | null;
+  sentAt: string | null;
+  lastAttemptAt: string | null;
+  createdAt: string;
+}
+
+export interface BroadcastDetail extends Broadcast {
+  counts: Record<string, number>;
+  logs: SmsLog[];
+}
+
 async function authHeaders(token?: string | null): Promise<Record<string, string>> {
   const t = token ?? (await tokenService.getTokenWithRetry());
   return { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' };
@@ -135,6 +151,47 @@ export async function getBroadcastTemplates(
     const e = handleApiError(error);
     logApiError('getBroadcastTemplates', e, {});
     return { success: false, data: [], error: e.message };
+  }
+}
+
+export async function getBroadcastDetail(
+  id: number,
+  token?: string | null
+): Promise<{ success: boolean; data?: BroadcastDetail; error?: string }> {
+  try {
+    const headers = await authHeaders(token);
+    const res = await fetchWithAuthHandling(
+      `${base()}/${id}`,
+      { method: 'GET', headers, cache: 'no-store' },
+      'getBroadcastDetail'
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  } catch (error) {
+    const e = handleApiError(error);
+    logApiError('getBroadcastDetail', e, { id });
+    return { success: false, error: e.message };
+  }
+}
+
+export async function testSmsSend(
+  payload: { phone: string; message: string },
+  token?: string | null
+): Promise<{ success: boolean; data?: Record<string, unknown>; error?: string }> {
+  try {
+    const headers = await authHeaders(token);
+    const res = await fetchWithAuthHandling(
+      `${base()}/test-send`,
+      { method: 'POST', headers, body: JSON.stringify(payload) },
+      'testSmsSend'
+    );
+    const body = await res.json().catch(() => ({})) as { message?: string; success?: boolean; data?: Record<string, unknown> };
+    if (!res.ok) throw new Error(body.message || `HTTP ${res.status}`);
+    return body as { success: boolean; data?: Record<string, unknown>; error?: string };
+  } catch (error) {
+    const e = handleApiError(error);
+    logApiError('testSmsSend', e, payload);
+    return { success: false, error: e.message };
   }
 }
 

@@ -1,5 +1,6 @@
 "use client";
-import { useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
+import { getBroadcastDetail, testSmsSend } from "@/lib/api/smsBroadcast";
 
 function StatusBadge({ stats = {} }) {
   const pending = stats.PENDING || 0;
@@ -32,7 +33,132 @@ function StatusBadge({ stats = {} }) {
   );
 }
 
-export default function BroadcastHistory({ broadcasts, onRefresh }) {
+function TestSmsPanel({ token }) {
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("Ayo test мессеж");
+  const [state, setState] = useState("idle");
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  async function handleTest() {
+    if (!phone || !message) return;
+    setState("sending");
+    setError(null);
+    setResult(null);
+    const res = await testSmsSend({ phone, message }, token);
+    if (res.success) {
+      setState("done");
+      setResult(res.data);
+    } else {
+      setState("error");
+      setError(res.error || "Алдаа гарлаа");
+    }
+  }
+
+  return (
+    <div style={{ border: "1px solid #fef3c7", borderRadius: "10px", background: "#fffbeb", padding: "16px 20px", marginBottom: "20px" }}>
+      <div style={{ fontWeight: 700, fontSize: "13px", color: "#92400e", marginBottom: "12px" }}>
+        🔧 SMS тест илгээх (алдааг оношлох)
+      </div>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}>Утасны дугаар</div>
+          <input
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            placeholder="94000000"
+            style={{ padding: "7px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "13px", width: "140px" }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: "200px" }}>
+          <div style={{ fontSize: "11px", color: "#6b7280", marginBottom: "4px" }}>Мессеж</div>
+          <input
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            style={{ padding: "7px 10px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "13px", width: "100%" }}
+          />
+        </div>
+        <button
+          onClick={handleTest}
+          disabled={state === "sending" || !phone}
+          style={{ padding: "7px 16px", borderRadius: "6px", background: state === "sending" ? "#9ca3af" : "#d97706", color: "#fff", fontWeight: 600, fontSize: "13px", border: "none", cursor: state === "sending" ? "not-allowed" : "pointer" }}
+        >
+          {state === "sending" ? "Илгээж байна…" : "Тест илгээх"}
+        </button>
+      </div>
+      {state === "done" && (
+        <div style={{ marginTop: "10px", padding: "8px 12px", background: "#dcfce7", borderRadius: "6px", fontSize: "12px", color: "#166534" }}>
+          ✅ Амжилттай илгээгдлээ — {JSON.stringify(result)}
+        </div>
+      )}
+      {state === "error" && (
+        <div style={{ marginTop: "10px", padding: "8px 12px", background: "#fee2e2", borderRadius: "6px", fontSize: "12px", color: "#991b1b" }}>
+          ❌ Алдаа: {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BroadcastDetail({ broadcastId, token }) {
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getBroadcastDetail(broadcastId, token).then(res => {
+      if (res.success) setDetail(res.data);
+      setLoading(false);
+    });
+  }, [broadcastId, token]);
+
+  if (loading) return <div style={{ padding: "12px", fontSize: "13px", color: "#9ca3af" }}>Уншиж байна…</div>;
+  if (!detail) return null;
+
+  const errorLogs = (detail.logs || []).filter(l => l.errorMessage);
+  const uniqueErrors = [...new Set(errorLogs.map(l => l.errorMessage))];
+
+  return (
+    <div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
+        {[
+          { label: "Нийт", value: detail.targetCount, color: "#374151", bg: "#f3f4f6" },
+          { label: "Явсан", value: detail.stats?.SENT || 0, color: "#15803d", bg: "#dcfce7" },
+          { label: "Хүлээгдэж байна", value: detail.stats?.PENDING || 0, color: "#92400e", bg: "#fef3c7" },
+          { label: "Хязгаарлагдсан", value: detail.stats?.RATE_LIMITED || 0, color: "#c2410c", bg: "#fff7ed" },
+          { label: "Амжилтгүй", value: detail.stats?.FAILED || 0, color: "#991b1b", bg: "#fee2e2" },
+          { label: "Орхигдсон", value: detail.skippedCount || 0, color: "#6b7280", bg: "#f9fafb" },
+        ].map(({ label, value, color, bg }) => (
+          <div key={label} style={{ padding: "8px 14px", background: bg, borderRadius: "8px", textAlign: "center" }}>
+            <div style={{ fontSize: "18px", fontWeight: 800, color }}>{value}</div>
+            <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "12px 14px", fontSize: "13px", color: "#374151", lineHeight: "1.6", marginBottom: uniqueErrors.length > 0 ? "12px" : 0 }}>
+        {detail.message}
+      </div>
+
+      {uniqueErrors.length > 0 && (
+        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px 14px" }}>
+          <div style={{ fontWeight: 700, fontSize: "12px", color: "#991b1b", marginBottom: "8px" }}>
+            ⚠️ Алдааны мэдээлэл (CallPro хариу)
+          </div>
+          {uniqueErrors.map((err, i) => (
+            <div key={i} style={{ fontFamily: "monospace", fontSize: "12px", color: "#7f1d1d", background: "#fff", border: "1px solid #fecaca", borderRadius: "4px", padding: "6px 10px", marginBottom: i < uniqueErrors.length - 1 ? "6px" : 0 }}>
+              {err}
+            </div>
+          ))}
+          <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px" }}>
+            Нийт {errorLogs.length} мессеж амжилтгүй болсон • CallPro API тохиргоог шалгана уу
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function BroadcastHistory({ broadcasts, onRefresh, token }) {
   const [expandedId, setExpandedId] = useState(null);
 
   return (
@@ -55,6 +181,8 @@ export default function BroadcastHistory({ broadcasts, onRefresh }) {
           <span>↻</span> Шинэчлэх
         </button>
       </div>
+
+      <TestSmsPanel token={token} />
 
       {broadcasts.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 16px" }}>
@@ -109,24 +237,7 @@ export default function BroadcastHistory({ broadcasts, onRefresh }) {
                     <tr>
                       <td colSpan={7} style={{ background: "#f0f7ff", padding: "0" }}>
                         <div style={{ padding: "16px 20px", borderTop: "2px solid #bfdbfe" }}>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}>
-                            {[
-                              { label: "Нийт", value: b.targetCount, color: "#374151", bg: "#f3f4f6" },
-                              { label: "Явсан", value: b.stats?.SENT || 0, color: "#15803d", bg: "#dcfce7" },
-                              { label: "Хүлээгдэж байна", value: b.stats?.PENDING || 0, color: "#92400e", bg: "#fef3c7" },
-                              { label: "Хязгаарлагдсан", value: b.stats?.RATE_LIMITED || 0, color: "#c2410c", bg: "#fff7ed" },
-                              { label: "Амжилтгүй", value: b.stats?.FAILED || 0, color: "#991b1b", bg: "#fee2e2" },
-                              { label: "Орхигдсон", value: b.skippedCount || 0, color: "#6b7280", bg: "#f9fafb" },
-                            ].map(({ label, value, color, bg }) => (
-                              <div key={label} style={{ padding: "8px 14px", background: bg, borderRadius: "8px", textAlign: "center" }}>
-                                <div style={{ fontSize: "18px", fontWeight: 800, color }}>{value}</div>
-                                <div style={{ fontSize: "11px", color: "#6b7280", marginTop: "2px" }}>{label}</div>
-                              </div>
-                            ))}
-                          </div>
-                          <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "12px 14px", fontSize: "13px", color: "#374151", lineHeight: "1.6" }}>
-                            {b.message}
-                          </div>
+                          <BroadcastDetail broadcastId={b.id} token={token} />
                         </div>
                       </td>
                     </tr>

@@ -132,7 +132,7 @@ export default function SmsBroadcastClient({ initialBroadcasts }) {
           onSaveTemplate={handleSaveTemplate}
         />
       </div>
-      <BroadcastHistory broadcasts={broadcasts} onRefresh={refreshBroadcasts} />
+      <BroadcastHistory broadcasts={broadcasts} onRefresh={refreshBroadcasts} token={token} />
     </div>
   );
 }
