@@ -173,18 +173,31 @@ function PinInput({ onComplete, disabled }) {
 }
 
 // ─── Stat card ────────────────────────────────────────────────────────────────
-function StatCard({ label, value, color, bg }) {
+function StatCard({ label, value, color, accentColor }) {
+  const isZero = value === 0;
   return (
     <div style={{
-      padding: "14px 20px", background: bg || T.surface,
-      border: `1px solid ${T.border}`, borderRadius: T.radius,
-      boxShadow: T.shadow, minWidth: 110,
+      padding: "14px 20px 16px",
+      background: T.surface,
+      border: `1px solid ${T.border}`,
+      borderTop: `3px solid ${isZero ? T.border : (accentColor || T.border)}`,
+      borderRadius: T.radius,
+      boxShadow: T.shadow,
+      minWidth: 120,
       animation: "pp-fade-in 0.3s ease both",
     }}>
-      <div style={{ fontFamily: T.mono, fontSize: 28, fontWeight: 500, color: color || T.text, lineHeight: 1 }}>
+      <div style={{
+        fontFamily: T.mono, fontSize: 30, fontWeight: 500, lineHeight: 1,
+        color: isZero ? "#D1CEC8" : (color || T.text),
+        transition: "color 0.3s",
+      }}>
         {value}
       </div>
-      <div style={{ fontFamily: T.sans, fontSize: 11, color: T.muted, marginTop: 5, letterSpacing: "0.03em" }}>
+      <div style={{
+        fontFamily: T.sans, fontSize: 11, marginTop: 6,
+        color: isZero ? "#C4C0B8" : T.muted,
+        letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 500,
+      }}>
         {label}
       </div>
     </div>
@@ -662,10 +675,10 @@ export default function PickupPinsClient() {
       {/* Stats */}
       {selectedId && (
         <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-          <StatCard label="Нийт pickup"   value={stats.total}   color={T.text}   />
-          <StatCard label="Хүлээгдэж буй" value={stats.pending} color={T.muted}  />
-          <StatCard label="PIN илгээсэн"  value={stats.pinSent} color={T.accent} bg={T.accentBg} />
-          <StatCard label="Баталгаажсан"  value={stats.verified}color={T.green}  bg={T.greenBg}  />
+          <StatCard label="Нийт pickup"   value={stats.total}    color={T.text}   accentColor={T.text}   />
+          <StatCard label="Хүлээгдэж буй" value={stats.pending}  color={T.muted}  accentColor="#9CA3AF"  />
+          <StatCard label="PIN илгээсэн"  value={stats.pinSent}  color={T.accent} accentColor={T.accent} />
+          <StatCard label="Баталгаажсан"  value={stats.verified} color={T.green}  accentColor={T.green}  />
         </div>
       )}
 
