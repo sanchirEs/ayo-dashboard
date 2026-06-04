@@ -368,7 +368,7 @@ function PickupRow({ record: init, token, onUpdate }) {
               className="pp-btn-primary"
               style={primaryBtnStyle(!record.customerPhone || loading)}
             >
-              {loading ? <><Spinner size={11} color="#fff" /> &nbsp;...</> : "📱 PIN илгээх"}
+              {loading ? <><Spinner size={11} color="#fff" /> илгээж байна</> : "PIN илгээх"}
             </button>
             <button onClick={doCancel} className="pp-btn-ghost" style={ghostBtnStyle()}>
               Цуцлах
@@ -527,7 +527,7 @@ function ImportModal({ token, onImported, onClose }) {
               className="pp-btn-primary"
               style={{ ...primaryBtnStyle(!file || loading || !token), width: "100%", justifyContent: "center", marginTop: 16, padding: "11px 0", fontSize: 14 }}
             >
-              {loading ? <><Spinner size={14} color="#fff" /> Уншиж байна...</> : "Оруулах"}
+              {loading ? <><Spinner size={14} color="#fff" /> Уншиж байна</> : "Оруулах"}
             </button>
           </>
         ) : (
