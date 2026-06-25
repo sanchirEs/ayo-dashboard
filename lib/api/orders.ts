@@ -363,7 +363,9 @@ export function translateStatus(status: string): string {
     'PROCESSING': 'Баталгаажсан',
     'SHIPPED': 'Илгээсэн',
     'DELIVERED': 'Хүргэгдсэн',
-    'CANCELLED': 'Цуцалсан'
+    'CANCELLED': 'Цуцалсан',
+    'RETURNED': 'Буцаагдсан',
+    'PICKED_UP': 'Ирж авсан'
   };
   return translations[status] || status;
 }
@@ -374,7 +376,9 @@ export function getStatusBadgeClass(status: string): string {
     'PROCESSING': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
     'SHIPPED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800',
     'DELIVERED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
-    'CANCELLED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'
+    'CANCELLED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800',
+    'RETURNED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800',
+    'PICKED_UP': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800'
   };
   return statusClasses[status] || statusClasses['PENDING'];
 }
@@ -385,7 +389,9 @@ export function getStatusBlockClass(status: string): string {
     'PROCESSING': 'block-tracking',
     'SHIPPED': 'block-tracking',
     'DELIVERED': 'block-available',
-    'CANCELLED': 'block-not-available'
+    'CANCELLED': 'block-not-available',
+    'RETURNED': 'block-not-available',
+    'PICKED_UP': 'block-available'
   };
   return statusBlockClasses[status] || statusBlockClasses['PENDING'];
 }

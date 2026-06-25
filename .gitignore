@@ -106,3 +106,4 @@ temp/
 # as it ensures consistent installs across different environments
 # Only ignore it if you're using yarn.lock instead
 # package-lock.json
+.gstack/

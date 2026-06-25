@@ -10,7 +10,6 @@ export default function OrderFilters() {
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [status, setStatus] = useState(searchParams.get('status') || '');
   const [paymentProvider, setPaymentProvider] = useState(searchParams.get('paymentProvider') || '');
-  const [deliveryType, setDeliveryType] = useState(searchParams.get('deliveryType') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
   const [datePreset, setDatePreset] = useState('');
@@ -67,7 +66,7 @@ export default function OrderFilters() {
   };
 
   const buildParams = (overrides = {}) => {
-    const current = { search, status, dateFrom, dateTo, paymentProvider, deliveryType };
+    const current = { search, status, dateFrom, dateTo, paymentProvider };
     const merged = { ...current, ...overrides };
     const params = new URLSearchParams();
     if (merged.search) params.set('search', merged.search);
@@ -75,7 +74,6 @@ export default function OrderFilters() {
     if (merged.dateFrom) params.set('dateFrom', merged.dateFrom);
     if (merged.dateTo) params.set('dateTo', merged.dateTo);
     if (merged.paymentProvider) params.set('paymentProvider', merged.paymentProvider);
-    if (merged.deliveryType) params.set('deliveryType', merged.deliveryType);
     params.set('page', '1');
     return params;
   };
@@ -83,41 +81,35 @@ export default function OrderFilters() {
   const updateAllFilters = (newDateFrom = dateFrom, newDateTo = dateTo) => {
     const params = buildParams({ dateFrom: newDateFrom, dateTo: newDateTo });
     const queryString = params.toString();
-    router.push(`/order-list${queryString ? '?' + queryString : ''}`);
+    router.push(`/pickup-orders${queryString ? '?' + queryString : ''}`);
   };
 
   const handleStatusChange = (newStatus) => {
     setStatus(newStatus);
-    router.push(`/order-list?${buildParams({ status: newStatus }).toString()}`);
+    router.push(`/pickup-orders?${buildParams({ status: newStatus }).toString()}`);
   };
 
   const handlePaymentProviderChange = (newPaymentProvider) => {
     setPaymentProvider(newPaymentProvider);
-    router.push(`/order-list?${buildParams({ paymentProvider: newPaymentProvider }).toString()}`);
-  };
-
-  const handleDeliveryTypeChange = (newDeliveryType) => {
-    setDeliveryType(newDeliveryType);
-    router.push(`/order-list?${buildParams({ deliveryType: newDeliveryType }).toString()}`);
+    router.push(`/pickup-orders?${buildParams({ paymentProvider: newPaymentProvider }).toString()}`);
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    router.push(`/order-list?${buildParams().toString()}`);
+    router.push(`/pickup-orders?${buildParams().toString()}`);
   };
 
   const clearFilters = () => {
     setSearch('');
     setStatus('');
     setPaymentProvider('');
-    setDeliveryType('');
     setDateFrom('');
     setDateTo('');
     setDatePreset('');
-    router.push('/order-list');
+    router.push('/pickup-orders');
   };
 
-  const activeFiltersCount = [search, status, paymentProvider, deliveryType, dateFrom, dateTo].filter(v => v).length;
+  const activeFiltersCount = [search, status, paymentProvider, dateFrom, dateTo].filter(v => v).length;
 
   return (
     <div style={{ marginBottom: '1.5rem' }}>
@@ -238,26 +230,6 @@ export default function OrderFilters() {
           <option value="QPAY">QPAY</option>
           <option value="POCKET">POCKET</option>
           <option value="STOREPAY">STOREPAY</option>
-        </select>
-
-        {/* Delivery Type Filter */}
-        <select
-          value={deliveryType}
-          onChange={(e) => handleDeliveryTypeChange(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            backgroundColor: deliveryType ? '#f3f4f6' : 'white',
-            cursor: 'pointer',
-            minWidth: '100px',
-            maxWidth: '130px'
-          }}
-        >
-          <option value="">Хүргэлт</option>
-          <option value="DELIVERY">Хүргэлт</option>
-          <option value="PICKUP">Ирж авах</option>
         </select>
 
         {/* Export Excel */}

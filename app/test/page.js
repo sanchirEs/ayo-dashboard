@@ -1,28 +1,14 @@
 "use client";
-import { toast } from "sonner";
+import Layout from "@/components/layout/Layout";
 
-import { Button } from "@/components/ui/button";
-
-export default function SonnerDemo() {
-  toast("Event has been created.");
+export default function SidebarTest() {
   return (
-    <div className="h-screen w-full bg-black">
-      {" "}
-      <Button
-        variant="destructive"
-        onClick={() =>
-          toast("Event has been created", {
-            description: "Sunday, December 03, 2023 at 9:00 AM",
-
-            action: {
-              label: "Undo",
-              onClick: () => console.log("Undo"),
-            },
-          })
-        }
-      >
-        Show Toast
-      </Button>
-    </div>
+    <Layout>
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">Sidebar Overlay Test</h1>
+        <p className="text-gray-600">Click the arrow button (→) in the top-left of the header to open the sidebar overlay.</p>
+        <p className="text-gray-600 mt-2">The sidebar should slide in from the left on top of this content, with a dark backdrop behind it.</p>
+      </div>
+    </Layout>
   );
 }
