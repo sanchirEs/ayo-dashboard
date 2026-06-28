@@ -183,9 +183,24 @@
 /* Sidebar always hidden by default — matches mobile behavior */
 .layout-wrap .section-menu-left {
   left: -100% !important;
+  width: 280px !important;
+  min-width: 280px !important;
+  transition: left 0.3s ease !important;
 }
 .layout-wrap .section-menu-left > .box-logo {
   left: -100% !important;
+  width: 280px !important;
+}
+
+/* Restore hidden text/elements that icon-default mode hid */
+.layout-wrap .section-menu-left .text {
+  display: block !important;
+}
+.layout-wrap .section-menu-left .center-heading {
+  display: block !important;
+}
+.layout-wrap .section-menu-left > .box-logo .button-show-hide {
+  display: block !important;
 }
 
 /* When sidebar is open, slide it in as a fixed overlay */

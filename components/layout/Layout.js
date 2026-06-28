@@ -57,7 +57,6 @@ export default function Layout({
           <div
             className={`layout-wrap
                     ${boxed ? "layout-width-boxed" : ""}
-                    menu-style-icon-default
                     ${isSidebar ? "full-width" : ""}
                     `}
           >
