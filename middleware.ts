@@ -8,7 +8,7 @@ import {
   apiAuthPrefix,
 } from "@/routes";
 import { isAdmin, isVendor } from "@/lib/auth-utils";
-import { canAccessRoute, getLandingRoute } from "@/lib/permissions";
+import { shouldRedirectRestrictedRole, getLandingRoute } from "@/lib/permissions";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -39,9 +39,12 @@ export default auth((req) => {
     return Response.redirect(new URL("/login", nextUrl));
   }
 
-  // Restricted roles (e.g. BRANCH) may only reach their allowlisted routes.
-  // Bounce them back to their own landing page rather than a dead-end.
-  if (!canAccessRoute(userRole, nextUrl.pathname)) {
+  // Restricted roles (e.g. BRANCH) may only reach their allowlisted *pages*.
+  // Bounce them back to their own landing page rather than a dead-end. API/proxy
+  // paths are deliberately exempt (see shouldRedirectRestrictedRole) — the
+  // backend enforces its own authorization, and page-gating an API call turns
+  // it into a 302 the client reads as an auth failure.
+  if (shouldRedirectRestrictedRole(userRole, nextUrl.pathname)) {
     return Response.redirect(new URL(getLandingRoute(userRole), nextUrl));
   }
 

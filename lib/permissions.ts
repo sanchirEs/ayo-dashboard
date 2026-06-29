@@ -49,3 +49,31 @@ export function canAccessRoute(
   // Non-restricted roles: access decided by the admin/vendor checks elsewhere.
   return true;
 }
+
+/**
+ * Path prefixes that are NOT dashboard pages. These are proxied to the backend
+ * (or framework internals) which enforce their own authorization. They must
+ * NEVER be page-gated by role: doing so turns an otherwise-allowed request into
+ * a 302 redirect that a client `fetch` reads as "Authentication failed".
+ */
+const NON_PAGE_PREFIXES = ["/api/", "/trpc/"];
+
+export function isNonPagePath(pathname: string): boolean {
+  return NON_PAGE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+/**
+ * Middleware gate decision: should a restricted role (e.g. BRANCH) be bounced
+ * away from `pathname`? Only real *pages* are gated — non-page paths (API/proxy)
+ * are exempt because the backend does its own role authorization.
+ *
+ * Use this in middleware instead of calling `canAccessRoute` directly, so the
+ * API exemption can't be accidentally dropped.
+ */
+export function shouldRedirectRestrictedRole(
+  role: UserRole | undefined,
+  pathname: string
+): boolean {
+  if (isNonPagePath(pathname)) return false;
+  return !canAccessRoute(role, pathname);
+}
