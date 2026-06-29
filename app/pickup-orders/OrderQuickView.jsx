@@ -11,11 +11,8 @@ import {
   getOrderDetailsClient,
   formatOrderDate,
   formatPrice,
-  translateStatus,
 } from "@/lib/api/orders";
 import {
-  updateOrderStatusClient,
-  cancelOrderClient,
   sendOrderPickupPinClient,
   verifyOrderPickupPinClient,
 } from "@/lib/api/orders-client";
@@ -137,8 +134,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [updating, setUpdating] = useState(false);
-  const [actionError, setActionError] = useState(null);
   const router = useRouter();
 
   // ── Pickup PIN state ──
@@ -156,7 +151,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     if (!open) {
       setOrder(null);
       setError(null);
-      setActionError(null);
       setPinBusy(false);
       setPinSent(false);
       setPinValue("");
@@ -179,45 +173,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
       setError(e.message || "Захиалга ачааллахад алдаа гарлаа");
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleStatusUpdate(newStatus) {
-    if (!token || updating) return;
-    setUpdating(true);
-    setActionError(null);
-    try {
-      const result = await updateOrderStatusClient(orderId, newStatus, token);
-      if (result.success) {
-        setOrder(prev => prev ? { ...prev, status: newStatus } : null);
-        router.refresh();
-      } else {
-        setActionError(result.message || "Статус шинэчлэхэд алдаа гарлаа");
-      }
-    } catch (e) {
-      setActionError(e.message || "Алдаа гарлаа");
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  async function handleCancel() {
-    if (!token || updating) return;
-    if (!window.confirm("Захиалгыг цуцлах уу?")) return;
-    setUpdating(true);
-    setActionError(null);
-    try {
-      const result = await cancelOrderClient(orderId, token);
-      if (result.success) {
-        setOrder(prev => prev ? { ...prev, status: "CANCELLED" } : null);
-        router.refresh();
-      } else {
-        setActionError(result.message || "Цуцлахад алдаа гарлаа");
-      }
-    } catch (e) {
-      setActionError(e.message || "Алдаа гарлаа");
-    } finally {
-      setUpdating(false);
     }
   }
 
@@ -279,7 +234,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     : 0;
   const shipping = parseFloat(order?.shippingCost || 0);
   const total = parseFloat(order?.total || 0);
-  const canAct = order && order.status !== "CANCELLED";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -611,14 +565,10 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
             gap: 10,
             flexShrink: 0,
           }}>
-            {/* Error message */}
-            <div style={{ flex: 1 }}>
-              {actionError && (
-                <div style={{ fontSize: 12, color: "#dc2626" }}>{actionError}</div>
-              )}
-            </div>
+            {/* Spacer keeps the close button right-aligned */}
+            <div style={{ flex: 1 }} />
 
-            {/* Buttons */}
+            {/* Buttons — pickup page is PIN-only; status changes happen in /order-list */}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button
                 onClick={() => onOpenChange(false)}
@@ -630,80 +580,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
               >
                 Хаах
               </button>
-
-              {canAct && (
-                <>
-                  {(order.status === "PENDING" || order.status === "PROCESSING") && (
-                    <button
-                      onClick={handleCancel}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-                        border: "1px solid #fee2e2", backgroundColor: "#fff", color: "#dc2626",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      Цуцлах
-                    </button>
-                  )}
-                  {order.status === "PENDING" && (
-                    <button
-                      onClick={() => handleStatusUpdate("PROCESSING")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#3b82f6", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Баталгаажуулах"}
-                    </button>
-                  )}
-                  {order.status === "PROCESSING" && (
-                    <button
-                      onClick={() => handleStatusUpdate("SHIPPED")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#8b5cf6", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Илгээх"}
-                    </button>
-                  )}
-                  {order.status === "SHIPPED" && (
-                    <button
-                      onClick={() => handleStatusUpdate("DELIVERED")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#10b981", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Хүргэсэн"}
-                    </button>
-                  )}
-                  {order.status === "DELIVERED" && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Захиалгыг PROCESSING руу буцаах уу?")) {
-                          handleStatusUpdate("PROCESSING");
-                        }
-                      }}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "1px solid #f59e0b", backgroundColor: "#fffbeb", color: "#92400e",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Буцаах"}
-                    </button>
-                  )}
-                </>
-              )}
             </div>
           </div>
         )}

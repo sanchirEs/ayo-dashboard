@@ -49,7 +49,7 @@ function DeliveryBadge({ order }) {
   );
 }
 
-export default function OrderRowClient({ order, isSelected, onSelect }) {
+export default function OrderRowClient({ order }) {
   const [modalOpen, setModalOpen] = useState(false);
 
   const firstItem = order.orderItems?.[0];
@@ -64,30 +64,17 @@ export default function OrderRowClient({ order, isSelected, onSelect }) {
       style={{
         transition: 'background-color 0.2s ease',
         borderBottom: '1px solid #f3f4f6',
-        backgroundColor: isSelected ? '#eff6ff' : 'transparent',
+        backgroundColor: 'transparent',
         cursor: 'pointer',
       }}
       onClick={() => setModalOpen(true)}
       onMouseEnter={(e) => {
-        if (!isSelected) e.currentTarget.style.backgroundColor = '#f9fafb';
+        e.currentTarget.style.backgroundColor = '#f9fafb';
       }}
       onMouseLeave={(e) => {
-        if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+        e.currentTarget.style.backgroundColor = 'transparent';
       }}
     >
-      {/* Checkbox Column */}
-      <div
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onChange={onSelect}
-          style={{ cursor: 'pointer', width: '18px', height: '18px' }}
-        />
-      </div>
-
       <OrderImage
         imageUrl={productImage}
         productName={productName}
