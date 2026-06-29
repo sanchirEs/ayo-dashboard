@@ -70,8 +70,8 @@ describe("shouldRedirectRestrictedRole", () => {
 });
 
 describe("getLandingRoute", () => {
-  it("sends BRANCH to its pickup landing page", () => {
-    expect(getLandingRoute("BRANCH")).toBe("/pickup-pins");
+  it("sends BRANCH to its pickup-orders landing page", () => {
+    expect(getLandingRoute("BRANCH")).toBe("/pickup-orders");
   });
 
   it("falls back to /login when role is undefined", () => {

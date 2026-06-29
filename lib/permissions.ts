@@ -23,7 +23,7 @@ export const ROLE_LANDING: Record<UserRole, string> = {
   VENDOR: "/order-list",
   ADMIN: "/order-list",
   SUPERADMIN: "/order-list",
-  BRANCH: "/pickup-pins",
+  BRANCH: "/pickup-orders",
 };
 
 export function getLandingRoute(role: UserRole | undefined): string {
