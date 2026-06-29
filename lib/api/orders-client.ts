@@ -131,6 +131,60 @@ export async function cancelOrderClient(
   }
 }
 
+export async function sendOrderPickupPinClient(
+  orderId: number,
+  token: string
+): Promise<{ success: boolean; message?: string; data?: { phone?: string } }> {
+  try {
+    if (!token) return { success: false, message: 'Authentication required' };
+    const url = `${getBackendUrl()}/api/v1/orders/send-pickup-pin/${orderId}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, message: result.message || 'PIN илгээхэд алдаа гарлаа' };
+    }
+    return { success: result.success, message: result.message, data: result.data };
+  } catch (error) {
+    const apiError = handleApiError(error);
+    logApiError('sendOrderPickupPinClient', apiError, { orderId });
+    return { success: false, message: apiError.message };
+  }
+}
+
+export async function verifyOrderPickupPinClient(
+  orderId: number,
+  pin: string,
+  token: string
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    if (!token) return { success: false, message: 'Authentication required' };
+    const url = `${getBackendUrl()}/api/v1/orders/verify-pickup-pin/${orderId}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ pin }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { success: false, message: result.message || 'Баталгаажуулахад алдаа гарлаа' };
+    }
+    return { success: result.success, message: result.message };
+  } catch (error) {
+    const apiError = handleApiError(error);
+    logApiError('verifyOrderPickupPinClient', apiError, { orderId });
+    return { success: false, message: apiError.message };
+  }
+}
+
 export async function bulkUpdateOrderStatusClient(
   orderIds: number[],
   status: string,

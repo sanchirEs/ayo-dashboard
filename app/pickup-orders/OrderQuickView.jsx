@@ -13,7 +13,12 @@ import {
   formatPrice,
   translateStatus,
 } from "@/lib/api/orders";
-import { updateOrderStatusClient, cancelOrderClient } from "@/lib/api/orders-client";
+import {
+  updateOrderStatusClient,
+  cancelOrderClient,
+  sendOrderPickupPinClient,
+  verifyOrderPickupPinClient,
+} from "@/lib/api/orders-client";
 import { resolveImageUrl } from "@/lib/api/env";
 import { useRouter } from "next/navigation";
 
@@ -136,6 +141,13 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   const [actionError, setActionError] = useState(null);
   const router = useRouter();
 
+  // ── Pickup PIN state ──
+  const [pinBusy, setPinBusy] = useState(false);
+  const [pinSent, setPinSent] = useState(false);
+  const [pinValue, setPinValue] = useState("");
+  const [pinInfo, setPinInfo] = useState(null);
+  const [pinError, setPinError] = useState(null);
+
   // Fetch when modal opens OR when token becomes available
   useEffect(() => {
     if (open && orderId && token) {
@@ -145,6 +157,11 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
       setOrder(null);
       setError(null);
       setActionError(null);
+      setPinBusy(false);
+      setPinSent(false);
+      setPinValue("");
+      setPinInfo(null);
+      setPinError(null);
     }
   }, [open, orderId, token]);
 
@@ -201,6 +218,52 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
       setActionError(e.message || "Алдаа гарлаа");
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function handleSendPin() {
+    if (!token || pinBusy) return;
+    setPinBusy(true);
+    setPinError(null);
+    setPinInfo(null);
+    try {
+      const result = await sendOrderPickupPinClient(orderId, token);
+      if (result.success) {
+        setPinSent(true);
+        const masked = result.data?.phone ? ` (${result.data.phone})` : "";
+        setPinInfo(`Код илгээгдлээ${masked}`);
+      } else {
+        setPinError(result.message || "PIN илгээхэд алдаа гарлаа");
+      }
+    } catch (e) {
+      setPinError(e.message || "Алдаа гарлаа");
+    } finally {
+      setPinBusy(false);
+    }
+  }
+
+  async function handleVerifyPin() {
+    if (!token || pinBusy) return;
+    if (pinValue.length !== 4) {
+      setPinError("4 оронтой код оруулна уу");
+      return;
+    }
+    setPinBusy(true);
+    setPinError(null);
+    try {
+      const result = await verifyOrderPickupPinClient(orderId, pinValue, token);
+      if (result.success) {
+        setOrder((prev) => (prev ? { ...prev, status: "PICKED_UP" } : null));
+        setPinInfo(null);
+        setPinValue("");
+        router.refresh();
+      } else {
+        setPinError(result.message || "Буруу код");
+      }
+    } catch (e) {
+      setPinError(e.message || "Алдаа гарлаа");
+    } finally {
+      setPinBusy(false);
     }
   }
 
@@ -417,6 +480,81 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                   </div>
                 )}
               </div>
+
+              {/* ── Pickup PIN ────────────────────────────────────────────── */}
+              {order.status !== "CANCELLED" && (
+                <>
+                  <Divider />
+                  <div style={{ padding: "16px 24px" }}>
+                    <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
+                      Ирж авах баталгаажуулалт
+                    </div>
+
+                    {order.status === "PICKED_UP" ? (
+                      <div style={{
+                        display: "flex", alignItems: "center", gap: 8,
+                        padding: "12px 14px", borderRadius: 10,
+                        backgroundColor: "#ecfeff", border: "1px solid #cffafe", color: "#0e7490",
+                        fontSize: 13, fontWeight: 600,
+                      }}>
+                        ✓ Захиалга ирж авсан
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "stretch" }}>
+                          <button
+                            onClick={handleSendPin}
+                            disabled={pinBusy}
+                            style={{
+                              padding: "9px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                              border: "1px solid #c7d2fe", backgroundColor: "#eef2ff", color: "#4338ca",
+                              cursor: pinBusy ? "not-allowed" : "pointer", opacity: pinBusy ? 0.6 : 1,
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {pinBusy ? "..." : pinSent ? "Дахин илгээх" : "📲 PIN илгээх"}
+                          </button>
+
+                          <input
+                            value={pinValue}
+                            onChange={(e) => {
+                              setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4));
+                              setPinError(null);
+                            }}
+                            onKeyDown={(e) => { if (e.key === "Enter") handleVerifyPin(); }}
+                            placeholder="• • • •"
+                            inputMode="numeric"
+                            maxLength={4}
+                            style={{
+                              flex: 1, minWidth: 0, padding: "9px 14px", borderRadius: 8,
+                              border: "1px solid #e5e7eb", fontSize: 18, fontWeight: 700,
+                              letterSpacing: "0.3em", textAlign: "center", color: "#111827",
+                            }}
+                          />
+
+                          <button
+                            onClick={handleVerifyPin}
+                            disabled={pinBusy || pinValue.length !== 4}
+                            style={{
+                              padding: "9px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+                              border: "none",
+                              backgroundColor: pinValue.length === 4 && !pinBusy ? "#06b6d4" : "#a5f3fc",
+                              color: "#fff",
+                              cursor: pinBusy || pinValue.length !== 4 ? "not-allowed" : "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            Баталгаажуулах
+                          </button>
+                        </div>
+
+                        {pinInfo && <div style={{ fontSize: 12, color: "#059669" }}>{pinInfo}</div>}
+                        {pinError && <div style={{ fontSize: 12, color: "#dc2626" }}>{pinError}</div>}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* ── Shipping tracking ─────────────────────────────────────── */}
               {order.shipping?.trackingNumber && (
