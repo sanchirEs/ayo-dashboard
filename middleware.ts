@@ -8,6 +8,7 @@ import {
   apiAuthPrefix,
 } from "@/routes";
 import { isAdmin, isVendor } from "@/lib/auth-utils";
+import { canAccessRoute, getLandingRoute } from "@/lib/permissions";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -37,7 +38,13 @@ export default auth((req) => {
   if (!isLoggedIn) {
     return Response.redirect(new URL("/login", nextUrl));
   }
-  
+
+  // Restricted roles (e.g. BRANCH) may only reach their allowlisted routes.
+  // Bounce them back to their own landing page rather than a dead-end.
+  if (!canAccessRoute(userRole, nextUrl.pathname)) {
+    return Response.redirect(new URL(getLandingRoute(userRole), nextUrl));
+  }
+
   // Role-based access control
   if (adminRoutes.includes(nextUrl.pathname) && !isAdmin(userRole)) {
     return Response.redirect(new URL("/unauthorized", nextUrl));

@@ -30,6 +30,13 @@ export function isSuperAdmin(userRole: UserRole | undefined): boolean {
 }
 
 /**
+ * Check if a user is a branch (store-location) account
+ */
+export function isBranch(userRole: UserRole | undefined): boolean {
+  return hasRole(userRole, ["BRANCH"]);
+}
+
+/**
  * Get user role display name
  */
 export function getRoleDisplayName(role: UserRole): string {
@@ -37,7 +44,8 @@ export function getRoleDisplayName(role: UserRole): string {
     CUSTOMER: "Customer",
     VENDOR: "Vendor",
     ADMIN: "Administrator",
-    SUPERADMIN: "Super Administrator"
+    SUPERADMIN: "Super Administrator",
+    BRANCH: "Салбар"
   };
   
   return roleNames[role] || "Unknown";
@@ -49,9 +57,10 @@ export function getRoleDisplayName(role: UserRole): string {
 export function getRoleBadgeColor(role: UserRole): string {
   const colors: Record<UserRole, string> = {
     CUSTOMER: "bg-blue-100 text-blue-800",
-    VENDOR: "bg-green-100 text-green-800", 
+    VENDOR: "bg-green-100 text-green-800",
     ADMIN: "bg-purple-100 text-purple-800",
-    SUPERADMIN: "bg-red-100 text-red-800"
+    SUPERADMIN: "bg-red-100 text-red-800",
+    BRANCH: "bg-amber-100 text-amber-800"
   };
   
   return colors[role] || "bg-gray-100 text-gray-800";

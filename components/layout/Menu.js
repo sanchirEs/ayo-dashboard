@@ -2,9 +2,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function Menu() {
   const router = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role;
 
   const [activeAccordion, setActiveAccordion] = useState(null);
 
@@ -87,6 +90,32 @@ export default function Menu() {
   const isSubMenuItemActive = (path) => {
     return router === path;
   };
+
+  // Branch (store-location) accounts only ever see the Pickup PIN page.
+  if (role === "BRANCH") {
+    return (
+      <div className="center">
+        <div className="center-item">
+          <div className="center-heading">Салбар</div>
+          <ul className="menu-list">
+            <li
+              className={`menu-item ${router === "/pickup-pins" ? "active" : ""}`}
+            >
+              <Link
+                href="/pickup-pins"
+                className={isSubMenuItemActive("/pickup-pins") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-truck" />
+                </div>
+                <div className="text">Pickup PIN</div>
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="center">
