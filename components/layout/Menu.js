@@ -42,6 +42,7 @@ export default function Menu() {
       "/order-tracking": 5,
       "/import-orders": 5,
       "/product-orders": 5,
+      "/pickup-logs": 5,
       "/delivery": 12,
       "/pickup-pins": 12,
       "/coupons": 7,
@@ -220,6 +221,16 @@ export default function Menu() {
                     }
                   >
                     <div className="text">📦 Бүтээгдэхүүнээр</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/pickup-logs"
+                    className={
+                      isSubMenuItemActive("/pickup-logs") ? "active" : ""
+                    }
+                  >
+                    <div className="text">📋 Pickup лог</div>
                   </Link>
                 </li>
                 {/* <li className="sub-menu-item">

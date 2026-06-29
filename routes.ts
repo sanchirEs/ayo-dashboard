@@ -13,7 +13,8 @@ export const authRoutes = ["/login", "/sign-up"];
 
 export const adminRoutes = [
   "/all-user",
-  "/add-new-user", 
+  "/add-new-user",
+  "/pickup-logs",
   "/category-list",
   "/new-category",
   "/attributes",
