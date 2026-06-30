@@ -45,6 +45,7 @@ export default function Menu() {
       "/pickup-logs": 5,
       "/delivery": 12,
       "/pickup-pins": 12,
+      "/sheet-payments": 12,
       "/coupons": 7,
       "/new-coupon": 7,
       "/campaigns": 11,
@@ -91,6 +92,25 @@ export default function Menu() {
   const isSubMenuItemActive = (path) => {
     return router === path;
   };
+
+  // Staff accounts see only the sheet payment verification page.
+  if (role === "STAFF") {
+    return (
+      <div className="center">
+        <div className="center-item">
+          <div className="center-heading">Санхүү</div>
+          <ul className="menu-list">
+            <li className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}>
+              <Link href="/sheet-payments" className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}>
+                <div className="icon"><i className="icon-check-square" /></div>
+                <div className="text">Гүйлгээ баталгаажуулах</div>
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    );
+  }
 
   // Branch (store-location) accounts see a limited menu: orders (view) + Pickup PIN.
   if (role === "BRANCH") {
@@ -293,6 +313,16 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Pickup PIN</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/sheet-payments"
+                    className={
+                      isSubMenuItemActive("/sheet-payments") ? "active" : ""
+                    }
+                  >
+                    <div className="text">💳 Гүйлгээ баталгаажуулах</div>
                   </Link>
                 </li>
               </ul>
