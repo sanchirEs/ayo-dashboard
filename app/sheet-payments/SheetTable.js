@@ -1,6 +1,7 @@
 import getToken from "@/lib/GetTokenServer";
 import { getSheetRows } from "@/lib/api/sheetPayments";
 import SheetTableClient from "./SheetTableClient";
+import SheetLogPanel from "./SheetLogPanel";
 
 export default async function SheetTable({ searchParams }) {
   const params = searchParams instanceof Promise ? await searchParams : searchParams;
@@ -11,7 +12,12 @@ export default async function SheetTable({ searchParams }) {
 
   try {
     const data = await getSheetRows({ q, page, limit: 50 }, token);
-    return <SheetTableClient initialData={data} initialToken={token} />;
+    return (
+      <>
+        <SheetTableClient initialData={data} initialToken={token} />
+        <SheetLogPanel initialToken={token} />
+      </>
+    );
   } catch (error) {
     return (
       <div className="wg-table table-all-category">

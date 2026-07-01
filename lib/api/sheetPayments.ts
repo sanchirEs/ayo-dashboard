@@ -101,3 +101,38 @@ export async function verifySheetPin(
     throw new Error(err.message || 'Буруу код');
   }
 }
+
+export interface SheetLogEntry {
+  id: number;
+  userEmail: string | null;
+  userRole: string | null;
+  action: string;
+  rowIndex: number | null;
+  phone: string | null;
+  success: boolean;
+  errorMsg: string | null;
+  ip: string | null;
+  createdAt: string;
+}
+
+export interface SheetLogsResponse {
+  status: string;
+  rows: SheetLogEntry[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+export async function getSheetLogs(
+  { page = 1, limit = 50, action = '' }: { page?: number; limit?: number; action?: string },
+  token: string
+): Promise<SheetLogsResponse> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit), action });
+  const res = await fetchWithAuthHandling(
+    `${getBackendUrl()}/api/v1/sheet-payments/logs?${params}`,
+    { headers: headers(token) },
+    'sheetPayments.getLogs'
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
