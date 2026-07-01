@@ -130,8 +130,7 @@ export default function SheetTableClient({ initialData, initialToken }) {
   const handleVerified = (rowIndex) => {
     setData((prev) => ({
       ...prev,
-      rows: prev.rows.filter((r) => r.rowIndex !== rowIndex),
-      total: Math.max(0, prev.total - 1),
+      rows: prev.rows.map((r) => r.rowIndex === rowIndex ? { ...r, pickupChecked: true } : r),
     }));
     setPinRow(null);
     setSuccessMsg("✅ Амжилттай баталгаажлаа!");
@@ -147,7 +146,7 @@ export default function SheetTableClient({ initialData, initialToken }) {
         <div style={{ flex: "1 1 280px", position: "relative" }}>
           <input
             type="text"
-            placeholder="Гүйлгээний тайлбар, утасны дугаараар хайх..."
+            placeholder="Дансны дугаар, гүйлгээний тайлбар, утасаар хайх..."
             value={query}
             onChange={handleSearch}
             style={{
@@ -187,15 +186,17 @@ export default function SheetTableClient({ initialData, initialToken }) {
       <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "39%" }} />
-            <col style={{ width: "22%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "13%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "34%" }} />
+            <col style={{ width: "18%" }} />
+            <col style={{ width: "11%" }} />
+            <col style={{ width: "12%" }} />
           </colgroup>
           <thead>
             <tr>
               <th style={TH}>Огноо</th>
+              <th style={TH}>Дансны дугаар</th>
               <th style={TH}>Гүйлгээний тайлбар</th>
               <th style={TH}>Утас</th>
               <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
@@ -211,12 +212,16 @@ export default function SheetTableClient({ initialData, initialToken }) {
               </tr>
             )}
             {rows.map((row) => (
-              <tr key={row.rowIndex} style={{ borderBottom: "1px solid #f3f4f6" }}
+              <tr key={row.rowIndex}
+                style={{ borderBottom: "1px solid #f3f4f6", opacity: row.pickupChecked ? 0.5 : 1 }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
                 onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
               >
                 <td style={{ ...TD, color: "#6b7280", fontSize: "12px", whiteSpace: "nowrap" }}>
                   {formatTimestamp(row.timestamp)}
+                </td>
+                <td style={{ ...TD, fontFamily: "monospace", fontSize: "12px", color: "#374151" }}>
+                  {row.accountNumber || "—"}
                 </td>
                 <td style={{ ...TD, overflow: "hidden" }}>
                   <span title={row.description} style={{
@@ -236,17 +241,26 @@ export default function SheetTableClient({ initialData, initialToken }) {
                   />
                 </td>
                 <td style={{ ...TD, textAlign: "center" }}>
-                  <button
-                    onClick={() => setPinRow(row)}
-                    title="Pick up баталгаажуулах"
-                    style={{
+                  {row.pickupChecked ? (
+                    <span title="Баталгаажсан" style={{
                       width: "24px", height: "24px", borderRadius: "4px",
-                      border: "2px solid #d1d5db", background: "white",
-                      cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                  />
+                      border: "2px solid #059669", background: "#d1fae5",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "13px",
+                    }}>✓</span>
+                  ) : (
+                    <button
+                      onClick={() => setPinRow(row)}
+                      title="Pick up баталгаажуулах"
+                      style={{
+                        width: "24px", height: "24px", borderRadius: "4px",
+                        border: "2px solid #d1d5db", background: "white",
+                        cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
+                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                    />
+                  )}
                 </td>
                 <td style={{ ...TD, textAlign: "center" }}>
                   <span title="Хүргэлт баталгаажуулах боломжгүй" style={{

@@ -10,7 +10,7 @@ import { type UserRole } from "@/types/next-auth";
 
 // Routes a BRANCH (store-location) account may access. Everything else is blocked.
 export const BRANCH_ALLOWED_ROUTES = [
-  "/pickup-pins",
+  "/sheet-payments",
   "/order-list",
   "/pickup-orders",
   "/order-detail",

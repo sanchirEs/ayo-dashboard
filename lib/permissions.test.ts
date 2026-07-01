@@ -9,7 +9,7 @@ import {
 
 describe("canAccessRoute", () => {
   it("allows BRANCH to reach its allowlisted pages (and nested paths)", () => {
-    expect(canAccessRoute("BRANCH", "/pickup-pins")).toBe(true);
+    expect(canAccessRoute("BRANCH", "/sheet-payments")).toBe(true);
     expect(canAccessRoute("BRANCH", "/pickup-orders")).toBe(true);
     expect(canAccessRoute("BRANCH", "/order-detail/2352")).toBe(true);
   });

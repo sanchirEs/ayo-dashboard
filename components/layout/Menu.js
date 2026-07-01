@@ -44,7 +44,6 @@ export default function Menu() {
       "/product-orders": 5,
       "/pickup-logs": 5,
       "/delivery": 12,
-      "/pickup-pins": 12,
       "/sheet-payments": 12,
       "/coupons": 7,
       "/new-coupon": 7,
@@ -146,16 +145,16 @@ export default function Menu() {
               </Link>
             </li>
             <li
-              className={`menu-item ${router === "/pickup-pins" ? "active" : ""}`}
+              className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}
             >
               <Link
-                href="/pickup-pins"
-                className={isSubMenuItemActive("/pickup-pins") ? "active" : ""}
+                href="/sheet-payments"
+                className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}
               >
                 <div className="icon">
-                  <i className="icon-truck" />
+                  <i className="icon-check-square" />
                 </div>
-                <div className="text">Pickup PIN</div>
+                <div className="text">Гүйлгээ баталгаажуулах</div>
               </Link>
             </li>
           </ul>
@@ -303,16 +302,6 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Хүргэлт</div>
-                  </Link>
-                </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/pickup-pins"
-                    className={
-                      isSubMenuItemActive("/pickup-pins") ? "active" : ""
-                    }
-                  >
-                    <div className="text">Pickup PIN</div>
                   </Link>
                 </li>
                 <li className="sub-menu-item">
