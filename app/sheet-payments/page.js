@@ -2,14 +2,14 @@ import Layout from "@/components/layout/Layout";
 import { Suspense } from "react";
 import SheetTable from "./SheetTable";
 
-export const metadata = { title: "Гүйлгээ баталгаажуулах" };
+export const metadata = { title: "ДАНС CHECK" };
 
 export default async function SheetPaymentsPage(props) {
   const searchParams = await props.searchParams;
   const searchKey = JSON.stringify(searchParams || {});
 
   return (
-    <Layout breadcrumbTitleParent="Санхүү" breadcrumbTitle="Гүйлгээ баталгаажуулах">
+    <Layout breadcrumbTitleParent="Санхүү" breadcrumbTitle="ДАНС CHECK">
       <div className="wg-box">
         <Suspense
           key={searchKey}

@@ -102,7 +102,7 @@ export default function Menu() {
             <li className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}>
               <Link href="/sheet-payments" className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}>
                 <div className="icon"><i className="icon-check-square" /></div>
-                <div className="text">Гүйлгээ баталгаажуулах</div>
+                <div className="text">ДАНС CHECK</div>
               </Link>
             </li>
           </ul>
@@ -154,7 +154,7 @@ export default function Menu() {
                 <div className="icon">
                   <i className="icon-check-square" />
                 </div>
-                <div className="text">Гүйлгээ баталгаажуулах</div>
+                <div className="text">ДАНС CHECK</div>
               </Link>
             </li>
           </ul>
@@ -311,7 +311,7 @@ export default function Menu() {
                       isSubMenuItemActive("/sheet-payments") ? "active" : ""
                     }
                   >
-                    <div className="text">💳 Гүйлгээ баталгаажуулах</div>
+                    <div className="text">💳 ДАНС CHECK</div>
                   </Link>
                 </li>
               </ul>
