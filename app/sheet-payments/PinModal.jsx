@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { sendSheetPin, verifySheetPin } from "@/lib/api/sheetPayments";
-import { updateSheetPhone } from "@/lib/api/sheetPayments";
+import { sendTabPin, verifyTabPin, updateTabPhone } from "@/lib/api/sheetPayments";
 
 const MAX_ATTEMPTS = 3;
 
-export default function PinModal({ row, token, onSuccess, onClose, onPhoneUpdate }) {
+export default function PinModal({ row, token, tabId, onSuccess, onClose, onPhoneUpdate }) {
   const [phase, setPhase] = useState(row.phone ? "ready" : "no-phone"); // no-phone | ready | sent | verifying
   const [phone, setPhone] = useState(row.phone || "");
   const [phoneInput, setPhoneInput] = useState("");
@@ -40,7 +39,7 @@ export default function PinModal({ row, token, onSuccess, onClose, onPhoneUpdate
     setSending(true);
     setError("");
     try {
-      await updateSheetPhone(row.rowIndex, digits, token);
+      await updateTabPhone(tabId, row.rowIndex, digits, token);
       setPhone(digits);
       onPhoneUpdate(digits);
       setPhase("ready");
@@ -55,7 +54,7 @@ export default function PinModal({ row, token, onSuccess, onClose, onPhoneUpdate
     setSending(true);
     setError("");
     try {
-      await sendSheetPin(row.rowIndex, phone, token);
+      await sendTabPin(tabId, row.rowIndex, phone, token);
       setPin(["", "", "", ""]);
       setAttemptsLeft(MAX_ATTEMPTS);
       setPhase("sent");
@@ -89,7 +88,7 @@ export default function PinModal({ row, token, onSuccess, onClose, onPhoneUpdate
     setVerifying(true);
     setError("");
     try {
-      await verifySheetPin(row.rowIndex, code, token);
+      await verifyTabPin(tabId, row.rowIndex, code, token);
       onSuccess();
     } catch (e) {
       const msg = e.message || "Буруу код";

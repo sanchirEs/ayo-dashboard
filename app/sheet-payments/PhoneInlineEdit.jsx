@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { updateSheetPhone } from "@/lib/api/sheetPayments";
+import { updateTabPhone } from "@/lib/api/sheetPayments";
 
-export default function PhoneInlineEdit({ rowIndex, phone, token, onUpdate }) {
+export default function PhoneInlineEdit({ rowIndex, phone, token, tabId, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(phone || "");
   const [saving, setSaving] = useState(false);
@@ -18,7 +18,7 @@ export default function PhoneInlineEdit({ rowIndex, phone, token, onUpdate }) {
     setSaving(true);
     setError("");
     try {
-      await updateSheetPhone(rowIndex, digits, token);
+      await updateTabPhone(tabId, rowIndex, digits, token);
       onUpdate(digits);
       setEditing(false);
     } catch (e) {
