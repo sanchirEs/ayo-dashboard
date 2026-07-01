@@ -44,7 +44,7 @@ export default function Menu() {
       "/product-orders": 5,
       "/pickup-logs": 5,
       "/delivery": 12,
-      "/sheet-payments": 12,
+      "/sheet-payments": 5,
       "/coupons": 7,
       "/new-coupon": 7,
       "/campaigns": 11,
@@ -252,6 +252,16 @@ export default function Menu() {
                     <div className="text">📋 Pickup лог</div>
                   </Link>
                 </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/sheet-payments"
+                    className={
+                      isSubMenuItemActive("/sheet-payments") ? "active" : ""
+                    }
+                  >
+                    <div className="text">💳 ДАНС CHECK</div>
+                  </Link>
+                </li>
                 {/* <li className="sub-menu-item">
                   <Link
                     href="/order-detail"
@@ -302,16 +312,6 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Хүргэлт</div>
-                  </Link>
-                </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/sheet-payments"
-                    className={
-                      isSubMenuItemActive("/sheet-payments") ? "active" : ""
-                    }
-                  >
-                    <div className="text">💳 ДАНС CHECK</div>
                   </Link>
                 </li>
               </ul>
