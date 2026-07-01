@@ -1,20 +1,37 @@
 import getToken from "@/lib/GetTokenServer";
-import { getSheetRows } from "@/lib/api/sheetPayments";
+import { getTabList, getTabRows } from "@/lib/api/sheetPayments";
 import SheetTableClient from "./SheetTableClient";
 import SheetLogPanel from "./SheetLogPanel";
+import TabBar from "./TabBar";
+
+const DEFAULT_TAB = "zaya-2026-02-02";
 
 export default async function SheetTable({ searchParams }) {
   const params = searchParams instanceof Promise ? await searchParams : searchParams;
   const q = params?.q || "";
   const page = parseInt(params?.page) || 1;
+  const tabId = params?.tab || DEFAULT_TAB;
 
   const token = await getToken();
 
   try {
-    const data = await getSheetRows({ q, page, limit: 50 }, token);
+    const [tabListData, data] = await Promise.all([
+      getTabList(token),
+      getTabRows(tabId, { q, page, limit: 50 }, token),
+    ]);
+
+    const tabs = tabListData.tabs;
+    const activeTab = tabs.find((t) => t.tabId === tabId) || tabs[0];
+
     return (
       <>
-        <SheetTableClient initialData={data} initialToken={token} />
+        <TabBar tabs={tabs} activeTabId={activeTab.tabId} />
+        <SheetTableClient
+          initialData={data}
+          initialToken={token}
+          tabId={activeTab.tabId}
+          tabType={activeTab.type}
+        />
         <SheetLogPanel initialToken={token} />
       </>
     );

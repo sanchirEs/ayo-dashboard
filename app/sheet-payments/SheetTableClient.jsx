@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { getSheetRows, refreshSheet } from "@/lib/api/sheetPayments";
+import { getTabRows, refreshTab } from "@/lib/api/sheetPayments";
 import PinModal from "./PinModal";
 import PhoneInlineEdit from "./PhoneInlineEdit";
 
@@ -13,14 +13,12 @@ const TH = {
 };
 const TD = { padding: "10px 12px", fontSize: "13px", verticalAlign: "middle" };
 
-// Google Sheets stores dates as serial numbers (days since Dec 30, 1899)
 const SHEETS_EPOCH_MS = Date.UTC(1899, 11, 30);
 
 function formatTimestamp(ts) {
   if (ts === null || ts === undefined || ts === "") return "—";
   let d;
   if (typeof ts === "number") {
-    // Google Sheets serial → JS Date
     d = new Date(SHEETS_EPOCH_MS + ts * 86400000);
   } else {
     d = new Date(ts);
@@ -74,7 +72,206 @@ function Paginator({ page, totalPages, onChange }) {
   );
 }
 
-export default function SheetTableClient({ initialData, initialToken }) {
+function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRow }) {
+  return (
+    <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
+        <colgroup>
+          <col style={{ width: "11%" }} />
+          <col style={{ width: "14%" }} />
+          <col style={{ width: "34%" }} />
+          <col style={{ width: "18%" }} />
+          <col style={{ width: "11%" }} />
+          <col style={{ width: "12%" }} />
+        </colgroup>
+        <thead>
+          <tr>
+            <th style={TH}>Огноо</th>
+            <th style={TH}>Дансны дугаар</th>
+            <th style={TH}>Гүйлгээний тайлбар</th>
+            <th style={TH}>Утас</th>
+            <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
+            <th style={{ ...TH, textAlign: "center" }}>Хүргэлт</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={6} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+                {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Баталгаажуулах гүйлгээ байхгүй байна"}
+              </td>
+            </tr>
+          )}
+          {rows.map((row) => (
+            <tr key={row.rowIndex}
+              style={{ borderBottom: "1px solid #f3f4f6", opacity: row.pickupChecked ? 0.5 : 1 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <td style={{ ...TD, color: "#6b7280", fontSize: "12px", whiteSpace: "nowrap" }}>
+                {formatTimestamp(row.timestamp)}
+              </td>
+              <td style={{ ...TD, fontFamily: "monospace", fontSize: "12px", color: "#374151" }}>
+                {row.accountNumber || "—"}
+              </td>
+              <td style={{ ...TD, overflow: "hidden" }}>
+                <span title={row.description} style={{
+                  display: "block", overflow: "hidden",
+                  textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontSize: "12px", color: "#374151",
+                }}>
+                  {row.description || "—"}
+                </span>
+              </td>
+              <td style={TD}>
+                <PhoneInlineEdit
+                  rowIndex={row.rowIndex}
+                  phone={row.phone}
+                  token={token}
+                  tabId={tabId}
+                  onUpdate={(phone) => onPhoneUpdate(row.rowIndex, phone)}
+                />
+              </td>
+              <td style={{ ...TD, textAlign: "center" }}>
+                {row.pickupChecked ? (
+                  <span title="Баталгаажсан" style={{
+                    width: "24px", height: "24px", borderRadius: "4px",
+                    border: "2px solid #059669", background: "#d1fae5",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "13px",
+                  }}>✓</span>
+                ) : (
+                  <button
+                    onClick={() => onPinRow(row)}
+                    title="Pick up баталгаажуулах"
+                    style={{
+                      width: "24px", height: "24px", borderRadius: "4px",
+                      border: "2px solid #d1d5db", background: "white",
+                      cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                )}
+              </td>
+              <td style={{ ...TD, textAlign: "center" }}>
+                <span style={{
+                  width: "24px", height: "24px", borderRadius: "4px",
+                  border: "2px solid #e5e7eb", background: "#f3f4f6",
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  cursor: "not-allowed", opacity: 0.4,
+                }} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OrderTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRow }) {
+  return (
+    <div className="wg-table table-all-category" style={{ width: "100%", overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "auto" }}>
+        <thead>
+          <tr>
+            <th style={TH}>Order ID</th>
+            <th style={TH}>Утас</th>
+            <th style={TH}>Статус</th>
+            <th style={TH}>Нийт дүн</th>
+            <th style={{ ...TH, minWidth: "200px" }}>Бараа</th>
+            <th style={TH}>Хүргэлт</th>
+            <th style={{ ...TH, minWidth: "160px" }}>Хаяг</th>
+            <th style={{ ...TH, textAlign: "center" }}>Баталгаажсан</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={8} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+                {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Захиалга байхгүй байна"}
+              </td>
+            </tr>
+          )}
+          {rows.map((row) => (
+            <tr key={row.rowIndex}
+              style={{ borderBottom: "1px solid #f3f4f6", opacity: row.verified ? 0.5 : 1 }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <td style={{ ...TD, fontWeight: 600, color: "#374151" }}>{row.orderId || "—"}</td>
+              <td style={TD}>
+                <PhoneInlineEdit
+                  rowIndex={row.rowIndex}
+                  phone={row.phone}
+                  token={token}
+                  tabId={tabId}
+                  onUpdate={(phone) => onPhoneUpdate(row.rowIndex, phone)}
+                />
+              </td>
+              <td style={TD}>
+                <span style={{
+                  padding: "2px 8px", borderRadius: "4px", fontSize: "11px", fontWeight: 600,
+                  background: row.status === "PROCESSING" ? "#fef3c7" : "#f3f4f6",
+                  color: row.status === "PROCESSING" ? "#92400e" : "#374151",
+                }}>
+                  {row.status || "—"}
+                </span>
+              </td>
+              <td style={{ ...TD, fontFamily: "monospace", whiteSpace: "nowrap" }}>
+                {row.total ? `₮${Number(row.total).toLocaleString()}` : "—"}
+              </td>
+              <td style={{ ...TD, maxWidth: "240px" }}>
+                <span title={row.products} style={{
+                  display: "block", overflow: "hidden",
+                  textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontSize: "12px", color: "#374151",
+                }}>
+                  {row.products || "—"}
+                </span>
+              </td>
+              <td style={{ ...TD, fontSize: "12px", color: "#6b7280" }}>{row.deliveryType || "—"}</td>
+              <td style={{ ...TD, maxWidth: "160px" }}>
+                <span title={row.address} style={{
+                  display: "block", overflow: "hidden",
+                  textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  fontSize: "12px", color: "#374151",
+                }}>
+                  {row.address || "—"}
+                </span>
+              </td>
+              <td style={{ ...TD, textAlign: "center" }}>
+                {row.verified ? (
+                  <span title="Баталгаажсан" style={{
+                    width: "24px", height: "24px", borderRadius: "4px",
+                    border: "2px solid #059669", background: "#d1fae5",
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "13px",
+                  }}>✓</span>
+                ) : (
+                  <button
+                    onClick={() => onPinRow(row)}
+                    title="PIN баталгаажуулах"
+                    style={{
+                      width: "24px", height: "24px", borderRadius: "4px",
+                      border: "2px solid #d1d5db", background: "white",
+                      cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+                  />
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default function SheetTableClient({ initialData, initialToken, tabId, tabType }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || initialToken;
 
@@ -91,14 +288,14 @@ export default function SheetTableClient({ initialData, initialToken }) {
     setLoading(true);
     setError("");
     try {
-      const result = await getSheetRows({ q, page, limit: 50 }, token);
+      const result = await getTabRows(tabId, { q, page, limit: 50 }, token);
       setData(result);
     } catch (e) {
       setError(e.message);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [tabId, token]);
 
   const handleSearch = (e) => {
     const q = e.target.value;
@@ -111,7 +308,7 @@ export default function SheetTableClient({ initialData, initialToken }) {
     setRefreshing(true);
     setError("");
     try {
-      await refreshSheet(token);
+      await refreshTab(tabId, token);
       await fetchRows(query, 1);
     } catch (e) {
       setError(e.message);
@@ -130,7 +327,9 @@ export default function SheetTableClient({ initialData, initialToken }) {
   const handleVerified = (rowIndex) => {
     setData((prev) => ({
       ...prev,
-      rows: prev.rows.map((r) => r.rowIndex === rowIndex ? { ...r, pickupChecked: true } : r),
+      rows: prev.rows.map((r) =>
+        r.rowIndex === rowIndex ? { ...r, pickupChecked: true, verified: true } : r
+      ),
     }));
     setPinRow(null);
     setSuccessMsg("✅ Амжилттай баталгаажлаа!");
@@ -139,14 +338,17 @@ export default function SheetTableClient({ initialData, initialToken }) {
 
   const { rows = [], total = 0, page = 1, totalPages = 1 } = data || {};
 
+  const searchPlaceholder = tabType === "order"
+    ? "Бараа, утас, хаягаар хайх..."
+    : "Дансны дугаар, гүйлгээний тайлбар, утасаар хайх...";
+
   return (
     <div>
-      {/* Toolbar */}
       <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "1.25rem", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 280px", position: "relative" }}>
           <input
             type="text"
-            placeholder="Дансны дугаар, гүйлгээний тайлбар, утасаар хайх..."
+            placeholder={searchPlaceholder}
             value={query}
             onChange={handleSearch}
             style={{
@@ -182,103 +384,14 @@ export default function SheetTableClient({ initialData, initialToken }) {
         </div>
       )}
 
-      {/* Table */}
-      <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
-          <colgroup>
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "34%" }} />
-            <col style={{ width: "18%" }} />
-            <col style={{ width: "11%" }} />
-            <col style={{ width: "12%" }} />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style={TH}>Огноо</th>
-              <th style={TH}>Дансны дугаар</th>
-              <th style={TH}>Гүйлгээний тайлбар</th>
-              <th style={TH}>Утас</th>
-              <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
-              <th style={{ ...TH, textAlign: "center" }}>Хүргэлт</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr>
-                <td colSpan={5} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
-                  {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Баталгаажуулах гүйлгээ байхгүй байна"}
-                </td>
-              </tr>
-            )}
-            {rows.map((row) => (
-              <tr key={row.rowIndex}
-                style={{ borderBottom: "1px solid #f3f4f6", opacity: row.pickupChecked ? 0.5 : 1 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                <td style={{ ...TD, color: "#6b7280", fontSize: "12px", whiteSpace: "nowrap" }}>
-                  {formatTimestamp(row.timestamp)}
-                </td>
-                <td style={{ ...TD, fontFamily: "monospace", fontSize: "12px", color: "#374151" }}>
-                  {row.accountNumber || "—"}
-                </td>
-                <td style={{ ...TD, overflow: "hidden" }}>
-                  <span title={row.description} style={{
-                    display: "block", overflow: "hidden",
-                    textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    fontSize: "12px", color: "#374151",
-                  }}>
-                    {row.description || "—"}
-                  </span>
-                </td>
-                <td style={TD}>
-                  <PhoneInlineEdit
-                    rowIndex={row.rowIndex}
-                    phone={row.phone}
-                    token={token}
-                    onUpdate={(phone) => handlePhoneUpdate(row.rowIndex, phone)}
-                  />
-                </td>
-                <td style={{ ...TD, textAlign: "center" }}>
-                  {row.pickupChecked ? (
-                    <span title="Баталгаажсан" style={{
-                      width: "24px", height: "24px", borderRadius: "4px",
-                      border: "2px solid #059669", background: "#d1fae5",
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "13px",
-                    }}>✓</span>
-                  ) : (
-                    <button
-                      onClick={() => setPinRow(row)}
-                      title="Pick up баталгаажуулах"
-                      style={{
-                        width: "24px", height: "24px", borderRadius: "4px",
-                        border: "2px solid #d1d5db", background: "white",
-                        cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
-                      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                    />
-                  )}
-                </td>
-                <td style={{ ...TD, textAlign: "center" }}>
-                  <span title="Хүргэлт баталгаажуулах боломжгүй" style={{
-                    width: "24px", height: "24px", borderRadius: "4px",
-                    border: "2px solid #e5e7eb", background: "#f3f4f6",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    cursor: "not-allowed", opacity: 0.4,
-                  }} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {tabType === "order" ? (
+        <OrderTable rows={rows} query={query} loading={loading} tabId={tabId} token={token} onPhoneUpdate={handlePhoneUpdate} onPinRow={setPinRow} />
+      ) : (
+        <TransactionTable rows={rows} query={query} loading={loading} tabId={tabId} token={token} onPhoneUpdate={handlePhoneUpdate} onPinRow={setPinRow} />
+      )}
 
       <Paginator page={page} totalPages={totalPages} onChange={(p) => fetchRows(query, p)} />
 
-      {/* Success toast */}
       {successMsg && (
         <div style={{
           position: "fixed", top: "24px", right: "24px", zIndex: 2000,
@@ -297,6 +410,7 @@ export default function SheetTableClient({ initialData, initialToken }) {
         <PinModal
           row={pinRow}
           token={token}
+          tabId={tabId}
           onSuccess={() => handleVerified(pinRow.rowIndex)}
           onClose={() => setPinRow(null)}
           onPhoneUpdate={(phone) => handlePhoneUpdate(pinRow.rowIndex, phone)}
