@@ -77,12 +77,13 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
     <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
         <colgroup>
-          <col style={{ width: "11%" }} />
-          <col style={{ width: "14%" }} />
-          <col style={{ width: "34%" }} />
-          <col style={{ width: "18%" }} />
-          <col style={{ width: "11%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "13%" }} />
+          <col style={{ width: "27%" }} />
+          <col style={{ width: "16%" }} />
           <col style={{ width: "12%" }} />
+          <col style={{ width: "11%" }} />
+          <col style={{ width: "11%" }} />
         </colgroup>
         <thead>
           <tr>
@@ -90,6 +91,7 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
             <th style={TH}>Дансны дугаар</th>
             <th style={TH}>Гүйлгээний тайлбар</th>
             <th style={TH}>Утас</th>
+            <th style={TH}>Дүн</th>
             <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
             <th style={{ ...TH, textAlign: "center" }}>Хүргэлт</th>
           </tr>
@@ -97,7 +99,7 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={6} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+              <td colSpan={7} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
                 {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Баталгаажуулах гүйлгээ байхгүй байна"}
               </td>
             </tr>
@@ -131,6 +133,11 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
                   tabId={tabId}
                   onUpdate={(phone) => onPhoneUpdate(row.rowIndex, phone)}
                 />
+              </td>
+              <td style={{ ...TD, fontFamily: "monospace", whiteSpace: "nowrap", color: "#374151" }}>
+                {row.amount !== "" && row.amount !== null && row.amount !== undefined
+                  ? `₮${Number(row.amount).toLocaleString()}`
+                  : "—"}
               </td>
               <td style={{ ...TD, textAlign: "center" }}>
                 {row.pickupChecked ? (
