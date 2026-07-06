@@ -26,7 +26,7 @@ export default function Layout({
   breadcrumbTitle,
   pageTitle,
   children,
-  boxed,
+  boxed = true,
   menuIconHover,
   menuIconDefault,
 }) {
