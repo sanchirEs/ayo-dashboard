@@ -105,6 +105,7 @@ export async function verifySheetPin(
 export interface SheetLogEntry {
   id: number;
   userEmail: string | null;
+  userDisplay: string | null;
   userRole: string | null;
   action: string;
   rowIndex: number | null;

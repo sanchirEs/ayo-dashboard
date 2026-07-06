@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { getSheetLogs } from "@/lib/api/sheetPayments";
+import { getRoleDisplayName } from "@/lib/auth-utils";
 
 const ACTION_LABELS = {
   SEND_PIN:     { label: "PIN илгээсэн",   color: "#2563eb", bg: "#eff6ff" },
@@ -35,7 +36,14 @@ function LogRow({ entry }) {
   return (
     <tr style={{ borderBottom: "1px solid #f3f4f6", fontSize: "12px" }}>
       <td style={{ padding: "8px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>{timeStr}</td>
-      <td style={{ padding: "8px 12px", color: "#374151" }}>{entry.userEmail || "—"}</td>
+      <td style={{ padding: "8px 12px", color: "#374151" }}>
+        {entry.userDisplay || "—"}
+        {entry.userRole && (
+          <span style={{ display: "block", fontSize: "10px", color: "#9ca3af" }}>
+            {getRoleDisplayName(entry.userRole)}
+          </span>
+        )}
+      </td>
       <td style={{ padding: "8px 12px" }}><ActionBadge action={entry.action} success={entry.success} /></td>
       <td style={{ padding: "8px 12px", color: "#6b7280", textAlign: "center" }}>
         {entry.rowIndex ? `#${entry.rowIndex}` : "—"}
