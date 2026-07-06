@@ -6,6 +6,12 @@ module.exports = {
   env: {
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
+  // Strip console.log/info/debug from production builds (Railway log noise);
+  // keep error/warn. Dev builds keep everything.
+  compiler: {
+    removeConsole:
+      process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  },
 
   // Proxy /api/v1/* to the backend to avoid CORS in the browser
   async rewrites() {
