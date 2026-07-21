@@ -6,10 +6,12 @@ import { getSheetLogs } from "@/lib/api/sheetPayments";
 import { getRoleDisplayName } from "@/lib/auth-utils";
 
 const ACTION_LABELS = {
-  SEND_PIN:     { label: "PIN илгээсэн",   color: "#2563eb", bg: "#eff6ff" },
-  VERIFY_PIN:   { label: "PIN баталгаажсан", color: "#059669", bg: "#f0fdf4" },
-  UPDATE_PHONE: { label: "Утас шинэчилсэн", color: "#d97706", bg: "#fffbeb" },
-  REFRESH:      { label: "Хуудас шинэчилсэн", color: "#7c3aed", bg: "#f5f3ff" },
+  SEND_PIN:         { label: "PIN илгээсэн",       color: "#2563eb", bg: "#eff6ff" },
+  VERIFY_PIN:       { label: "PIN баталгаажсан",   color: "#059669", bg: "#f0fdf4" },
+  CONFIRM_DELIVERY: { label: "Хүргэлт баталгаажсан", color: "#059669", bg: "#f0fdf4" },
+  CONFIRM_REFUND:   { label: "Буцаалт баталгаажсан", color: "#dc2626", bg: "#fef2f2" },
+  UPDATE_PHONE:     { label: "Утас шинэчилсэн",     color: "#d97706", bg: "#fffbeb" },
+  REFRESH:          { label: "Хуудас шинэчилсэн",   color: "#7c3aed", bg: "#f5f3ff" },
 };
 
 function ActionBadge({ action, success }) {
@@ -66,9 +68,10 @@ const TH = {
   whiteSpace: "nowrap",
 };
 
-const ACTIONS = ["", "SEND_PIN", "VERIFY_PIN", "UPDATE_PHONE", "REFRESH"];
+const ACTIONS = ["", "SEND_PIN", "VERIFY_PIN", "CONFIRM_DELIVERY", "CONFIRM_REFUND", "UPDATE_PHONE", "REFRESH"];
 const ACTION_FILTER_LABELS = {
   "": "Бүгд", SEND_PIN: "PIN илгээсэн", VERIFY_PIN: "Баталгаажсан",
+  CONFIRM_DELIVERY: "Хүргэлт", CONFIRM_REFUND: "Буцаалт",
   UPDATE_PHONE: "Утас", REFRESH: "Шинэчлэл",
 };
 
