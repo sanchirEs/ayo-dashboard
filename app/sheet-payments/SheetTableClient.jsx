@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { getTabRows, refreshTab } from "@/lib/api/sheetPayments";
+import { getTabRows, refreshTab, confirmTabDelivery, confirmTabRefund } from "@/lib/api/sheetPayments";
 import PinModal from "./PinModal";
 import PhoneInlineEdit from "./PhoneInlineEdit";
 
@@ -72,17 +72,126 @@ function Paginator({ page, totalPages, onChange }) {
   );
 }
 
-function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRow }) {
+function ActionCell({ checked, canAct, onClick, title }) {
+  if (checked) {
+    return (
+      <td style={{ ...TD, textAlign: "center" }}>
+        <span title="Баталгаажсан" style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #059669", background: "#d1fae5",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontSize: "13px",
+        }}>✓</span>
+      </td>
+    );
+  }
+  if (!canAct) {
+    return (
+      <td style={{ ...TD, textAlign: "center" }}>
+        <span style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #e5e7eb", background: "#f3f4f6",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          cursor: "not-allowed", opacity: 0.4,
+        }} />
+      </td>
+    );
+  }
+  return (
+    <td style={{ ...TD, textAlign: "center" }}>
+      <button
+        onClick={onClick}
+        title={title}
+        style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #d1d5db", background: "white",
+          cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+      />
+    </td>
+  );
+}
+
+function RefundActionCell({ checked, canAct, onConfirm }) {
+  const [confirming, setConfirming] = useState(false);
+
+  if (checked) {
+    return (
+      <td style={{ ...TD, textAlign: "center" }}>
+        <span title="Буцаалт баталгаажсан" style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #dc2626", background: "#fee2e2",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontSize: "13px", color: "#dc2626",
+        }}>✓</span>
+      </td>
+    );
+  }
+  if (!canAct) {
+    return (
+      <td style={{ ...TD, textAlign: "center" }}>
+        <span style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #e5e7eb", background: "#f3f4f6",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          cursor: "not-allowed", opacity: 0.4,
+        }} />
+      </td>
+    );
+  }
+  if (confirming) {
+    return (
+      <td style={{ ...TD, textAlign: "center" }}>
+        <div style={{ display: "flex", gap: "4px", justifyContent: "center" }}>
+          <button
+            onClick={() => { setConfirming(false); onConfirm(); }}
+            title="Тийм, буцаалт хийсэн"
+            style={{ padding: "2px 6px", borderRadius: "4px", border: "1px solid #dc2626", background: "#dc2626", color: "white", fontSize: "11px", cursor: "pointer" }}
+          >✓</button>
+          <button
+            onClick={() => setConfirming(false)}
+            title="Цуцлах"
+            style={{ padding: "2px 6px", borderRadius: "4px", border: "1px solid #d1d5db", background: "white", fontSize: "11px", cursor: "pointer" }}
+          >✕</button>
+        </div>
+      </td>
+    );
+  }
+  return (
+    <td style={{ ...TD, textAlign: "center" }}>
+      <button
+        onClick={() => setConfirming(true)}
+        title="Буцаалт баталгаажуулах"
+        style={{
+          width: "24px", height: "24px", borderRadius: "4px",
+          border: "2px solid #d1d5db", background: "white",
+          cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#dc2626")}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
+      />
+    </td>
+  );
+}
+
+function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, onPinRow, onDeliveryConfirm, onRefundConfirm }) {
+  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP";
+  const canDeliver = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_DELIVERY";
+  const canRefund = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_REFUND";
+
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
         <colgroup>
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "13%" }} />
-          <col style={{ width: "27%" }} />
-          <col style={{ width: "16%" }} />
+          <col style={{ width: "9%" }} />
           <col style={{ width: "12%" }} />
+          <col style={{ width: "23%" }} />
+          <col style={{ width: "14%" }} />
           <col style={{ width: "11%" }} />
+          <col style={{ width: "10%" }} />
+          <col style={{ width: "10%" }} />
           <col style={{ width: "11%" }} />
         </colgroup>
         <thead>
@@ -94,21 +203,26 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
             <th style={TH}>Дүн</th>
             <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
             <th style={{ ...TH, textAlign: "center" }}>Хүргэлт</th>
+            <th style={{ ...TH, textAlign: "center" }}>Буцаалт</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={7} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+              <td colSpan={8} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
                 {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Баталгаажуулах гүйлгээ байхгүй байна"}
               </td>
             </tr>
           )}
           {rows.map((row) => (
             <tr key={row.rowIndex}
-              style={{ borderBottom: "1px solid #f3f4f6", opacity: row.pickupChecked ? 0.5 : 1 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              style={{
+                borderBottom: "1px solid #f3f4f6",
+                opacity: row.refunded ? 1 : (row.pickupChecked ? 0.5 : 1),
+                background: row.refunded ? "#fef2f2" : undefined,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = row.refunded ? "#fee2e2" : "#fafafa")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = row.refunded ? "#fef2f2" : "transparent")}
             >
               <td style={{ ...TD, color: "#6b7280", fontSize: "12px", whiteSpace: "nowrap" }}>
                 {formatTimestamp(row.timestamp)}
@@ -139,36 +253,23 @@ function TransactionTable({ rows, query, loading, tabId, token, onPhoneUpdate, o
                   ? `₮${Number(row.amount).toLocaleString()}`
                   : "—"}
               </td>
-              <td style={{ ...TD, textAlign: "center" }}>
-                {row.pickupChecked ? (
-                  <span title="Баталгаажсан" style={{
-                    width: "24px", height: "24px", borderRadius: "4px",
-                    border: "2px solid #059669", background: "#d1fae5",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "13px",
-                  }}>✓</span>
-                ) : (
-                  <button
-                    onClick={() => onPinRow(row)}
-                    title="Pick up баталгаажуулах"
-                    style={{
-                      width: "24px", height: "24px", borderRadius: "4px",
-                      border: "2px solid #d1d5db", background: "white",
-                      cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                  />
-                )}
-              </td>
-              <td style={{ ...TD, textAlign: "center" }}>
-                <span style={{
-                  width: "24px", height: "24px", borderRadius: "4px",
-                  border: "2px solid #e5e7eb", background: "#f3f4f6",
-                  display: "inline-flex", alignItems: "center", justifyContent: "center",
-                  cursor: "not-allowed", opacity: 0.4,
-                }} />
-              </td>
+              <ActionCell
+                checked={row.pickupChecked}
+                canAct={canPickup}
+                onClick={() => onPinRow(row)}
+                title="Pick up баталгаажуулах"
+              />
+              <ActionCell
+                checked={row.deliveryChecked}
+                canAct={canDeliver}
+                onClick={() => onDeliveryConfirm(row.rowIndex)}
+                title="Хүргэлт баталгаажуулах"
+              />
+              <RefundActionCell
+                checked={row.refunded}
+                canAct={canRefund}
+                onConfirm={() => onRefundConfirm(row.rowIndex)}
+              />
             </tr>
           ))}
         </tbody>
@@ -281,6 +382,7 @@ function OrderTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRo
 export default function SheetTableClient({ initialData, initialToken, tabId, tabType }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || initialToken;
+  const role = session?.user?.role;
 
   const [data, setData] = useState(initialData);
   const [query, setQuery] = useState("");
@@ -343,6 +445,34 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     setTimeout(() => setSuccessMsg(""), 3500);
   };
 
+  const handleDeliveryConfirm = async (rowIndex) => {
+    try {
+      await confirmTabDelivery(tabId, rowIndex, token);
+      setData((prev) => ({
+        ...prev,
+        rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, deliveryChecked: true } : r)),
+      }));
+      setSuccessMsg("✅ Хүргэлт баталгаажлаа!");
+      setTimeout(() => setSuccessMsg(""), 3500);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
+  const handleRefundConfirm = async (rowIndex) => {
+    try {
+      await confirmTabRefund(tabId, rowIndex, token);
+      setData((prev) => ({
+        ...prev,
+        rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, refunded: true } : r)),
+      }));
+      setSuccessMsg("✅ Буцаалт баталгаажлаа!");
+      setTimeout(() => setSuccessMsg(""), 3500);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const { rows = [], total = 0, page = 1, totalPages = 1 } = data || {};
 
   const searchPlaceholder = tabType === "order"
@@ -394,7 +524,18 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
       {tabType === "order" ? (
         <OrderTable rows={rows} query={query} loading={loading} tabId={tabId} token={token} onPhoneUpdate={handlePhoneUpdate} onPinRow={setPinRow} />
       ) : (
-        <TransactionTable rows={rows} query={query} loading={loading} tabId={tabId} token={token} onPhoneUpdate={handlePhoneUpdate} onPinRow={setPinRow} />
+        <TransactionTable
+          rows={rows}
+          query={query}
+          loading={loading}
+          tabId={tabId}
+          token={token}
+          role={role}
+          onPhoneUpdate={handlePhoneUpdate}
+          onPinRow={setPinRow}
+          onDeliveryConfirm={handleDeliveryConfirm}
+          onRefundConfirm={handleRefundConfirm}
+        />
       )}
 
       <Paginator page={page} totalPages={totalPages} onChange={(p) => fetchRows(query, p)} />
