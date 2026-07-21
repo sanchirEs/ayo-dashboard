@@ -9,6 +9,7 @@ export interface SheetRow {
   accountNumber: string;
   pickupChecked: boolean;
   deliveryChecked: boolean;
+  refunded: boolean;
   phone: string;
 }
 
@@ -249,6 +250,40 @@ export async function verifyTabPin(
     const err = await res.json().catch(() => ({})) as { message?: string };
     throw new Error(err.message || 'Буруу код');
   }
+}
+
+export async function confirmTabDelivery(
+  tabId: string,
+  rowIndex: number,
+  token: string
+): Promise<{ message: string }> {
+  const res = await fetchWithAuthHandling(
+    `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-delivery`,
+    { method: 'POST', headers: headers(token) },
+    'sheetPayments.confirmTabDelivery'
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message || 'Хүргэлт баталгаажуулахад алдаа гарлаа');
+  }
+  return res.json();
+}
+
+export async function confirmTabRefund(
+  tabId: string,
+  rowIndex: number,
+  token: string
+): Promise<{ message: string }> {
+  const res = await fetchWithAuthHandling(
+    `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-refund`,
+    { method: 'POST', headers: headers(token) },
+    'sheetPayments.confirmTabRefund'
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message || 'Буцаалт баталгаажуулахад алдаа гарлаа');
+  }
+  return res.json();
 }
 
 export async function getSheetLogs(
