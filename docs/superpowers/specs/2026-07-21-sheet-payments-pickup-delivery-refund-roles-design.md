@@ -53,26 +53,26 @@ Hand-write a matching `migrations/<timestamp>_add_sheet_roles/migration.sql` for
 
 ### Refund column in the Google Sheet
 
-Refund is stored as a real sheet column, same pattern as pickup/delivery — the sheet stays the single source of truth. It is **appended as a new last column** on each `transaction`-type tab (not inserted between existing columns), so no existing `pickup`/`delivery`/`phone` column index needs to shift. Every transaction tab currently has `phone` at column index 7 (H), so refund lands at index 8 (column I) across the board:
+Refund is stored as a real sheet column, same pattern as pickup/delivery — the sheet stays the single source of truth. **Update:** originally planned as column I (index 8, right after phone at H) — moved to **column Z (index 25)** instead. Live-sheet inspection during implementation found that column H already had leftover unused header text ("butsaalt"/"@dropdown") on 4 of the 7 tabs, so a new refund column right next to it would have sat in a confusing spot. Z is the last column already covered by `syncTab`'s existing `A:Z` read range, so it needs no other code change, and it is well clear of the active columns:
 
 | tabId | Tab Name | Header Row | Refund col |
 |-------|----------|-----------|-----------|
-| `zaya-2026-02-02` | `Zaya 2026.02.02s` | 0 | I1 |
-| `zahialga-4sar` | `zahialga 4sariin2oos` | 0 | I1 |
-| `zahialga-2sar` | `Zahialga 2sar 5031956973` | 1 | I2 |
-| `tuguldur-11sar` | `Tuguldur 11sar 5046468550 ` | 0 | I1 |
-| `10min` | `10min 5309755093` | 0 | I1 |
-| `zaya-dans-8sar` | `Zaya dans 8sar 5011346779` | 0 | I1 |
-| `zaya-dans-25on2sar` | `Zaya dans 25on2sar` | 0 | I1 |
+| `zaya-2026-02-02` | `Zaya 2026.02.02s` | 0 | Z1 |
+| `zahialga-4sar` | `zahialga 4sariin2oos` | 0 | Z1 |
+| `zahialga-2sar` | `Zahialga 2sar 5031956973` | 1 | Z2 |
+| `tuguldur-11sar` | `Tuguldur 11sar 5046468550 ` | 0 | Z1 |
+| `10min` | `10min 5309755093` | 0 | Z1 |
+| `zaya-dans-8sar` | `Zaya dans 8sar 5011346779` | 0 | Z1 |
+| `zaya-dans-25on2sar` | `Zaya dans 25on2sar` | 0 | Z1 |
 
 `storepay-pocket` (the only `order`-type tab) is **out of scope** — it already has its own `verified` flag/flow tied to website orders, not manual bank transfers.
 
-**Operational step (you, not code):** add a "Буцаалт" header cell at the row/column above, in each of the 7 tabs. Historical rows that were manually colored red keep their color but won't retroactively show as `refunded: true` in the dashboard — only refunds confirmed through the new button going forward are tracked. Worth a one-time manual backfill pass if you want old refunds reflected too, but that's optional and separate from this change.
+**Done (no longer manual):** the "Буцаалт" header was written directly via the same Sheets API credentials the backend already uses, no hand-editing needed. Additionally, all 90 pre-existing red-colored rows across the 7 tabs (12+35+0+25+6+0+12) were detected by reading actual cell background color — `rgb(255,0,0)` turned out to be an exact, unambiguous marker with no fuzzy threshold needed — and backfilled to `TRUE` in column Z, so historical refunds are reflected in the dashboard too, not just refunds confirmed going forward. 3 of the 7 tabs (`10min`, `zaya-dans-8sar`, `zaya-dans-25on2sar`) had a grid that only extended to column Y and needed their `gridProperties.columnCount` grown to 26 before the column-Z write would succeed.
 
 ## Backend Changes (`ayo-back`)
 
 ### `src/services/multiSheetService.js`
-- Add `refund: 8` to each of the 7 transaction-tab configs in `TAB_CONFIGS`.
+- Add `refund: 25` to each of the 7 transaction-tab configs in `TAB_CONFIGS`.
 - In `searchRows`, add `refunded: row[cols.refund] === true || row[cols.refund] === 'TRUE'` to the row shape (alongside existing `pickupChecked`/`deliveryChecked`).
 - Add `markDeliveryVerified(tabId, rowIndex)` — mirrors existing `markPickupVerified`, writes `TRUE` to `config.columns.delivery` and patches the Redis cache.
 - Add `markRefunded(tabId, rowIndex)` — same shape, writes to `config.columns.refund`.
