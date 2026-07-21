@@ -9,6 +9,9 @@ import { createUserByAdmin } from "@/lib/api/adminUsers";
 
 const ROLE_OPTIONS = [
   { value: "BRANCH", label: "Салбар (зөвхөн Pickup PIN хуудас)" },
+  { value: "SHEET_PICKUP", label: "Дансны Pickup баталгаажуулагч" },
+  { value: "SHEET_DELIVERY", label: "Дансны Хүргэлт баталгаажуулагч" },
+  { value: "SHEET_REFUND", label: "Дансны Буцаалт баталгаажуулагч" },
   { value: "ADMIN", label: "Админ (бүх хуудас)" },
   { value: "VENDOR", label: "Борлуулагч" },
 ];
@@ -19,7 +22,7 @@ const schema = z
     telephone: z.string().min(8, "Утасны дугаар буруу байна"),
     password: z.string().min(6, "Нууц үг хамгийн багадаа 6 тэмдэгт байна"),
     confirmPassword: z.string(),
-    role: z.enum(["BRANCH", "ADMIN", "VENDOR"]),
+    role: z.enum(["BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND", "ADMIN", "VENDOR"]),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Нууц үг таарахгүй байна",
