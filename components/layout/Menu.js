@@ -71,8 +71,9 @@ export default function Menu() {
     return router === path;
   };
 
-  // Staff accounts see only the sheet payment verification page.
-  if (role === "STAFF") {
+  // Staff accounts (and the pickup/delivery/refund sheet-payments roles)
+  // see only the sheet payment verification page.
+  if (["STAFF", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"].includes(role)) {
     return (
       <div className="center">
         <div className="center-item">
