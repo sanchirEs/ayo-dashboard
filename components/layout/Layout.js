@@ -1,34 +1,17 @@
 "use client";
 import { useState } from "react";
-import ClearButton1 from "../ThemeSettings/Clear1";
-import ClearButton2 from "../ThemeSettings/Clear2";
-import ColorsHeader from "../ThemeSettings/ColorsHeader";
-import ColorsMenu from "../ThemeSettings/ColorsMenu";
-import HeaderPosition from "../ThemeSettings/HeaderPosition";
-import LayoutWidth from "../ThemeSettings/LayoutWidth";
-import MenuBackground from "../ThemeSettings/MenuBackground";
-import MenuPosition from "../ThemeSettings/MenuPosition";
-import MenuStyle from "../ThemeSettings/MenuStyle";
-import PrimaryTheme from "../ThemeSettings/PrimaryTheme";
-import StyleLoader from "../ThemeSettings/StyleLoader";
-import ThemeBackground from "../ThemeSettings/ThemeBackground";
 import ProgressBar from "../elements/ProgressBar";
 import Breadcrumb from "./Breadcrumb";
 import Footer1 from "./Footer1";
 import Header1 from "./Header1";
 import Offcanvas from "./Offcanvas";
 import Sidebar from "./Sidebar";
- 
 
 export default function Layout({
-  headerStyle,
   breadcrumbTitleParent,
   breadcrumbTitle,
   pageTitle,
   children,
-  boxed = true,
-  menuIconHover,
-  menuIconDefault,
 }) {
   // Moblile Menu
   const [isSidebar, setSidebar] = useState(false);
@@ -40,26 +23,9 @@ export default function Layout({
   return (
     <>
       <ProgressBar />
-      <MenuStyle />
-      <LayoutWidth />
-      <MenuPosition />
-      <HeaderPosition />
-      <StyleLoader />
-      <ClearButton1 />
-      <ColorsMenu />
-      <ColorsHeader />
-      <PrimaryTheme />
-      <ThemeBackground />
-      <MenuBackground />
-      <ClearButton2 />
       <div id="wrapper">
         <div id="page">
-          <div
-            className={`layout-wrap
-                    ${boxed ? "layout-width-boxed" : ""}
-                    ${isSidebar ? "full-width" : ""}
-                    `}
-          >
+          <div className={`layout-wrap ${isSidebar ? "full-width" : ""}`}>
             {isSidebar && (
               <div className="sidebar-backdrop" onClick={handleSidebar} />
             )}
