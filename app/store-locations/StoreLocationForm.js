@@ -16,6 +16,7 @@ const schema = z.object({
   lunchBreak: z.string().optional(),
   phone:      z.string().min(8, "Утасны дугаар буруу байна"),
   closedDay:  z.string().optional(),
+  googleMapLink: z.string().url("Зөв холбоос оруулна уу").optional().or(z.literal("")),
   sortOrder:  z.coerce.number().int().min(0).default(0),
 });
 
@@ -98,6 +99,7 @@ export default function StoreLocationForm({ existing }) {
       lunchBreak: existing?.lunchBreak || "",
       phone:      existing?.phone      || "",
       closedDay:  existing?.closedDay  || "",
+      googleMapLink: existing?.googleMapLink || "",
       sortOrder:  existing?.sortOrder  ?? 0,
     },
   });
@@ -204,6 +206,21 @@ export default function StoreLocationForm({ existing }) {
                   rows={3}
                   placeholder="Дэлгэрэнгүй хаяг..."
                   style={{ ...inputStyle, resize: "vertical", lineHeight: "1.5" }}
+                />
+              </Field>
+            </div>
+
+            <div style={{ gridColumn: "1 / -1" }}>
+              <Field
+                label="Google Map линк"
+                hint="Хэрэглэгч зураг дээр дарахад шинэ табаар нээгдэнэ"
+                error={errors.googleMapLink?.message}
+              >
+                <input
+                  {...form.register("googleMapLink")}
+                  type="url"
+                  placeholder="https://maps.app.goo.gl/..."
+                  style={inputStyle}
                 />
               </Field>
             </div>

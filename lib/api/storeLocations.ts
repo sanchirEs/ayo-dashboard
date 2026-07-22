@@ -12,6 +12,7 @@ export interface StoreLocation {
   phone: string;
   closedDay?: string | null;
   image?: string | null;
+  googleMapLink?: string | null;
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
@@ -57,6 +58,7 @@ export type StoreLocationPayload = {
   lunchBreak?: string;
   phone: string;
   closedDay?: string;
+  googleMapLink?: string;
   sortOrder?: number;
   image?: File;
 };
@@ -70,6 +72,7 @@ function buildFormData(payload: StoreLocationPayload): FormData {
   fd.append("phone", payload.phone);
   if (payload.lunchBreak !== undefined) fd.append("lunchBreak", payload.lunchBreak);
   if (payload.closedDay !== undefined) fd.append("closedDay", payload.closedDay);
+  if (payload.googleMapLink !== undefined) fd.append("googleMapLink", payload.googleMapLink);
   if (payload.sortOrder !== undefined) fd.append("sortOrder", String(payload.sortOrder));
   if (payload.image) fd.append("image", payload.image);
   return fd;

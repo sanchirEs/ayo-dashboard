@@ -66,6 +66,18 @@ export default async function StoreLocationTable() {
                 <div className="text-tiny" style={{ color: "#374151", lineHeight: "1.5", wordBreak: "break-word" }}>
                   {loc.address}
                 </div>
+                {loc.googleMapLink && (
+                  <a
+                    href={loc.googleMapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-tiny"
+                    style={{ color: "#3b82f6", marginTop: "4px", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                  >
+                    <i className="icon-map-pin" style={{ fontSize: "11px" }} />
+                    Google Map
+                  </a>
+                )}
               </div>
 
               {/* Schedule */}
