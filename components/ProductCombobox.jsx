@@ -1,27 +1,80 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { getDiscountableProducts } from "@/lib/api/discounts";
+import { searchProducts } from "@/lib/api/discounts";
 import { resolveImageUrl } from "@/lib/api/env";
+
+const DEBOUNCE_MS = 250;
+
+/** Marks a product that is hidden from the storefront. */
+function InactiveBadge({ style }) {
+  return (
+    <span
+      title="Энэ бараа дэлгүүрт харагдахгүй байна"
+      style={{
+        display: "inline-block",
+        padding: "1px 6px",
+        borderRadius: 4,
+        background: "#f1f5f9",
+        color: "#64748b",
+        fontSize: 10,
+        fontWeight: 600,
+        whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      Идэвхгүй
+    </span>
+  );
+}
 
 export default function ProductCombobox({ value, onSelect }) {
   const { data: session } = useSession();
-  const [allProducts, setAllProducts] = useState([]);
+  const token = session?.user?.accessToken;
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [error, setError] = useState(null);
   const containerRef = useRef(null);
 
-  // Fetch all products once when token is available
+  // The catalogue is far bigger than one page of /api/v1/products, so the
+  // query goes to the backend rather than filtering a preloaded list.
   useEffect(() => {
-    const token = session?.user?.accessToken;
-    if (!token) return;
-    setLoading(true);
-    getDiscountableProducts(token)
-      .then((products) => setAllProducts((prev) => prev.length > 0 ? prev : products))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [session?.user?.accessToken]);
+    const trimmed = query.trim();
+    if (!token || !trimmed) {
+      setResults([]);
+      setSearching(false);
+      setError(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setSearching(true);
+    setError(null);
+
+    const timer = setTimeout(() => {
+      searchProducts(trimmed, token, controller.signal)
+        .then((found) => {
+          if (!controller.signal.aborted) setResults(found);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setError("Хайлт амжилтгүй боллоо");
+            setResults([]);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setSearching(false);
+        });
+    }, DEBOUNCE_MS);
+
+    // Supersede the previous keystroke's request instead of racing it.
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, token]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -33,14 +86,6 @@ export default function ProductCombobox({ value, onSelect }) {
     document.addEventListener("mousedown", handleMouseDown);
     return () => document.removeEventListener("mousedown", handleMouseDown);
   }, []);
-
-  const filtered = query.trim()
-    ? allProducts.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.toLowerCase()) ||
-          (p.sku ?? "").toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6)
-    : [];
 
   const handleSelect = (product) => {
     onSelect(product);
@@ -92,7 +137,19 @@ export default function ProductCombobox({ value, onSelect }) {
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#111827" }}>{value.name}</div>
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 14,
+              color: "#111827",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            {value.name}
+            {value.isActive === false && <InactiveBadge />}
+          </div>
           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
             SKU: {value.sku}
             {value.category ? ` · ${value.category.name}` : ""}
@@ -147,8 +204,7 @@ export default function ProductCombobox({ value, onSelect }) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={loading ? "Бараа ачааллаж байна..." : "Нэр эсвэл SKU-аар хайх..."}
-          disabled={loading}
+          placeholder="Нэр эсвэл SKU-аар хайх..."
           style={{
             border: "none",
             outline: "none",
@@ -176,12 +232,20 @@ export default function ProductCombobox({ value, onSelect }) {
             overflowY: "auto",
           }}
         >
-          {filtered.length === 0 ? (
+          {searching ? (
+            <div style={{ padding: "10px 12px", color: "#9ca3af", fontSize: 13 }}>
+              Хайж байна...
+            </div>
+          ) : error ? (
+            <div style={{ padding: "10px 12px", color: "#b91c1c", fontSize: 13 }}>
+              {error}
+            </div>
+          ) : results.length === 0 ? (
             <div style={{ padding: "10px 12px", color: "#9ca3af", fontSize: 13 }}>
               Бараа олдсонгүй
             </div>
           ) : (
-            filtered.map((product) => (
+            results.map((product) => (
               <div
                 key={product.id}
                 onMouseDown={() => handleSelect(product)}
@@ -214,8 +278,20 @@ export default function ProductCombobox({ value, onSelect }) {
                     }}
                   />
                 )}
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{product.name}</div>
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#111827",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                    }}
+                  >
+                    {product.name}
+                    {product.isActive === false && <InactiveBadge />}
+                  </div>
                   <div style={{ fontSize: 11, color: "#9ca3af" }}>
                     SKU: {product.sku} · ₮{Number(product.price).toLocaleString()}
                   </div>

@@ -18,6 +18,8 @@ export interface ProductDiscount {
     url: string;
   }>;
   priceRange?: { min: number; max: number };
+  /** False for products hidden from the storefront. */
+  isActive?: boolean;
 }
 
 export interface FlashSaleUpdate {
@@ -30,6 +32,84 @@ export interface DiscountResponse {
   success: boolean;
   data: ProductDiscount | ProductDiscount[];
   message?: string;
+}
+
+function mapProduct(product: any): ProductDiscount {
+  return {
+    id: product.id,
+    name: product.name,
+    sku: product.sku,
+    price: product.price,
+    flashSale: product.flashSale || false,
+    flashSaleEndDate: product.flashSaleEndDate,
+    categoryId: product.categoryId,
+    category: product.category,
+    images: product.images,
+    // Present only when the product's variants aren't all one price — the
+    // sale form uses it to warn that a ₮ figure can only mean one variant.
+    priceRange: product.priceRange,
+    isActive: product.isActive,
+  };
+}
+
+/**
+ * Search the whole catalogue for a product to discount.
+ *
+ * Searching has to happen on the backend: /api/v1/products returns only the
+ * first 20 rows by default, so filtering a preloaded list in the browser can
+ * never match anything outside the 20 newest products. The backend `search`
+ * param also matches description, variant SKUs, tags, category and brand,
+ * which a name/SKU-only client filter misses.
+ */
+export const PRODUCT_SEARCH_LIMIT = 8;
+
+export async function searchProducts(
+  query: string,
+  token: string,
+  signal?: AbortSignal
+): Promise<ProductDiscount[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const BACKEND_URL = getBackendUrl();
+  const params = new URLSearchParams({
+    search: trimmed,
+    limit: String(PRODUCT_SEARCH_LIMIT),
+    // `category` and `priceRange` are omitted from the default "basic" field
+    // set, but the combobox and the sale form both render them.
+    include: 'categories,variants',
+    // Deactivated products are still discountable — the combobox marks them
+    // so it's clear the price won't be visible until the product is live.
+    isActive: 'all',
+  });
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v1/products/?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+      signal,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (result.success && Array.isArray(result.data?.products)) {
+      return result.data.products.map(mapProduct);
+    }
+    return [];
+  } catch (error: any) {
+    // A superseded keystroke isn't a failure worth surfacing.
+    if (error?.name === 'AbortError') return [];
+    console.error('Error searching products:', error);
+    throw error;
+  }
 }
 
 // Get products that are currently on sale or can be put on sale
@@ -53,20 +133,7 @@ export async function getDiscountableProducts(token: string): Promise<ProductDis
     const result = await response.json();
     
     if (result.success && Array.isArray(result.data.products)) {
-      return result.data.products.map((product: any) => ({
-        id: product.id,
-        name: product.name,
-        sku: product.sku,
-        price: product.price,
-        flashSale: product.flashSale || false,
-        flashSaleEndDate: product.flashSaleEndDate,
-        categoryId: product.categoryId,
-        category: product.category,
-        images: product.images,
-        // Present only when the product's variants aren't all one price — the
-        // sale form uses it to warn that a ₮ figure can only mean one variant.
-        priceRange: product.priceRange,
-      }));
+      return result.data.products.map(mapProduct);
     }
     
     return [];
