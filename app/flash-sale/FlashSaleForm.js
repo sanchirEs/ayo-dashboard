@@ -2,7 +2,8 @@
 import { useState, useTransition } from "react";
 import { createFlashSale, cancelFlashSale } from "@/lib/api/flashSale";
 import { useSession } from "next-auth/react";
-import ProductCombobox from "./ProductCombobox";
+import ProductCombobox from "@/components/ProductCombobox";
+import { formatUB, ubToday, ubWallClockToDate } from "@/lib/ubTime";
 
 const DURATIONS = [
   { label: '10 мин', minutes: 10 },
@@ -37,7 +38,12 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
     }
     startTransition(async () => {
       try {
-        const start = new Date(`${form.startDate}T${form.startTime}:00`);
+        // Entered times are Ulaanbaatar wall clock, never the browser's timezone.
+        const start = ubWallClockToDate(form.startDate, form.startTime);
+        if (!start) {
+          setError('Огноо эсвэл цаг буруу байна');
+          return;
+        }
         const end = new Date(start.getTime() + form.duration * 60 * 1000);
         await createFlashSale({
           productId: selectedProduct.id,
@@ -95,9 +101,7 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
     );
   }
 
-  const previewStart = form.startDate && form.startTime
-    ? new Date(`${form.startDate}T${form.startTime}:00`)
-    : null;
+  const previewStart = ubWallClockToDate(form.startDate, form.startTime);
   const previewEnd = previewStart
     ? new Date(previewStart.getTime() + form.duration * 60 * 1000)
     : null;
@@ -133,19 +137,19 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
         <div className="flex gap20">
           <div>
             <label className="body-title" style={{ display: 'block', marginBottom: 6 }}>
-              Date
+              Date <span style={{ color: '#9ca3af', fontWeight: 400 }}>(УБ цаг)</span>
             </label>
             <input
               type="date"
               value={form.startDate}
-              min={new Date().toISOString().split('T')[0]}
+              min={ubToday()}
               onChange={e => set('startDate', e.target.value)}
               style={{ padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 14 }}
             />
           </div>
           <div>
             <label className="body-title" style={{ display: 'block', marginBottom: 6 }}>
-              Start Time
+              Start Time <span style={{ color: '#9ca3af', fontWeight: 400 }}>(УБ цаг)</span>
             </label>
             <input
               type="time"
@@ -213,8 +217,11 @@ export default function FlashSaleForm({ mode = "create", campaignId, token: serv
             fontSize: 14
           }}>
             <strong>Preview:</strong>{' '}
-            {previewStart.toLocaleString('mn-MN')} → {previewEnd.toLocaleString('mn-MN')}
+            {formatUB(previewStart)} → {formatUB(previewEnd)}
             {' '}({durationLabel}, <strong>{form.discountPct}%</strong> хямдрал)
+            <div style={{ color: '#4d7c0f', fontSize: 12, marginTop: 4 }}>
+              Улаанбаатарын цагаар
+            </div>
           </div>
         )}
 

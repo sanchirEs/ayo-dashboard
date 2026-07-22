@@ -352,6 +352,19 @@ export default function Menu() {
               </Link>
             </li>
             <li
+              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
+            >
+              <Link
+                href="/discounts"
+                className={isSubMenuItemActive("/discounts") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-percent" />
+                </div>
+                <div className="text">🏷️ Хямдрал</div>
+              </Link>
+            </li>
+            <li
               className={`menu-item ${router === "/sms-broadcast" ? "active" : ""}`}
             >
               <Link
@@ -621,21 +634,6 @@ export default function Menu() {
                   </Link>
                 </li>
               </ul>
-            </li>
-            )}
-            {false && (
-            <li
-              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
-            >
-              <Link
-                href="/discounts"
-                className={isSubMenuItemActive("/discounts") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-percent" />
-                </div>
-                <div className="text">Хөнгөлөлт</div>
-              </Link>
             </li>
             )}
             {/** Removed from sidebar as requested

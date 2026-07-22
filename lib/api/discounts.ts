@@ -17,6 +17,7 @@ export interface ProductDiscount {
   images?: Array<{
     url: string;
   }>;
+  priceRange?: { min: number; max: number };
 }
 
 export interface FlashSaleUpdate {
@@ -62,6 +63,9 @@ export async function getDiscountableProducts(token: string): Promise<ProductDis
         categoryId: product.categoryId,
         category: product.category,
         images: product.images,
+        // Present only when the product's variants aren't all one price — the
+        // sale form uses it to warn that a ₮ figure can only mean one variant.
+        priceRange: product.priceRange,
       }));
     }
     
