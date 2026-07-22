@@ -84,6 +84,7 @@ export default function AddProductComponent() {
   // Variant management
   const [variants, setVariants] = useState([]);
   const [selectedAttributeOptions, setSelectedAttributeOptions] = useState({});
+  const [variantImageUploading, setVariantImageUploading] = useState({});
   
   // Product specifications state
   const [productSpecs, setProductSpecs] = useState([]);
@@ -370,40 +371,50 @@ export default function AddProductComponent() {
     }));
   };
 
-  const handleVariantImageUpload = (variantIndex, event) => {
-    try {
-      const files = Array.from(event.target.files || []);
-      if (files.length === 0) return;
+  const handleVariantImageUpload = async (variantIndex, event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = ""; // allow re-selecting the same file later
+    if (files.length === 0) return;
 
-      const imageObjects = [];
-      let processedCount = 0;
-      
-      files.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          // Create proper image object structure that matches backend schema
-          const imageObject = {
-            imageUrl: reader.result, // base64 data URL for preview
-            altText: file.name || "",
-            isPrimary: false,
-            // Store file reference for potential upload
-            _file: file,
-            _isPreview: true // Flag to indicate this is preview data
-          };
-          
-          imageObjects.push(imageObject);
-          processedCount++;
-          
-          if (processedCount === files.length) {
-            // Update variant with proper image objects
-            const currentImages = variants[variantIndex].images || [];
-            updateVariant(variantIndex, 'images', [...currentImages, ...imageObjects]);
-          }
-        };
-        reader.readAsDataURL(file);
+    if (!TOKEN) {
+      toastManager?.error("Зураг байршуулахын тулд нэвтэрсэн байх шаардлагатай", { title: 'Алдаа' });
+      return;
+    }
+
+    setVariantImageUploading(prev => ({ ...prev, [variantIndex]: true }));
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append('images', file));
+      formData.append('folder', 'products');
+      formData.append('type', 'variant_images');
+
+      const response = await fetch(`${getBackendUrl()}/api/v1/upload/images`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${TOKEN}` },
+        body: formData,
       });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Зураг байршуулахад алдаа гарлаа");
+      }
+
+      // Real, hosted image objects — matches backend schema so getVariantImages()
+      // picks these up instead of falling back to the shared product images
+      const uploadedImages = (result.data?.images || []).map((img) => ({
+        imageUrl: img.url,
+        altText: img.original_filename || "",
+        isPrimary: false,
+      }));
+
+      const currentImages = variants[variantIndex].images || [];
+      updateVariant(variantIndex, 'images', [...currentImages, ...uploadedImages]);
+      toastManager?.success(`${uploadedImages.length} зураг байршуулагдлаа`, { title: 'Амжилттай' });
     } catch (e) {
-      console.warn("Error processing variant images:", e);
+      console.error("Error uploading variant images:", e);
+      toastManager?.error(e.message || "Зураг байршуулахад алдаа гарлаа", { title: 'Алдаа' });
+    } finally {
+      setVariantImageUploading(prev => ({ ...prev, [variantIndex]: false }));
     }
   };
 
