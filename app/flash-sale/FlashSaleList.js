@@ -1,19 +1,8 @@
 import GetTokenServer from "@/lib/GetTokenServer";
 import { getFlashSaleSchedule } from "@/lib/api/flashSale";
+import { getFlashSaleStatus } from "@/lib/flashSaleStatus";
+import { formatUB } from "@/lib/ubTime";
 import FlashSaleForm from "./FlashSaleForm";
-
-function getStatus(item) {
-  const now = new Date();
-  const start = new Date(item.startDate);
-  const end = new Date(item.endDate);
-  if (item.active && start <= now && end > now) return { label: 'Live', color: '#065f46', bg: '#d1fae5' };
-  if (start > now) return { label: 'Scheduled', color: '#1e40af', bg: '#dbeafe' };
-  return { label: 'Ended', color: '#6b7280', bg: '#f3f4f6' };
-}
-
-function fmt(iso) {
-  return new Date(iso).toLocaleString('mn-MN', { timeZone: 'Asia/Ulaanbaatar', dateStyle: 'short', timeStyle: 'short' });
-}
 
 export default async function FlashSaleList() {
   const token = await GetTokenServer();
@@ -38,7 +27,9 @@ export default async function FlashSaleList() {
     <div className="wg-box mt-20">
       <div className="flex items-center justify-between mb-20">
         <h4 className="text-title">Scheduled Flash Sales</h4>
-        <span style={{ color: '#6b7280', fontSize: 13 }}>{schedule.total} нийт</span>
+        <span style={{ color: '#6b7280', fontSize: 13 }}>
+          Улаанбаатарын цагаар · {schedule.total} нийт
+        </span>
       </div>
 
       <div className="wg-table">
@@ -53,7 +44,7 @@ export default async function FlashSaleList() {
 
         <ul className="flex flex-column">
           {schedule.items.map(item => {
-            const { label, color, bg } = getStatus(item);
+            const { label, color, bg, cancellable } = getFlashSaleStatus(item);
             const product = item.products[0]?.product;
 
             return (
@@ -72,11 +63,11 @@ export default async function FlashSaleList() {
                 </div>
 
                 <div style={{ flex: 2 }}>
-                  <div className="body-text" style={{ fontSize: 13 }}>{fmt(item.startDate)}</div>
+                  <div className="body-text" style={{ fontSize: 13 }}>{formatUB(item.startDate)}</div>
                 </div>
 
                 <div style={{ flex: 2 }}>
-                  <div className="body-text" style={{ fontSize: 13 }}>{fmt(item.endDate)}</div>
+                  <div className="body-text" style={{ fontSize: 13 }}>{formatUB(item.endDate)}</div>
                 </div>
 
                 <div style={{ flex: 1 }}>
@@ -100,7 +91,7 @@ export default async function FlashSaleList() {
                 </div>
 
                 <div style={{ flex: 1 }}>
-                  {label === 'Scheduled' && (
+                  {cancellable && (
                     <FlashSaleForm mode="cancel" campaignId={item.id} />
                   )}
                 </div>
