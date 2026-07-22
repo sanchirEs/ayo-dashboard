@@ -161,6 +161,7 @@ export default async function ProductOrdersTable({ searchParams }) {
     const status = params?.status || '';
     const dateFrom = params?.dateFrom || '';
     const dateTo = params?.dateTo || '';
+    const productName = params?.productName || '';
 
     try {
         // Fetch a large batch — group server-side, no new endpoint needed
@@ -171,6 +172,7 @@ export default async function ProductOrdersTable({ searchParams }) {
             status,
             dateFrom,
             dateTo,
+            productName,
             sortField: 'createdAt',
             sortOrder: 'desc',
         });

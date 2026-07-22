@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/api/env";
 import { exportToExcel } from "@/lib/exportToExcel";
@@ -349,11 +350,33 @@ function UserGroupsTable({ userGroups }) {
 
 // ─── Main client component ────────────────────────────────────────────────────
 export default function ProductOrdersClient({ groups, userGroups, stats }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [activeTab, setActiveTab] = useState('products'); // 'products' | 'users'
-  const [localSearch, setLocalSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState(() => searchParams.get('productName') || '');
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [sortBy, setSortBy] = useState('totalQty'); // totalQty | totalRevenue | orderCount | lastOrderedAt
   const [sortDir, setSortDir] = useState('desc');
+
+  // Debounce pushing productName to the URL so the server can re-fetch a
+  // matching order set instead of only filtering the already-loaded batch.
+  const debounceRef = useRef(null);
+  useEffect(() => {
+    const trimmed = localSearch.trim();
+    if (trimmed === (searchParams.get('productName') || '')) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (trimmed) params.set('productName', trimmed);
+      else params.delete('productName');
+      const qs = params.toString();
+      router.push(`/product-orders${qs ? '?' + qs : ''}`);
+    }, 400);
+    return () => clearTimeout(debounceRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
 
   // Client-side search filter (instant, no server round-trip)
   const filtered = useMemo(() => {

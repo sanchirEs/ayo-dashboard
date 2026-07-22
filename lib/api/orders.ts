@@ -98,6 +98,7 @@ export interface OrdersParams {
   paymentStatus?: string;
   paymentProvider?: string;
   deliveryType?: string;
+  productName?: string;
 }
 
 export async function getOrders(params: OrdersParams = {}): Promise<OrdersResponse> {
@@ -130,6 +131,7 @@ export async function getOrders(params: OrdersParams = {}): Promise<OrdersRespon
     if (params.paymentStatus) searchParams.append('paymentStatus', params.paymentStatus);
     if (params.paymentProvider) searchParams.append('paymentProvider', params.paymentProvider);
     if (params.deliveryType) searchParams.append('deliveryType', params.deliveryType);
+    if (params.productName) searchParams.append('productName', params.productName);
     // Ensure createdAt sorting is used for recent orders
     searchParams.append('sortField', params.sortField || 'createdAt');
     searchParams.append('sortOrder', params.sortOrder || 'desc');
