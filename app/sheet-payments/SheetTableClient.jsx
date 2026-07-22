@@ -177,7 +177,7 @@ function RefundActionCell({ checked, canAct, onConfirm }) {
 }
 
 function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, onPinRow, onDeliveryConfirm, onRefundConfirm }) {
-  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP";
+  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP" || role === "BRANCH";
   const canDeliver = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_DELIVERY";
   const canRefund = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_REFUND";
 
