@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resolveImageUrl } from "@/lib/api/env";
@@ -359,24 +359,28 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
   const [sortBy, setSortBy] = useState('totalQty'); // totalQty | totalRevenue | orderCount | lastOrderedAt
   const [sortDir, setSortDir] = useState('desc');
 
-  // Debounce pushing productName to the URL so the server can re-fetch a
-  // matching order set instead of only filtering the already-loaded batch.
-  const debounceRef = useRef(null);
-  useEffect(() => {
-    const trimmed = localSearch.trim();
+  // Push productName to the URL on submit (Enter / search button) so the
+  // server re-fetches a matching order set instead of only filtering the
+  // already-loaded batch. No round-trip on every keystroke.
+  const pushProductName = (value) => {
+    const trimmed = value.trim();
     if (trimmed === (searchParams.get('productName') || '')) return;
+    const params = new URLSearchParams(searchParams.toString());
+    if (trimmed) params.set('productName', trimmed);
+    else params.delete('productName');
+    const qs = params.toString();
+    router.push(`/product-orders${qs ? '?' + qs : ''}`);
+  };
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (trimmed) params.set('productName', trimmed);
-      else params.delete('productName');
-      const qs = params.toString();
-      router.push(`/product-orders${qs ? '?' + qs : ''}`);
-    }, 400);
-    return () => clearTimeout(debounceRef.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [localSearch]);
+  const handleProductSearchSubmit = (e) => {
+    e.preventDefault();
+    pushProductName(localSearch);
+  };
+
+  const clearProductSearch = () => {
+    setLocalSearch('');
+    pushProductName('');
+  };
 
   // Client-side search filter (instant, no server round-trip)
   const filtered = useMemo(() => {
@@ -515,16 +519,16 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
         <StatCard label="Хайлтын үр дүн" value={filtered.length} sub={`/ ${groups.length} бүтээгдэхүүн`} />
       </div>
 
-      {/* ── Client-side search ── */}
+      {/* ── Search: instant client filter as you type, real search on submit ── */}
       <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ position: 'relative', flex: '0 0 300px' }}>
+        <form onSubmit={handleProductSearchSubmit} style={{ position: 'relative', flex: '0 0 300px' }}>
           <input
             type="text"
-            placeholder="Бүтээгдэхүүний нэрээр шүүх..."
+            placeholder="Бүтээгдэхүүний нэрээр хайх..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             style={{
-              width: '100%', padding: '7px 36px 7px 12px',
+              width: '100%', padding: '7px 64px 7px 12px',
               borderRadius: '6px', border: '1px solid #e5e7eb', fontSize: '13px', outline: 'none',
             }}
             onFocus={(e) => e.target.style.borderColor = '#3730a3'}
@@ -532,11 +536,18 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
           />
           {localSearch && (
             <button
-              onClick={() => setLocalSearch('')}
-              style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '14px' }}
+              type="button"
+              onClick={clearProductSearch}
+              style={{ position: 'absolute', right: '34px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: '14px' }}
             >✕</button>
           )}
-        </div>
+          <button
+            type="submit"
+            style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#6b7280' }}
+          >
+            <i className="icon-search" />
+          </button>
+        </form>
         <span style={{ fontSize: '13px', color: '#6b7280' }}>{filtered.length} бүтээгдэхүүн</span>
       </div>
 
