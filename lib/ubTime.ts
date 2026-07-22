@@ -70,7 +70,10 @@ export function ubWallClockToDate(dateStr: string, timeStr: string): Date | null
 }
 
 /** Format an instant as Ulaanbaatar wall clock: `2026.07.22 17:20`. */
-export function formatUB(instant: Date | string | number): string {
+export function formatUB(instant: Date | string | number | null | undefined): string {
+  // Guard null/'' explicitly: `new Date(null)` is the epoch, not an invalid
+  // date, so without this an unset field would render as 1970.01.01.
+  if (instant === null || instant === undefined || instant === '') return '—';
   const date = instant instanceof Date ? instant : new Date(instant);
   if (Number.isNaN(date.getTime())) return '—';
   const p = ubParts(date);
@@ -90,4 +93,22 @@ export function ubNowTime(now: Date = new Date()): string {
   const p = ubParts(now);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(p.hour)}:${pad(p.minute)}`;
+}
+
+/**
+ * Read an `<input type="datetime-local">` value (`YYYY-MM-DDTHH:mm`, with an
+ * optional `:ss`) as Ulaanbaatar wall clock. Browsers hand these back with no
+ * timezone attached, so `new Date(value)` resolves them against the machine's
+ * own clock — which is the bug this exists to avoid.
+ */
+export function ubLocalInputToDate(value: string): Date | null {
+  if (!value) return null;
+  const [datePart, timePart] = value.split('T');
+  if (!datePart || !timePart) return null;
+  return ubWallClockToDate(datePart, timePart);
+}
+
+/** Current UB time as `YYYY-MM-DDTHH:mm`, for datetime-local values and bounds. */
+export function ubNowLocalInput(now: Date = new Date()): string {
+  return `${ubToday(now)}T${ubNowTime(now)}`;
 }

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { getProductSales, isOpenEnded } from "@/lib/api/campaigns";
 import { resolveImageUrl } from "@/lib/api/env";
+import { formatUB } from "@/lib/ubTime";
 import SaleRowActions from "./SaleRowActions";
 
 const TABS = [
@@ -14,12 +15,9 @@ const TABS = [
 const th = { textAlign: 'left', padding: '10px 12px', fontSize: 12, color: '#6b7280', fontWeight: 600 };
 const td = { padding: '10px 12px', fontSize: 13, color: '#374151', verticalAlign: 'middle' };
 
-function formatDate(value) {
-  return new Date(value).toLocaleString('mn-MN', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
+// Always Ulaanbaatar, never the viewing machine's timezone — the form stores
+// what the admin typed as UB wall clock, so the list must read it back the same.
+const formatDate = formatUB;
 
 export default function SaleList({ token: serverToken }) {
   const { data: session } = useSession();
@@ -45,7 +43,12 @@ export default function SaleList({ token: serverToken }) {
   return (
     <div className="wg-box" style={{ marginTop: 20 }}>
       <div className="flex items-center justify-between gap10 flex-wrap mb-20">
-        <h4 className="text-title">Хямдралууд</h4>
+        <h4 className="text-title">
+          Хямдралууд{' '}
+          <span style={{ color: '#9ca3af', fontSize: 12, fontWeight: 400 }}>
+            (Улаанбаатарын цагаар)
+          </span>
+        </h4>
         <div className="flex gap10">
           {TABS.map((t) => (
             <button

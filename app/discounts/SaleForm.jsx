@@ -3,6 +3,7 @@ import { useState, useTransition } from "react";
 import { useSession } from "next-auth/react";
 import ProductCombobox from "@/components/ProductCombobox";
 import { createProductSale } from "@/lib/api/campaigns";
+import { formatUB, ubLocalInputToDate, ubNowLocalInput } from "@/lib/ubTime";
 
 const QUICK_PCTS = [10, 15, 20, 30, 50];
 
@@ -87,7 +88,19 @@ export default function SaleForm({ token: serverToken }) {
       setError('Дуусах огноог сонгоно уу');
       return;
     }
-    if (hasEnd && !startNow && new Date(endAt) <= new Date(startAt)) {
+    // Entered times are Ulaanbaatar wall clock, never the browser's timezone.
+    const startInstant = startNow ? null : ubLocalInputToDate(startAt);
+    const endInstant = hasEnd ? ubLocalInputToDate(endAt) : null;
+
+    if (!startNow && !startInstant) {
+      setError('Эхлэх огноо буруу байна');
+      return;
+    }
+    if (hasEnd && !endInstant) {
+      setError('Дуусах огноо буруу байна');
+      return;
+    }
+    if (endInstant && endInstant <= (startInstant ?? new Date())) {
       setError('Дуусах огноо эхлэх огнооноос хойш байх ёстой');
       return;
     }
@@ -99,8 +112,8 @@ export default function SaleForm({ token: serverToken }) {
             productId: product.id,
             discountPercent: Number(effectivePercent.toFixed(4)),
             name: `Хямдрал — ${product.name}`,
-            startDate: startNow ? undefined : new Date(startAt).toISOString(),
-            endDate: hasEnd ? new Date(endAt).toISOString() : undefined,
+            startDate: startInstant ? startInstant.toISOString() : undefined,
+            endDate: endInstant ? endInstant.toISOString() : undefined,
           },
           token
         );
@@ -219,7 +232,9 @@ export default function SaleForm({ token: serverToken }) {
 
         <div className="flex gap20" style={{ flexWrap: 'wrap' }}>
           <div>
-            <label className="body-title" style={labelStyle}>Эхлэх</label>
+            <label className="body-title" style={labelStyle}>
+              Эхлэх <span style={{ color: '#9ca3af', fontWeight: 400 }}>(УБ цаг)</span>
+            </label>
             <div className="flex gap10" style={{ alignItems: 'center' }}>
               <label style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <input
@@ -233,6 +248,7 @@ export default function SaleForm({ token: serverToken }) {
                 <input
                   type="datetime-local"
                   value={startAt}
+                  min={ubNowLocalInput()}
                   onChange={(e) => setStartAt(e.target.value)}
                   style={inputStyle}
                 />
@@ -241,7 +257,9 @@ export default function SaleForm({ token: serverToken }) {
           </div>
 
           <div>
-            <label className="body-title" style={labelStyle}>Дуусах</label>
+            <label className="body-title" style={labelStyle}>
+              Дуусах <span style={{ color: '#9ca3af', fontWeight: 400 }}>(УБ цаг)</span>
+            </label>
             <div className="flex gap10" style={{ alignItems: 'center' }}>
               <label style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>
                 <input
@@ -255,6 +273,7 @@ export default function SaleForm({ token: serverToken }) {
                 <input
                   type="datetime-local"
                   value={endAt}
+                  min={startAt || ubNowLocalInput()}
                   onChange={(e) => setEndAt(e.target.value)}
                   style={inputStyle}
                 />
@@ -298,6 +317,12 @@ export default function SaleForm({ token: serverToken }) {
             <span style={{ color: '#dc2626', fontWeight: 600 }}>
               (−{Math.round(effectivePercent)}%)
             </span>
+            <div style={{ color: '#4d7c0f', fontSize: 12, marginTop: 6 }}>
+              {startNow ? 'Одооноос' : `${formatUB(ubLocalInputToDate(startAt))}-с`}
+              {' '}
+              {hasEnd ? `${formatUB(ubLocalInputToDate(endAt))} хүртэл` : 'хугацаагүй'}
+              {' · Улаанбаатарын цагаар'}
+            </div>
           </div>
         )}
 
