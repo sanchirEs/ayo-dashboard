@@ -339,7 +339,7 @@ export default function Menu() {
               </ul>
             </li>
             <li
-              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
+              className={`menu-item ${router === "/flash-sale" ? "active" : ""}`}
             >
               <Link
                 href="/flash-sale"
@@ -352,7 +352,7 @@ export default function Menu() {
               </Link>
             </li>
             <li
-              className={`menu-item ${activeAccordion === 8 ? "active" : ""}`}
+              className={`menu-item ${router === "/discounts" ? "active" : ""}`}
             >
               <Link
                 href="/discounts"
