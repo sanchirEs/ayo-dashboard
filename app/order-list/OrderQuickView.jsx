@@ -13,9 +13,7 @@ import {
   formatPrice,
   translateStatus,
 } from "@/lib/api/orders";
-import { updateOrderStatusClient, cancelOrderClient } from "@/lib/api/orders-client";
 import { resolveImageUrl } from "@/lib/api/env";
-import { useRouter } from "next/navigation";
 
 // ── Status config ──────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -132,9 +130,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [updating, setUpdating] = useState(false);
-  const [actionError, setActionError] = useState(null);
-  const router = useRouter();
 
   // Fetch when modal opens OR when token becomes available
   useEffect(() => {
@@ -144,7 +139,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     if (!open) {
       setOrder(null);
       setError(null);
-      setActionError(null);
     }
   }, [open, orderId, token]);
 
@@ -165,63 +159,55 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
     }
   }
 
-  async function handleStatusUpdate(newStatus) {
-    if (!token || updating) return;
-    setUpdating(true);
-    setActionError(null);
-    try {
-      const result = await updateOrderStatusClient(orderId, newStatus, token);
-      if (result.success) {
-        setOrder(prev => prev ? { ...prev, status: newStatus } : null);
-        router.refresh();
-      } else {
-        setActionError(result.message || "Статус шинэчлэхэд алдаа гарлаа");
-      }
-    } catch (e) {
-      setActionError(e.message || "Алдаа гарлаа");
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  async function handleCancel() {
-    if (!token || updating) return;
-    if (!window.confirm("Захиалгыг цуцлах уу?")) return;
-    setUpdating(true);
-    setActionError(null);
-    try {
-      const result = await cancelOrderClient(orderId, token);
-      if (result.success) {
-        setOrder(prev => prev ? { ...prev, status: "CANCELLED" } : null);
-        router.refresh();
-      } else {
-        setActionError(result.message || "Цуцлахад алдаа гарлаа");
-      }
-    } catch (e) {
-      setActionError(e.message || "Алдаа гарлаа");
-    } finally {
-      setUpdating(false);
-    }
-  }
-
   if (!open) return null;
 
   // ── Computed values ──────────────────────────────────────────────────────────
   const customerName = order?.user
     ? `${order.user.firstName || ""} ${order.user.lastName || ""}`.trim()
     : null;
-  const address = order?.user?.addresses?.[0] || order?.shipping || null;
+  // Prefer the order's own shipping snapshot (captured at checkout) over the
+  // customer's saved address — user.addresses[0] can be edited or deleted after
+  // the order, which would make old orders show the wrong address. Normalize the
+  // two shapes (snapshot uses district/recipientPhone; saved address uses
+  // country/mobile) into one so the render below stays simple.
+  const shippingSnap = order?.shipping;
+  const savedAddr = order?.user?.addresses?.[0];
+  const rawAddr =
+    shippingSnap && (shippingSnap.addressLine1 || shippingSnap.district)
+      ? shippingSnap
+      : savedAddr || shippingSnap || null;
+  const address = rawAddr && {
+    addressLine1: rawAddr.addressLine1,
+    addressLine2: rawAddr.addressLine2,
+    // snapshot stores the district in `district`; saved address stores it in `country`
+    district: rawAddr.district || rawAddr.country || null,
+    // only the saved address carries a separate city (e.g. "Улаанбаатар")
+    city: rawAddr.city || null,
+    mobile: rawAddr.mobile || rawAddr.recipientPhone || null,
+  };
   const subtotal = order
     ? order.orderItems?.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0) ?? parseFloat(order.total) - parseFloat(order.shippingCost || 0)
     : 0;
   const shipping = parseFloat(order?.shippingCost || 0);
   const total = parseFloat(order?.total || 0);
-  const canAct = order && order.status !== "CANCELLED";
+
+  // Who the order is for — phone-registered users have no name, so never show a bare "—"
+  const customerDisplay = customerName || order?.user?.email || "Зочин";
+  // Primary contact number, with fallback for guest / phone-only orders
+  const contactPhone = order?.user?.telephone || address?.mobile || address?.recipientPhone || null;
+  // Address often stores line1 and line2 identically — collapse the stutter
+  const addrLine1 = address?.addressLine1?.trim() || "";
+  const addrLine2 = address?.addressLine2?.trim() || "";
+  const showAddrLine2 = addrLine2 && addrLine2.toLowerCase() !== addrLine1.toLowerCase();
+  // Recipient phone on the address; hide when it's the same number already shown in the header
+  const addrPhone = address?.mobile || address?.recipientPhone || null;
+  const showAddrPhone = addrPhone && addrPhone !== contactPhone;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="p-0"
+        hideCloseButton
         style={{
           maxWidth: 720,
           width: "95vw",
@@ -235,9 +221,10 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
         }}
       >
         <DialogTitle className="sr-only">Order #{orderId}</DialogTitle>
+        <style>{`.oqv-body::-webkit-scrollbar{width:0;height:0;} .oqv-body{scrollbar-width:none;-ms-overflow-style:none;}`}</style>
 
-        {/* ── Scrollable body ─────────────────────────────────────────────── */}
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", backgroundColor: "#fff" }}>
+        {/* ── Scrollable body (scrollbar hidden, wheel/trackpad still scrolls) ── */}
+        <div className="oqv-body" style={{ flex: 1, overflowY: "auto", overflowX: "hidden", backgroundColor: "#fff" }}>
 
           {loading && !order ? (
             <LoadingSkeleton />
@@ -286,15 +273,17 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                   backgroundColor: "#f9fafb",
                   borderRadius: 10,
                 }}>
-                  <MetaItem label="Хэрэглэгч" value={customerName || order.user?.email} />
-                  <MetaItem label="Утас" value={order.user?.telephone} />
+                  <MetaItem label="Хэрэглэгч" value={customerDisplay} />
+                  <MetaItem label="Утас" value={contactPhone} />
                   <MetaItem
                     label="Төлбөр"
                     value={
                       order.payment ? (
                         <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span style={{ fontSize: 13, color: "#111827" }}>{order.payment.provider}</span>
-                          <PaymentBadge status={order.payment.status} />
+                          {order.payment.status !== "COMPLETED" && (
+                            <PaymentBadge status={order.payment.status} />
+                          )}
                         </span>
                       ) : "—"
                     }
@@ -333,16 +322,11 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                           <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {item.product?.name || "Бүтээгдэхүүн"}
                           </div>
-                          {item.variant && (
-                            <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
-                              SKU: {item.variant.sku}
-                            </div>
-                          )}
                           <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
                             {item.quantity} ширхэг × {formatPrice(item.price)}
                           </div>
                         </div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", flexShrink: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#111827", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
                           {formatPrice(lineTotal)}
                         </div>
                       </div>
@@ -358,22 +342,21 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
                     <span>Нийт бүтээгдэхүүн</span>
-                    <span>{formatPrice(subtotal)}</span>
+                    <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(subtotal)}</span>
                   </div>
                   {shipping > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
                       <span>Хүргэлтийн төлбөр</span>
-                      <span>{formatPrice(shipping)}</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(shipping)}</span>
                     </div>
                   )}
                   <div style={{
-                    display: "flex", justifyContent: "space-between",
-                    fontSize: 16, fontWeight: 700, color: "#111827",
-                    paddingTop: 10, marginTop: 4,
+                    display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                    paddingTop: 12, marginTop: 6,
                     borderTop: "1.5px solid #111827",
                   }}>
-                    <span>Нийт дүн</span>
-                    <span>{formatPrice(total)}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Нийт дүн</span>
+                    <span style={{ fontSize: 21, fontWeight: 800, color: "#111827", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
@@ -385,14 +368,15 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                   <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
                     {order.deliveryType === "PICKUP" ? "Авах дэлгүүр" : "Хүргэлтийн хаяг"}
                   </div>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", padding: "2px 10px", borderRadius: 9999,
-                    fontSize: 11, fontWeight: 600,
-                    backgroundColor: order.deliveryType === "PICKUP" ? "#fef3c7" : "#dbeafe",
-                    color: order.deliveryType === "PICKUP" ? "#92400e" : "#1e40af",
-                  }}>
-                    {order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт"}
-                  </span>
+                  {order.deliveryType === "PICKUP" && (
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", padding: "2px 10px", borderRadius: 9999,
+                      fontSize: 11, fontWeight: 600,
+                      backgroundColor: "#fef3c7", color: "#92400e",
+                    }}>
+                      Ирж авах
+                    </span>
+                  )}
                 </div>
                 {order.deliveryType === "PICKUP" ? (
                   <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
@@ -407,12 +391,15 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                   </div>
                 ) : address && (
                   <div style={{ fontSize: 13, color: "#374151", lineHeight: 1.6 }}>
-                    {address.addressLine1 && <div>{address.addressLine1}</div>}
-                    {address.addressLine2 && <div>{address.addressLine2}</div>}
-                    {address.district && <div>{address.district}</div>}
-                    {address.city && <div>{address.city}</div>}
-                    {address.mobile && (
-                      <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>📞 {address.mobile}</div>
+                    {addrLine1 && <div>{addrLine1}</div>}
+                    {showAddrLine2 && <div>{addrLine2}</div>}
+                    {address.district && <div style={{ color: "#6b7280" }}>{address.district}</div>}
+                    {address.city && <div style={{ color: "#6b7280" }}>{address.city}</div>}
+                    {showAddrPhone && (
+                      <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+                        <span style={{ color: "#9ca3af", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", fontSize: 10 }}>Хүлээн авагч</span>
+                        <span style={{ color: "#374151", fontWeight: 500 }}>{addrPhone}</span>
+                      </div>
                     )}
                   </div>
                 )}
@@ -460,115 +447,6 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
             </div>
           )}
         </div>
-
-        {/* ── Footer / Actions ─────────────────────────────────────────────── */}
-        {order && (
-          <div style={{
-            padding: "14px 24px",
-            borderTop: "1px solid #f3f4f6",
-            backgroundColor: "#fafafa",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: 10,
-            flexShrink: 0,
-          }}>
-            {/* Error message */}
-            <div style={{ flex: 1 }}>
-              {actionError && (
-                <div style={{ fontSize: 12, color: "#dc2626" }}>{actionError}</div>
-              )}
-            </div>
-
-            {/* Buttons */}
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <button
-                onClick={() => onOpenChange(false)}
-                style={{
-                  padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-                  border: "1px solid #e5e7eb", backgroundColor: "#fff", color: "#374151",
-                  cursor: "pointer",
-                }}
-              >
-                Хаах
-              </button>
-
-              {canAct && (
-                <>
-                  {(order.status === "PENDING" || order.status === "PROCESSING") && (
-                    <button
-                      onClick={handleCancel}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
-                        border: "1px solid #fee2e2", backgroundColor: "#fff", color: "#dc2626",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      Цуцлах
-                    </button>
-                  )}
-                  {order.status === "PENDING" && (
-                    <button
-                      onClick={() => handleStatusUpdate("PROCESSING")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#3b82f6", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Баталгаажуулах"}
-                    </button>
-                  )}
-                  {order.status === "PROCESSING" && (
-                    <button
-                      onClick={() => handleStatusUpdate("SHIPPED")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#8b5cf6", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Илгээх"}
-                    </button>
-                  )}
-                  {order.status === "SHIPPED" && (
-                    <button
-                      onClick={() => handleStatusUpdate("DELIVERED")}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "none", backgroundColor: "#10b981", color: "#fff",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Хүргэсэн"}
-                    </button>
-                  )}
-                  {order.status === "DELIVERED" && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm("Захиалгыг PROCESSING руу буцаах уу?")) {
-                          handleStatusUpdate("PROCESSING");
-                        }
-                      }}
-                      disabled={updating}
-                      style={{
-                        padding: "7px 18px", borderRadius: 8, fontSize: 13, fontWeight: 600,
-                        border: "1px solid #f59e0b", backgroundColor: "#fffbeb", color: "#92400e",
-                        cursor: updating ? "not-allowed" : "pointer", opacity: updating ? 0.6 : 1,
-                      }}
-                    >
-                      {updating ? "..." : "Буцаах"}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
