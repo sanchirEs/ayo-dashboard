@@ -15,6 +15,7 @@ export interface StoreSetting {
   type: 'NUMBER' | 'STRING' | 'BOOLEAN';
   label: string;
   description: string | null;
+  group: 'GENERAL' | 'DELIVERY_ZONE';
   updatedAt: string;
   updatedBy: number | null;
   updatedByUser: { id: number; email: string; firstName: string | null } | null;
