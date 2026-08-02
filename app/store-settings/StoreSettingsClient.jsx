@@ -5,6 +5,93 @@ import { useSession } from "next-auth/react";
 import { updateSettingClient } from "@/lib/api/settings";
 
 const TYPE_LABELS = { NUMBER: "Тоо (MNT)", STRING: "Текст", BOOLEAN: "Тийм/Үгүй" };
+const ACCENT = "#495D35";
+
+function SectionHeader({ icon, title, subtitle }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "14px",
+        padding: "18px 24px",
+        borderBottom: "1px solid #ecf0f4",
+        background: "#f9fafb",
+      }}
+    >
+      <div
+        style={{
+          width: "38px",
+          height: "38px",
+          borderRadius: "10px",
+          background: "rgba(73, 93, 53, 0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+        }}
+      >
+        <i className={icon} style={{ fontSize: "18px", color: ACCENT }} />
+      </div>
+      <div>
+        <h6 style={{ margin: 0, fontWeight: 600, color: "#111827", fontSize: "15px" }}>{title}</h6>
+        <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#6b7280" }}>{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+// Icon-only edit trigger, matching the .list-icon-function pattern used for
+// row actions across the dashboard (store-locations, coupons, etc.)
+function EditTrigger({ onClick, title = "Засах" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="list-icon-function"
+      style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}
+    >
+      <span className="item edit" style={{ color: ACCENT }}>
+        <i className="icon-edit-3" />
+      </span>
+    </button>
+  );
+}
+
+function SaveCancelTriggers({ onSave, onCancel, saving }) {
+  return (
+    <div className="list-icon-function" style={{ gap: "10px" }}>
+      <button
+        type="button"
+        onClick={onSave}
+        disabled={saving}
+        title="Хадгалах"
+        style={{
+          border: "none",
+          background: "transparent",
+          padding: 0,
+          cursor: saving ? "not-allowed" : "pointer",
+          opacity: saving ? 0.5 : 1,
+        }}
+      >
+        <span className="item edit" style={{ color: ACCENT }}>
+          <i className="icon-check" />
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        title="Болих"
+        style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer" }}
+      >
+        <span className="item trash">
+          <i className="icon-x" />
+        </span>
+      </button>
+    </div>
+  );
+}
 
 function SettingRow({ setting, onSaved }) {
   const { data: session } = useSession();
@@ -80,70 +167,38 @@ function SettingRow({ setting, onSaved }) {
         )}
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "14px", flexShrink: 0 }}>
         {editing ? (
-          <>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <input
-                  type={setting.type === "NUMBER" ? "number" : "text"}
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  style={{
-                    border: "1.5px solid #495D35",
-                    borderRadius: "6px",
-                    padding: "6px 10px",
-                    fontSize: "14px",
-                    width: "140px",
-                    outline: "none",
-                  }}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSave();
-                    if (e.key === "Escape") handleCancel();
-                  }}
-                />
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{
-                    background: "#495D35",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "6px",
-                    padding: "6px 14px",
-                    fontSize: "13px",
-                    cursor: saving ? "not-allowed" : "pointer",
-                    opacity: saving ? 0.7 : 1,
-                  }}
-                >
-                  {saving ? "Хадгалж байна..." : "Хадгалах"}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    padding: "6px 12px",
-                    fontSize: "13px",
-                    cursor: "pointer",
-                    color: "#6b7280",
-                  }}
-                >
-                  Болих
-                </button>
-              </div>
-              {error && (
-                <span style={{ fontSize: "12px", color: "#dc2626" }}>{error}</span>
-              )}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <input
+                type={setting.type === "NUMBER" ? "number" : "text"}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                style={{
+                  border: "1.5px solid #495D35",
+                  borderRadius: "8px",
+                  padding: "7px 12px",
+                  fontSize: "14px",
+                  width: "140px",
+                  outline: "none",
+                  background: "#f9fafb",
+                }}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Escape") handleCancel();
+                }}
+              />
+              <SaveCancelTriggers onSave={handleSave} onCancel={handleCancel} saving={saving} />
             </div>
-          </>
+            {error && <span style={{ fontSize: "12px", color: "#dc2626" }}>{error}</span>}
+          </div>
         ) : (
           <>
             <span
               style={{
-                fontSize: "16px",
+                fontSize: "17px",
                 fontWeight: 700,
                 color: "#111827",
                 minWidth: "80px",
@@ -152,23 +207,12 @@ function SettingRow({ setting, onSaved }) {
             >
               {displayValue}
             </span>
-            <button
+            <EditTrigger
               onClick={() => {
                 setDraft(setting.value);
                 setEditing(true);
               }}
-              style={{
-                background: "transparent",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                padding: "6px 12px",
-                fontSize: "13px",
-                cursor: "pointer",
-                color: "#374151",
-              }}
-            >
-              Өөрчлөх
-            </button>
+            />
           </>
         )}
       </div>
@@ -190,6 +234,11 @@ const ZONE_DISPLAY_ORDER = [
   "Налайх дүүрэг",
   "Хөдөө орон нутаг",
 ];
+
+const ZONE_COL = {
+  name: { flex: 1, minWidth: 0 },
+  price: { width: "200px", flexShrink: 0, textAlign: "right" },
+};
 
 function DeliveryZoneRow({ setting, onSaved }) {
   const { data: session } = useSession();
@@ -221,23 +270,26 @@ function DeliveryZoneRow({ setting, onSaved }) {
   };
 
   return (
-    <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-      <td style={{ padding: "10px 24px", fontSize: "14px", color: "#111827" }}>{setting.label}</td>
-      <td style={{ padding: "10px 24px", textAlign: "right" }}>
+    <li className="attribute-item flex items-center gap20">
+      <div style={ZONE_COL.name}>
+        <span className="body-title-2">{setting.label}</span>
+      </div>
+      <div style={ZONE_COL.price}>
         {editing ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-            <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", justifyContent: "flex-end" }}>
               <input
                 type="number"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 style={{
                   border: "1.5px solid #495D35",
-                  borderRadius: "6px",
-                  padding: "4px 8px",
+                  borderRadius: "8px",
+                  padding: "5px 10px",
                   fontSize: "13px",
-                  width: "110px",
+                  width: "100px",
                   outline: "none",
+                  background: "#fff",
                 }}
                 autoFocus
                 onKeyDown={(e) => {
@@ -245,65 +297,25 @@ function DeliveryZoneRow({ setting, onSaved }) {
                   if (e.key === "Escape") handleCancel();
                 }}
               />
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{
-                  background: "#495D35",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "4px 12px",
-                  fontSize: "12px",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                {saving ? "..." : "Хадгалах"}
-              </button>
-              <button
-                onClick={handleCancel}
-                style={{
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  borderRadius: "6px",
-                  padding: "4px 10px",
-                  fontSize: "12px",
-                  cursor: "pointer",
-                  color: "#6b7280",
-                }}
-              >
-                Болих
-              </button>
+              <SaveCancelTriggers onSave={handleSave} onCancel={handleCancel} saving={saving} />
             </div>
             {error && <span style={{ fontSize: "11px", color: "#dc2626" }}>{error}</span>}
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "12px" }}>
-            <span style={{ fontSize: "14px", fontWeight: 700, color: "#111827" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "16px" }}>
+            <span className="body-title-2" style={{ fontSize: "15px" }}>
               ₮{Number(setting.value).toLocaleString()}
             </span>
-            <button
+            <EditTrigger
               onClick={() => {
                 setDraft(setting.value);
                 setEditing(true);
               }}
-              style={{
-                background: "transparent",
-                border: "1px solid #d1d5db",
-                borderRadius: "6px",
-                padding: "4px 10px",
-                fontSize: "12px",
-                cursor: "pointer",
-                color: "#374151",
-              }}
-            >
-              Өөрчлөх
-            </button>
+            />
           </div>
         )}
-      </td>
-    </tr>
+      </div>
+    </li>
   );
 }
 
@@ -314,20 +326,23 @@ function DeliveryZoneTable({ settings, onSaved }) {
 
   return (
     <div className="wg-box" style={{ padding: 0, overflow: "hidden", marginTop: "20px" }}>
-      <div style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb", background: "#f9fafb" }}>
-        <h6 style={{ margin: 0, fontWeight: 600, color: "#111827" }}>Хүргэлтийн үнэ дүүргээр</h6>
-        <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#6b7280" }}>
-          Улаанбаатарын дүүрэг тус бүр болон орон нутгийн хүргэлтийн үнийг тусад нь тохируулна.
-        </p>
-      </div>
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <tbody>
+      <SectionHeader
+        icon="icon-truck"
+        title="Хүргэлтийн үнэ дүүргээр"
+        subtitle="Улаанбаатарын дүүрэг тус бүр болон орон нутгийн хүргэлтийн үнийг тусад нь тохируулна."
+      />
+      <div style={{ padding: "16px 24px 20px" }}>
+        <div className="wg-table table-all-attribute">
+          <ul className="table-title flex gap20 mb-14" style={{ alignItems: "center" }}>
+            <li style={ZONE_COL.name}><div className="body-title">Чиглэл</div></li>
+            <li style={ZONE_COL.price}><div className="body-title" style={{ textAlign: "right" }}>Хүргэлтийн үнэ</div></li>
+          </ul>
+          <ul className="flex flex-column">
             {sorted.map((s) => (
               <DeliveryZoneRow key={s.key} setting={s} onSaved={onSaved} />
             ))}
-          </tbody>
-        </table>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -355,23 +370,12 @@ export default function StoreSettingsClient({ initialSettings }) {
 
   return (
     <>
-      <div
-        className="wg-box"
-        style={{ padding: 0, overflow: "hidden" }}
-      >
-        <div
-          style={{
-            padding: "16px 24px",
-            borderBottom: "1px solid #e5e7eb",
-            background: "#f9fafb",
-          }}
-        >
-          <h6 style={{ margin: 0, fontWeight: 600, color: "#111827" }}>Дэлгүүрийн тохиргоо</h6>
-          <p style={{ margin: "2px 0 0", fontSize: "13px", color: "#6b7280" }}>
-            Энэ хуудсанд өөрчилсөн утга нь шууд хэрэглэгдэнэ.
-          </p>
-        </div>
-
+      <div className="wg-box" style={{ padding: 0, overflow: "hidden" }}>
+        <SectionHeader
+          icon="icon-settings"
+          title="Дэлгүүрийн тохиргоо"
+          subtitle="Энэ хуудсанд өөрчилсөн утга нь шууд хэрэглэгдэнэ."
+        />
         {generalSettings.map((s) => (
           <SettingRow key={s.key} setting={s} onSaved={handleSaved} />
         ))}
