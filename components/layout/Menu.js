@@ -51,6 +51,7 @@ export default function Menu() {
       "/report": 0,
       "/setting": 0,
       "/store-settings": 0,
+      "/banners": 0,
       "/store-locations": 0,
       "/store-locations/new": 0,
     };
@@ -806,6 +807,17 @@ export default function Menu() {
                 <i className="icon-settings" />
               </div>
               <div className="text">Дэлгүүрийн тохиргоо</div>
+            </Link>
+          </li>
+          <li className={`menu-item ${router === "/banners" ? "active" : ""}`}>
+            <Link
+              href="/banners"
+              className={isSubMenuItemActive("/banners") ? "active" : ""}
+            >
+              <div className="icon">
+                <i className="icon-image" />
+              </div>
+              <div className="text">Баннер</div>
             </Link>
           </li>
           <li className={`menu-item ${router.startsWith("/store-locations") ? "active" : ""}`}>
