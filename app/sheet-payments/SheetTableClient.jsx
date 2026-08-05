@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { getTabRows, refreshTab, confirmTabDelivery, confirmTabRefund } from "@/lib/api/sheetPayments";
+import { getTabRows, refreshTab, confirmTabPickup, confirmTabDelivery, confirmTabRefund } from "@/lib/api/sheetPayments";
 import PinModal from "./PinModal";
 import PhoneInlineEdit from "./PhoneInlineEdit";
 
@@ -278,7 +278,14 @@ function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpd
   );
 }
 
-function OrderTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRow }) {
+function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, onPickupConfirm, onDeliveryConfirm, onRefundConfirm }) {
+  // Storepay/Pocket pickup is a plain staff attestation, not a customer-PIN
+  // flow — so it shares the same one-click role gate as delivery/refund
+  // rather than the PinModal used by the manual bank-transfer tabs.
+  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP" || role === "BRANCH";
+  const canDeliver = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_DELIVERY";
+  const canRefund = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_REFUND";
+
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflowX: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "auto" }}>
@@ -289,24 +296,30 @@ function OrderTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRo
             <th style={TH}>Статус</th>
             <th style={TH}>Нийт дүн</th>
             <th style={{ ...TH, minWidth: "200px" }}>Бараа</th>
-            <th style={TH}>Хүргэлт</th>
+            <th style={TH}>Хүргэлтийн төрөл</th>
             <th style={{ ...TH, minWidth: "160px" }}>Хаяг</th>
-            <th style={{ ...TH, textAlign: "center" }}>Баталгаажсан</th>
+            <th style={{ ...TH, textAlign: "center" }}>Pick up</th>
+            <th style={{ ...TH, textAlign: "center" }}>Хүргэлт</th>
+            <th style={{ ...TH, textAlign: "center" }}>Буцаалт</th>
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={8} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+              <td colSpan={10} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
                 {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Захиалга байхгүй байна"}
               </td>
             </tr>
           )}
           {rows.map((row) => (
             <tr key={row.rowIndex}
-              style={{ borderBottom: "1px solid #f3f4f6", opacity: row.verified ? 0.5 : 1 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#fafafa")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              style={{
+                borderBottom: "1px solid #f3f4f6",
+                opacity: row.refunded ? 1 : (row.pickupChecked ? 0.5 : 1),
+                background: row.refunded ? "#fef2f2" : undefined,
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = row.refunded ? "#fee2e2" : "#fafafa")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = row.refunded ? "#fef2f2" : "transparent")}
             >
               <td style={{ ...TD, fontWeight: 600, color: "#374151" }}>{row.orderId || "—"}</td>
               <td style={TD}>
@@ -349,28 +362,23 @@ function OrderTable({ rows, query, loading, tabId, token, onPhoneUpdate, onPinRo
                   {row.address || "—"}
                 </span>
               </td>
-              <td style={{ ...TD, textAlign: "center" }}>
-                {row.verified ? (
-                  <span title="Баталгаажсан" style={{
-                    width: "24px", height: "24px", borderRadius: "4px",
-                    border: "2px solid #059669", background: "#d1fae5",
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "13px",
-                  }}>✓</span>
-                ) : (
-                  <button
-                    onClick={() => onPinRow(row)}
-                    title="PIN баталгаажуулах"
-                    style={{
-                      width: "24px", height: "24px", borderRadius: "4px",
-                      border: "2px solid #d1d5db", background: "white",
-                      cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#3730a3")}
-                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "#d1d5db")}
-                  />
-                )}
-              </td>
+              <ActionCell
+                checked={row.pickupChecked}
+                canAct={canPickup}
+                onClick={() => onPickupConfirm(row.rowIndex)}
+                title="Pick up баталгаажуулах"
+              />
+              <ActionCell
+                checked={row.deliveryChecked}
+                canAct={canDeliver}
+                onClick={() => onDeliveryConfirm(row.rowIndex)}
+                title="Хүргэлт баталгаажуулах"
+              />
+              <RefundActionCell
+                checked={row.refunded}
+                canAct={canRefund}
+                onConfirm={() => onRefundConfirm(row.rowIndex)}
+              />
             </tr>
           ))}
         </tbody>
@@ -437,12 +445,26 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     setData((prev) => ({
       ...prev,
       rows: prev.rows.map((r) =>
-        r.rowIndex === rowIndex ? { ...r, pickupChecked: true, verified: true } : r
+        r.rowIndex === rowIndex ? { ...r, pickupChecked: true } : r
       ),
     }));
     setPinRow(null);
     setSuccessMsg("✅ Амжилттай баталгаажлаа!");
     setTimeout(() => setSuccessMsg(""), 3500);
+  };
+
+  const handlePickupConfirm = async (rowIndex) => {
+    try {
+      await confirmTabPickup(tabId, rowIndex, token);
+      setData((prev) => ({
+        ...prev,
+        rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, pickupChecked: true } : r)),
+      }));
+      setSuccessMsg("✅ Pick up баталгаажлаа!");
+      setTimeout(() => setSuccessMsg(""), 3500);
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   const handleDeliveryConfirm = async (rowIndex) => {
@@ -522,7 +544,18 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
       )}
 
       {tabType === "order" ? (
-        <OrderTable rows={rows} query={query} loading={loading} tabId={tabId} token={token} onPhoneUpdate={handlePhoneUpdate} onPinRow={setPinRow} />
+        <OrderTable
+          rows={rows}
+          query={query}
+          loading={loading}
+          tabId={tabId}
+          token={token}
+          role={role}
+          onPhoneUpdate={handlePhoneUpdate}
+          onPickupConfirm={handlePickupConfirm}
+          onDeliveryConfirm={handleDeliveryConfirm}
+          onRefundConfirm={handleRefundConfirm}
+        />
       ) : (
         <TransactionTable
           rows={rows}

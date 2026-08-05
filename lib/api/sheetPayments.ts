@@ -141,7 +141,6 @@ export interface TabListResponse {
 export interface OrderRow {
   rowIndex: number;
   orderId: string | number;
-  email: string;
   phone: string;
   status: string;
   total: string | number;
@@ -152,7 +151,9 @@ export interface OrderRow {
   address: string;
   district: string;
   date: string;
-  verified: boolean;
+  pickupChecked: boolean;
+  deliveryChecked: boolean;
+  refunded: boolean;
 }
 
 export interface TabRowsResponse {
@@ -250,6 +251,23 @@ export async function verifyTabPin(
     const err = await res.json().catch(() => ({})) as { message?: string };
     throw new Error(err.message || 'Буруу код');
   }
+}
+
+export async function confirmTabPickup(
+  tabId: string,
+  rowIndex: number,
+  token: string
+): Promise<{ message: string }> {
+  const res = await fetchWithAuthHandling(
+    `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-pickup`,
+    { method: 'POST', headers: headers(token) },
+    'sheetPayments.confirmTabPickup'
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({})) as { message?: string };
+    throw new Error(err.message || 'Pick up баталгаажуулахад алдаа гарлаа');
+  }
+  return res.json();
 }
 
 export async function confirmTabDelivery(

@@ -8,6 +8,7 @@ import { getRoleDisplayName } from "@/lib/auth-utils";
 const ACTION_LABELS = {
   SEND_PIN:         { label: "PIN илгээсэн",       color: "#2563eb", bg: "#eff6ff" },
   VERIFY_PIN:       { label: "PIN баталгаажсан",   color: "#059669", bg: "#f0fdf4" },
+  CONFIRM_PICKUP:   { label: "Pick up баталгаажсан", color: "#059669", bg: "#f0fdf4" },
   CONFIRM_DELIVERY: { label: "Хүргэлт баталгаажсан", color: "#059669", bg: "#f0fdf4" },
   CONFIRM_REFUND:   { label: "Буцаалт баталгаажсан", color: "#dc2626", bg: "#fef2f2" },
   UPDATE_PHONE:     { label: "Утас шинэчилсэн",     color: "#d97706", bg: "#fffbeb" },
