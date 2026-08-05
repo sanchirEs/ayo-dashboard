@@ -54,6 +54,7 @@ export default function Menu() {
       "/banners": 0,
       "/store-locations": 0,
       "/store-locations/new": 0,
+      "/retailers": 0,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -842,6 +843,17 @@ export default function Menu() {
                 <i className="icon-map-pin" />
               </div>
               <div className="text">Салбарууд</div>
+            </Link>
+          </li>
+          <li className={`menu-item ${router.startsWith("/retailers") ? "active" : ""}`}>
+            <Link
+              href="/retailers"
+              className={router.startsWith("/retailers") ? "active" : ""}
+            >
+              <div className="icon">
+                <i className="icon-shopping-bag" />
+              </div>
+              <div className="text">Эх сурвалж</div>
             </Link>
           </li>
         </ul>
