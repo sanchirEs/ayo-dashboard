@@ -62,7 +62,11 @@ const COL = {
  */
 function blockers(row, retailer) {
   const out = [];
-  if (!row.nameMn?.trim()) out.push("монгол нэр");
+  // A Mongolian name is preferred, not required — publish falls back to
+  // nameEn/nameOriginal, so only a row with no name at all is blocked.
+  if (!row.nameMn?.trim() && !row.nameEn?.trim() && !row.nameOriginal?.trim()) {
+    out.push("нэр");
+  }
   if (row.priceMnt === null && row.computedPriceMnt === null) out.push("үнэ");
   const categoryId = row.retailerCategory?.categoryId ?? retailer?.defaultCategoryId ?? null;
   if (!categoryId) out.push("ангилал");
@@ -506,7 +510,7 @@ export default function QueueClient({
             </li>
             <li style={COL.image} />
             <li style={COL.name}>
-              <div className="body-title">Нэр (монгол нэр заавал)</div>
+              <div className="body-title">Нэр (монгол нэр заавал биш)</div>
             </li>
             <li style={COL.price}>
               <div className="body-title">Үнэ</div>
@@ -575,7 +579,11 @@ export default function QueueClient({
                         <div style={{ marginTop: 4, maxWidth: 460 }}>
                           <InlineEdit
                             value={row.nameMn}
-                            placeholder="Монгол нэр бичих..."
+                            placeholder={
+                              row.nameEn
+                                ? `Хоосон бол: ${row.nameEn}`
+                                : "Монгол нэр бичих..."
+                            }
                             onCommit={(v) => saveField(row, { nameMn: v })}
                           />
                         </div>
