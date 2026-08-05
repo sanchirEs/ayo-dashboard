@@ -82,11 +82,11 @@ describe("getLandingRoute", () => {
 describe("SHEET_PICKUP / SHEET_DELIVERY / SHEET_REFUND roles", () => {
   const sheetRoles = ["SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"] as const;
 
-  it("each sheet role can only reach /sheet-payments", () => {
+  it("each sheet role can reach /sheet-payments and /order-list (view-only), nothing else", () => {
     for (const role of sheetRoles) {
       expect(canAccessRoute(role, "/sheet-payments")).toBe(true);
       expect(canAccessRoute(role, "/sheet-payments/anything")).toBe(true);
-      expect(canAccessRoute(role, "/order-list")).toBe(false);
+      expect(canAccessRoute(role, "/order-list")).toBe(true);
       expect(canAccessRoute(role, "/pickup-orders")).toBe(false);
       expect(canAccessRoute(role, "/all-user")).toBe(false);
     }

@@ -80,6 +80,19 @@ export default function Menu() {
         <div className="center-item">
           <div className="center-heading">Санхүү</div>
           <ul className="menu-list">
+            <li
+              className={`menu-item ${router === "/order-list" ? "active" : ""}`}
+            >
+              <Link
+                href="/order-list"
+                className={isSubMenuItemActive("/order-list") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-file-plus" />
+                </div>
+                <div className="text">Захиалгын жагсаалт</div>
+              </Link>
+            </li>
             <li className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}>
               <Link href="/sheet-payments" className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}>
                 <div className="icon"><i className="icon-check-square" /></div>

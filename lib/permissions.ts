@@ -11,9 +11,9 @@ import { type UserRole } from "@/types/next-auth";
 
 const ROLE_ALLOWED_ROUTES: Partial<Record<UserRole, string[]>> = {
   BRANCH: ["/sheet-payments", "/order-list", "/pickup-orders", "/order-detail"],
-  SHEET_PICKUP: ["/sheet-payments"],
-  SHEET_DELIVERY: ["/sheet-payments"],
-  SHEET_REFUND: ["/sheet-payments"],
+  SHEET_PICKUP: ["/sheet-payments", "/order-list"],
+  SHEET_DELIVERY: ["/sheet-payments", "/order-list"],
+  SHEET_REFUND: ["/sheet-payments", "/order-list"],
 };
 
 // Kept as a named export for backward compatibility — lib/permissions.test.ts
