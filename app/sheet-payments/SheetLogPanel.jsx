@@ -13,6 +13,7 @@ const ACTION_LABELS = {
   CONFIRM_REFUND:   { label: "Буцаалт баталгаажсан", color: "#dc2626", bg: "#fef2f2" },
   UPDATE_PHONE:     { label: "Утас шинэчилсэн",     color: "#d97706", bg: "#fffbeb" },
   REFRESH:          { label: "Хуудас шинэчилсэн",   color: "#7c3aed", bg: "#f5f3ff" },
+  SYNC_TO_ORDER:    { label: "Захиалгатай холбосон", color: "#0891b2", bg: "#ecfeff" },
 };
 
 function ActionBadge({ action, success }) {
@@ -69,11 +70,11 @@ const TH = {
   whiteSpace: "nowrap",
 };
 
-const ACTIONS = ["", "SEND_PIN", "VERIFY_PIN", "CONFIRM_DELIVERY", "CONFIRM_REFUND", "UPDATE_PHONE", "REFRESH"];
+const ACTIONS = ["", "SEND_PIN", "VERIFY_PIN", "CONFIRM_DELIVERY", "CONFIRM_REFUND", "UPDATE_PHONE", "REFRESH", "SYNC_TO_ORDER"];
 const ACTION_FILTER_LABELS = {
   "": "Бүгд", SEND_PIN: "PIN илгээсэн", VERIFY_PIN: "Баталгаажсан",
   CONFIRM_DELIVERY: "Хүргэлт", CONFIRM_REFUND: "Буцаалт",
-  UPDATE_PHONE: "Утас", REFRESH: "Шинэчлэл",
+  UPDATE_PHONE: "Утас", REFRESH: "Шинэчлэл", SYNC_TO_ORDER: "Захиалгатай холбосон",
 };
 
 export default function SheetLogPanel({ initialToken }) {

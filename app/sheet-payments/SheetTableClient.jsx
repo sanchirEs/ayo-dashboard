@@ -399,7 +399,15 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
   const [pinRow, setPinRow] = useState(null);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [warningMsg, setWarningMsg] = useState("");
   const debounceRef = useRef(null);
+
+  const showSyncWarning = (sync) => {
+    if (sync && sync.matched === false) {
+      setWarningMsg(`⚠️ ${sync.reason || "Тохирох захиалга олдсонгүй"} — гараар шалгана уу`);
+      setTimeout(() => setWarningMsg(""), 5000);
+    }
+  };
 
   const fetchRows = useCallback(async (q, page = 1) => {
     setLoading(true);
@@ -441,7 +449,7 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     }));
   };
 
-  const handleVerified = (rowIndex) => {
+  const handleVerified = (rowIndex, sync) => {
     setData((prev) => ({
       ...prev,
       rows: prev.rows.map((r) =>
@@ -451,17 +459,19 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     setPinRow(null);
     setSuccessMsg("✅ Амжилттай баталгаажлаа!");
     setTimeout(() => setSuccessMsg(""), 3500);
+    showSyncWarning(sync);
   };
 
   const handlePickupConfirm = async (rowIndex) => {
     try {
-      await confirmTabPickup(tabId, rowIndex, token);
+      const result = await confirmTabPickup(tabId, rowIndex, token);
       setData((prev) => ({
         ...prev,
         rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, pickupChecked: true } : r)),
       }));
       setSuccessMsg("✅ Pick up баталгаажлаа!");
       setTimeout(() => setSuccessMsg(""), 3500);
+      showSyncWarning(result.sync);
     } catch (e) {
       setError(e.message);
     }
@@ -469,13 +479,14 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
 
   const handleDeliveryConfirm = async (rowIndex) => {
     try {
-      await confirmTabDelivery(tabId, rowIndex, token);
+      const result = await confirmTabDelivery(tabId, rowIndex, token);
       setData((prev) => ({
         ...prev,
         rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, deliveryChecked: true } : r)),
       }));
       setSuccessMsg("✅ Хүргэлт баталгаажлаа!");
       setTimeout(() => setSuccessMsg(""), 3500);
+      showSyncWarning(result.sync);
     } catch (e) {
       setError(e.message);
     }
@@ -483,13 +494,14 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
 
   const handleRefundConfirm = async (rowIndex) => {
     try {
-      await confirmTabRefund(tabId, rowIndex, token);
+      const result = await confirmTabRefund(tabId, rowIndex, token);
       setData((prev) => ({
         ...prev,
         rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, refunded: true } : r)),
       }));
       setSuccessMsg("✅ Буцаалт баталгаажлаа!");
       setTimeout(() => setSuccessMsg(""), 3500);
+      showSyncWarning(result.sync);
     } catch (e) {
       setError(e.message);
     }
@@ -587,12 +599,27 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
         </div>
       )}
 
+      {warningMsg && (
+        <div style={{
+          position: "fixed", top: successMsg ? "84px" : "24px", right: "24px", zIndex: 2000,
+          background: "#d97706", color: "white",
+          padding: "14px 20px", borderRadius: "8px",
+          fontSize: "14px", fontWeight: 600,
+          boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+          animation: "slideIn 0.25s ease",
+          display: "flex", alignItems: "center", gap: "8px",
+          maxWidth: "360px",
+        }}>
+          {warningMsg}
+        </div>
+      )}
+
       {pinRow && (
         <PinModal
           row={pinRow}
           token={token}
           tabId={tabId}
-          onSuccess={() => handleVerified(pinRow.rowIndex)}
+          onSuccess={(sync) => handleVerified(pinRow.rowIndex, sync)}
           onClose={() => setPinRow(null)}
           onPhoneUpdate={(phone) => handlePhoneUpdate(pinRow.rowIndex, phone)}
         />

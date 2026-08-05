@@ -88,8 +88,8 @@ export default function PinModal({ row, token, tabId, onSuccess, onClose, onPhon
     setVerifying(true);
     setError("");
     try {
-      await verifyTabPin(tabId, row.rowIndex, code, token);
-      onSuccess();
+      const result = await verifyTabPin(tabId, row.rowIndex, code, token);
+      onSuccess(result.sync);
     } catch (e) {
       const msg = e.message || "Буруу код";
       // Parse remaining attempts from backend message
