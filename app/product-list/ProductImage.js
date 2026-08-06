@@ -31,7 +31,6 @@ export default function ProductImage({ product, size = 64 }) {
     >
       <img
         src={imageSrc}
-        crossOrigin="anonymous"
         alt={product.name}
         onError={handleError}
         style={{ width: "100%", height: "100%", objectFit: "cover" }}
