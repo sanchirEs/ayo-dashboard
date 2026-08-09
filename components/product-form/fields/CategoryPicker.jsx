@@ -69,7 +69,11 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
                 disabled={disabled}
                 onClick={() => toggle(entry.id)}
                 aria-label={`${entry.name} арилгах`}
-                className="cursor-pointer rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                // p-0 border-0 leading-none: `form button` (public/css/style.css) gives
+                // every plain <button> a 14px/22px padding and a 1px border unless
+                // something more specific opposes it. This × had neither, so it was
+                // rendering as a ~50px-tall bordered pill instead of an inline glyph.
+                className="cursor-pointer rounded-sm border-0 p-0 leading-none transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               >
                 ×
               </button>

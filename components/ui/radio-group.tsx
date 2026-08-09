@@ -19,7 +19,12 @@ const RadioGroupItem = React.forwardRef<
   <RadioGroupPrimitive.Item
     ref={ref}
     className={cn(
-      "aspect-square h-4 w-4 shrink-0 cursor-pointer rounded-full border border-primary text-primary shadow",
+      // p-0: public/css/style.css's `form button { padding: 14px 22px }` (spec 0,0,2)
+      // applies to every plain <button> and wins by default whenever nothing more
+      // specific sets padding. This element sets h-4 w-4 but no padding utility, so
+      // without an explicit p-0 (a single class, spec 0,1,0, always beats a 2-element
+      // selector) the template's padding alone forces a ~46x30 box. Do not remove.
+      "aspect-square h-4 w-4 shrink-0 cursor-pointer rounded-full border border-primary p-0 text-primary shadow",
       "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className

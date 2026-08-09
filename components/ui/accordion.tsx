@@ -23,7 +23,19 @@ const AccordionTrigger = React.forwardRef<
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
-        "flex flex-1 cursor-pointer items-center justify-between py-4 text-sm font-medium transition-all hover:underline",
+        // px-0 / border-0 / rounded-none: `form button` (public/css/style.css) sets
+        // padding: 14px 22px, a 12px radius and a 1px border on every plain <button>.
+        // This trigger declared none of those itself, so all three leaked through
+        // unopposed. px-0 matches the parent Card's own horizontal padding, so the
+        // trigger content stays flush with the rest of the card.
+        //
+        // py-4 is NOT enough on its own: Bootstrap ships its own `.py-4` utility
+        // (padding: 1.5rem !important) that collides with Tailwind's same-named,
+        // non-important `.py-4` (1rem) — same class name, different framework,
+        // Bootstrap wins on !important alone regardless of specificity. `!py-4`
+        // compiles to a distinct class (`.\!py-4`) that Bootstrap has no equivalent
+        // for, so it applies Tailwind's own value with matching !important weight.
+        "flex flex-1 cursor-pointer items-center justify-between !py-4 px-0 border-0 rounded-none text-sm font-medium transition-all hover:underline",
         "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         "[&[data-state=open]>svg]:rotate-180",
         className

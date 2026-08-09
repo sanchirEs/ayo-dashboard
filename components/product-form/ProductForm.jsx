@@ -131,19 +131,46 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
           <h1 className="text-base font-semibold">
             {mode === "create" ? "Бараа нэмэх" : "Бараа засах"}
           </h1>
+          {/*
+            px-[1rem]/py-[0.5rem]/border-[1px]: Bootstrap ships its own .px-4, .py-2 and
+            .border utilities carrying !important, with the exact same class names
+            Tailwind's own px-4/py-2/border compile to but different values (Bootstrap's
+            spacer scale, and a plain grey border colour) — same name, two frameworks.
+            cva's own base classes ("h-9 px-4 py-2", plus "border border-input" for the
+            outline variant) always inject the plain px-4/py-2/border tokens, and
+            tailwind-merge does NOT treat a `!`-prefixed utility as replacing its
+            non-`!` counterpart (verified: `twMerge('px-4 !px-4')` keeps both). So an
+            earlier `!px-4` attempt here still left "px-4" in the class list, Bootstrap's
+            same-named !important rule still matched via that leftover token, and since
+            bootstrap.css is bundled after Tailwind's utilities, it won an !important-vs-
+            !important source-order tie despite our override.
+            The fix that actually works: pass the SAME value through Tailwind's arbitrary
+            syntax instead (px-[1rem] etc). tailwind-merge DOES recognize px-[1rem] as the
+            same conflict group as px-4 (verified: `twMerge('px-4 px-[1rem]')` → only
+            'px-[1rem]' survives), so the plain "px-4"/"py-2"/"border" tokens are removed
+            outright. With the token gone, Bootstrap's selector no longer matches this
+            element at all — no !important war needed, a plain utility wins on
+            specificity alone against `form button`'s non-important shorthand.
+            Цуцлах keeps its own `border-input` (Tailwind-only, no Bootstrap collision)
+            for colour, now unopposed once the colliding `border` token is gone.
+            Хадгалах's `border-0` is unrelated to this mechanism — the default variant
+            has no border utility at all, so `form button` was leaking an unwanted 1px
+            border in unopposed; border-0 (0 either way, so no collision to worry about)
+            already fixed that.
+          */}
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => form.reset()}
-              className="cursor-pointer"
+              className="cursor-pointer border-[1px] px-[1rem] py-[0.5rem]"
             >
               Цуцлах
             </Button>
             <LoadingButton
               type="submit"
               loading={submitting}
-              className="cursor-pointer bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+              className="cursor-pointer border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 px-[1rem] py-[0.5rem]"
             >
               Хадгалах
             </LoadingButton>
