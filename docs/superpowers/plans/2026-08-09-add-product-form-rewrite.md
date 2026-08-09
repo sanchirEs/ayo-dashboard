@@ -884,7 +884,8 @@ const tree = [
 
 describe('flattenCategoryTree', () => {
   it('returns one entry per node, including branches', () => {
-    expect(flattenCategoryTree(tree)).toHaveLength(7);
+    // 8 nodes: 1, 2, 3 in the first branch; 62, 70, 71, 80, 81 in the second.
+    expect(flattenCategoryTree(tree)).toHaveLength(8);
   });
 
   it('builds the full ancestor path for a leaf', () => {
@@ -914,8 +915,8 @@ describe('searchCategoryPaths', () => {
   const entries = flattenCategoryTree(tree);
 
   it('returns everything for a blank query', () => {
-    expect(searchCategoryPaths(entries, '')).toHaveLength(7);
-    expect(searchCategoryPaths(entries, '   ')).toHaveLength(7);
+    expect(searchCategoryPaths(entries, '')).toHaveLength(8);
+    expect(searchCategoryPaths(entries, '   ')).toHaveLength(8);
   });
 
   it('matches on the leaf name case-insensitively', () => {
