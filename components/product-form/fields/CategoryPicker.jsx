@@ -17,10 +17,24 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
-  const selected = useMemo(
-    () => entries.filter((e) => value.includes(e.id)),
-    [entries, value]
-  );
+  const selected = useMemo(() => {
+    // Entries that exist in the array
+    const known = entries.filter((e) => value.includes(e.id));
+    const knownIds = new Set(known.map((e) => e.id));
+
+    // IDs in value but not in entries (unresolved)
+    const unresolved = value
+      .filter((id) => !knownIds.has(id))
+      .map((id) => ({
+        id,
+        name: `#${id}`,
+        path: [],
+        pathLabel: `#${id}`,
+        isUnresolved: true,
+      }));
+
+    return [...known, ...unresolved];
+  }, [entries, value]);
 
   const results = useMemo(() => searchCategoryPaths(entries, query), [entries, query]);
 
@@ -34,24 +48,31 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
         {selected.length === 0 && (
           <span className="px-1 text-sm text-muted-foreground">Ангилал сонгогдоогүй</span>
         )}
-        {selected.map((entry) => (
-          <span
-            key={entry.id}
-            title={entry.pathLabel}
-            className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground"
-          >
-            {entry.name}
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => toggle(entry.id)}
-              aria-label={`${entry.name} арилгах`}
-              className="cursor-pointer rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        {selected.map((entry) => {
+          const isUnresolved = entry.isUnresolved === true;
+          return (
+            <span
+              key={entry.id}
+              title={isUnresolved ? "Ангилал олдсонгүй" : entry.pathLabel}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
+                isUnresolved
+                  ? "bg-destructive/10 text-destructive"
+                  : "bg-secondary text-secondary-foreground"
+              }`}
             >
-              ×
-            </button>
-          </span>
-        ))}
+              {entry.name}
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => toggle(entry.id)}
+                aria-label={`${entry.name} арилгах`}
+                className="cursor-pointer rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                ×
+              </button>
+            </span>
+          );
+        })}
         <Button
           type="button"
           variant="ghost"
