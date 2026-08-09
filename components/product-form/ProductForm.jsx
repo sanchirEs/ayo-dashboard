@@ -165,7 +165,15 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
             )}
           </div>
 
-          <div className="w-full space-y-6 lg:sticky lg:top-20 lg:w-[380px] lg:shrink-0">
+          {/*
+            No `w-full` here: `public/css/style.css` (the Remos template stylesheet,
+            loaded after globals.css) defines `.w-full { width: 100% !important; }`,
+            which beats `lg:w-[380px]` and pins this rail to the full page width. This
+            div is a flex child of the `flex flex-col` wrapper above, so it already
+            stretches to full width by default at small sizes via `align-items: stretch` —
+            `w-full` was redundant even before it became harmful. Do not add it back.
+          */}
+          <div className="space-y-6 lg:sticky lg:top-20 lg:w-[380px] lg:shrink-0">
             <MediaSection form={form} />
             <OrganizeSection
               form={form}
