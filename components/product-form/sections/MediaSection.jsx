@@ -14,6 +14,10 @@ import ImageUploadField from "@/components/upload/ImageUploadField";
  * the form. `addProductsSchema.images` only accepts `File[]` or that exact shape,
  * so storing a raw Cloudinary response here would fail validation and block
  * submission. `altText` must be non-empty — imageSchema requires min(1).
+ *
+ * onChange handles the clear-all case (empty array). File selection with autoUpload
+ * uses onUploadComplete instead, which normalizes Cloudinary objects. Both paths
+ * write the same normalized shape to the form.
  */
 export default function MediaSection({ form }) {
   const images = form.watch("images") || [];
@@ -23,6 +27,17 @@ export default function MediaSection({ form }) {
     altText: img.name || img.alt || form.getValues("name") || "Бүтээгдэхүүний зураг",
     isPrimary: offset + index === 0,
   });
+
+  const handleImageChange = (value) => {
+    // When autoUpload=true, onChange is only called by clearAllImages() with [].
+    // File selection uses onUploadComplete instead.
+    if (!value || value.length === 0) {
+      form.setValue("images", [], {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  };
 
   return (
     <Card>
@@ -35,7 +50,7 @@ export default function MediaSection({ form }) {
           value={images}
           autoUpload
           maxFiles={10}
-          onChange={() => {}}
+          onChange={handleImageChange}
           onUploadComplete={(uploaded) => {
             const current = form.getValues("images") || [];
             const added = (uploaded || []).map((img, i) => toFormImage(img, i, current.length));
