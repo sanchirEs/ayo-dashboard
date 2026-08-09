@@ -10,6 +10,14 @@ export default function VariantsSection({ form, attributes }) {
   const { fields, replace, update } = useFieldArray({ control: form.control, name: "variants" });
   const [selectedOptions, setSelectedOptions] = useState({});
 
+  // Coerce empty/null/undefined/NaN to 0, preserving numeric values.
+  // Matches original updateVariant logic: value === '' ? 0 : parseFloat(value)
+  const coerceToNumber = (value) => {
+    if (value === '' || value === null || value === undefined) return 0;
+    const num = parseFloat(value);
+    return isFinite(num) ? num : 0;
+  };
+
   const toggleOption = (attributeId, optionId) => {
     setSelectedOptions((prev) => {
       const current = prev[attributeId] || [];
@@ -130,7 +138,7 @@ export default function VariantsSection({ form, attributes }) {
                     </td>
                     <td className="px-3 py-2">
                       <Input
-                        {...form.register(`variants.${index}.price`, { valueAsNumber: true })}
+                        {...form.register(`variants.${index}.price`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
                         className="h-9 w-28"
@@ -138,7 +146,7 @@ export default function VariantsSection({ form, attributes }) {
                     </td>
                     <td className="px-3 py-2">
                       <Input
-                        {...form.register(`variants.${index}.inventory.quantity`, { valueAsNumber: true })}
+                        {...form.register(`variants.${index}.inventory.quantity`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
                         className="h-9 w-24"
