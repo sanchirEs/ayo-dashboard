@@ -17,13 +17,16 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+  // Deduplicate value once to ensure chip count matches display count
+  const uniqueValue = useMemo(() => [...new Set(value)], [value]);
+
   const selected = useMemo(() => {
     // Entries that exist in the array
-    const known = entries.filter((e) => value.includes(e.id));
+    const known = entries.filter((e) => uniqueValue.includes(e.id));
     const knownIds = new Set(known.map((e) => e.id));
 
-    // IDs in value but not in entries (unresolved)
-    const unresolved = value
+    // IDs in uniqueValue but not in entries (unresolved)
+    const unresolved = uniqueValue
       .filter((id) => !knownIds.has(id))
       .map((id) => ({
         id,
@@ -34,7 +37,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
       }));
 
     return [...known, ...unresolved];
-  }, [entries, value]);
+  }, [entries, uniqueValue]);
 
   const results = useMemo(() => searchCategoryPaths(entries, query), [entries, query]);
 
@@ -133,7 +136,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">{value.length} сонгогдсон</span>
+            <span className="text-xs text-muted-foreground">{uniqueValue.length} сонгогдсон</span>
             <Button
               type="button"
               variant="outline"
