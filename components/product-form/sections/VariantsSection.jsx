@@ -123,29 +123,40 @@ export default function VariantsSection({ form, attributes }) {
           Вариант үүсгэх
         </Button>
 
+        {/*
+          table-fixed with explicit widths on the numeric columns: the default auto
+          layout split all four evenly at 158px, which left a generated SKU of 70+
+          characters showing about twelve of them. SKU is the only column without a
+          width so it absorbs the remainder. min-w keeps the columns from crushing
+          on a narrow viewport — the wrapper scrolls instead.
+        */}
         {fields.length > 0 && (
           <div className="overflow-x-auto rounded-[8px] border-[1px] border-border">
-            <table className="w-full text-[14px]">
+            <table className="w-full min-w-[520px] table-fixed text-[14px]">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="px-ui-3 py-ui-2 text-left font-medium">SKU</th>
-                  <th className="px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
-                  <th className="px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
-                  <th className="px-ui-3 py-ui-2 text-left font-medium">Үндсэн</th>
+                  <th className="w-[112px] px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
+                  <th className="w-[100px] px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
+                  <th className="w-[76px] px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
                 </tr>
               </thead>
               <tbody>
                 {fields.map((variant, index) => (
                   <tr key={variant.id} className="border-t border-border transition-colors hover:bg-accent/40">
                     <td className="px-ui-3 py-ui-2">
-                      <Input {...form.register(`variants.${index}.sku`)} className={INPUT_SM_CLASS} />
+                      <Input
+                        {...form.register(`variants.${index}.sku`)}
+                        title={form.watch(`variants.${index}.sku`) || ""}
+                        className={INPUT_SM_CLASS}
+                      />
                     </td>
                     <td className="px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.price`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
-                        className={`${INPUT_TYPED_SM_CLASS} w-[112px]`}
+                        className={INPUT_TYPED_SM_CLASS}
                       />
                     </td>
                     <td className="px-ui-3 py-ui-2">
@@ -153,16 +164,24 @@ export default function VariantsSection({ form, attributes }) {
                         {...form.register(`variants.${index}.inventory.quantity`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
-                        className={`${INPUT_TYPED_SM_CLASS} w-[96px]`}
+                        className={INPUT_TYPED_SM_CLASS}
                       />
                     </td>
-                    <td className="px-ui-3 py-ui-2">
+                    <td className="px-ui-3 py-ui-2 text-center">
+                      {/*
+                        style.css sets `input[type="radio"] { width:22px; height:22px }`
+                        at specificity (0,1,1) — one attribute selector plus one element —
+                        which outranks a Tailwind class (0,1,0), so the plain utility was
+                        ignored and this rendered 22px against the 16px Radix radios in
+                        PricingSection. The `!` twin settles it by importance.
+                      */}
                       <input
                         type="radio"
                         name="defaultVariant"
+                        aria-label="Үндсэн вариант"
                         checked={form.watch(`variants.${index}.isDefault`) === true}
                         onChange={() => setDefault(index)}
-                        className="h-[16px] w-[16px] cursor-pointer"
+                        className="h-[16px] w-[16px] !h-[16px] !w-[16px] cursor-pointer align-middle"
                       />
                     </td>
                   </tr>
