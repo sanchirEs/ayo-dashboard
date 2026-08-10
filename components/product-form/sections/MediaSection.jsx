@@ -46,7 +46,21 @@ export default function MediaSection({ form }) {
         <CardDescription>Эхний зураг үндсэн зураг болно</CardDescription>
       </CardHeader>
       <CardContent>
+        {/*
+          The dropzone's own styled-jsx renders `.upload-description` in rem, so it
+          lands at 8.75px under this app's 62.5% root font-size. ImageUploadField is
+          shared with app/edit-product/, which is out of scope for this rewrite, so
+          the size is corrected from the outside with an arbitrary-variant class on
+          the wrapper it already forwards to its root element — no edit to the shared
+          component and no change to how the edit-product pages render.
+
+          The `!` is required: styled-jsx scopes its rule as `.jsx-<hash>.upload-description`
+          (two classes), which ties with this variant's own two-class selector and then
+          wins on source order, because styled-jsx injects into <head> at runtime after
+          Tailwind's stylesheet. Importance settles it without a specificity race.
+        */}
         <ImageUploadField
+          className="[&_.upload-description]:!text-[12px]"
           value={images}
           autoUpload
           maxFiles={10}
@@ -64,7 +78,7 @@ export default function MediaSection({ form }) {
           }}
         />
         {images.length > 0 && (
-          <p className="mt-3 text-xs text-muted-foreground">{images.length} зураг байршуулсан</p>
+          <p className="mt-ui-3 text-[12px] text-muted-foreground">{images.length} зураг байршуулсан</p>
         )}
       </CardContent>
     </Card>

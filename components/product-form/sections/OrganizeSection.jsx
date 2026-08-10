@@ -1,12 +1,39 @@
 "use client";
 
+import { useMemo } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import Field from "../fields/Field";
 import CategoryPicker from "../fields/CategoryPicker";
+import {
+  SELECT_CLASS,
+  SECTION_LABEL_CLASS,
+  GROUP_LABEL_CLASS,
+  chipClass,
+} from "../fieldStyles";
 
 export default function OrganizeSection({ form, categoryEntries, brands, tagPresets, tagGroups }) {
   const tags = form.watch("tags") || [];
   const hierarchicalTagIds = form.watch("hierarchicalTagIds") || [];
+
+  // Production returns two distinct tag presets both named "VEGAN", which rendered
+  // as two identical chips that toggled as one — toggleTag keys off the name, so
+  // the second was never anything but a duplicate control for the first.
+  //
+  // Deduplication is deliberately scoped to THIS flat list and must not be applied
+  // to `tagGroups` below. Names repeat legitimately across hierarchical groups —
+  // "Dive in Fig" exists under Биеийн тос үнэр, Үнэртэн AND Шингэн саван үнэр as
+  // three different attribute options. Those toggle by `option.id`, independently
+  // (verified in the browser: clicking one leaves the other two untouched), so
+  // collapsing them by name would delete two real, selectable options.
+  const uniqueTagPresets = useMemo(() => {
+    const seen = new Set();
+    return (tagPresets || []).filter((preset) => {
+      const name = (preset.name || "").trim();
+      if (!name || seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    });
+  }, [tagPresets]);
 
   const toggleTag = (name) => {
     form.setValue(
@@ -26,18 +53,13 @@ export default function OrganizeSection({ form, categoryEntries, brands, tagPres
     );
   };
 
-  const chipClass = (isOn) =>
-    `cursor-pointer rounded-md border px-2.5 py-1 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-      isOn ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background hover:bg-accent"
-    }`;
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Ангилал ба брэнд</CardTitle>
         <CardDescription>Бүтээгдэхүүнд олон ангилал оноож болно</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-ui-5">
         <Field control={form.control} name="categoryIds" label="Ангилал" required>
           {(field) => (
             <CategoryPicker
@@ -50,10 +72,7 @@ export default function OrganizeSection({ form, categoryEntries, brands, tagPres
 
         <Field control={form.control} name="brandId" label="Брэнд">
           {(field) => (
-            <select
-              {...field}
-              className="h-10 w-full cursor-pointer rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-            >
+            <select {...field} className={SELECT_CLASS}>
               <option value="">Брэнд сонгох</option>
               {brands.map((brand) => (
                 <option key={brand.id} value={brand.id}>{brand.name}</option>
@@ -62,38 +81,46 @@ export default function OrganizeSection({ form, categoryEntries, brands, tagPres
           )}
         </Field>
 
-        <div className="space-y-2">
-          <span className="text-sm font-medium">Шошго</span>
-          <div className="flex flex-wrap gap-1.5">
-            {tagPresets.map((preset) => (
-              <button
-                key={preset.id ?? preset.name}
-                type="button"
-                onClick={() => toggleTag(preset.name)}
-                className={chipClass(tags.includes(preset.name))}
-              >
-                {preset.name}
-              </button>
-            ))}
+        <div className="space-y-ui-2">
+          <span className={SECTION_LABEL_CLASS}>Шошго</span>
+          <div className="flex flex-wrap gap-ui-1.5">
+            {uniqueTagPresets.map((preset) => {
+              const isOn = tags.includes(preset.name);
+              return (
+                <button
+                  key={preset.id ?? preset.name}
+                  type="button"
+                  aria-pressed={isOn}
+                  onClick={() => toggleTag(preset.name)}
+                  className={chipClass(isOn)}
+                >
+                  {preset.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="space-y-3">
-          <span className="text-sm font-medium">Ангилал шошго</span>
+        <div className="space-y-ui-3">
+          <span className={SECTION_LABEL_CLASS}>Ангилал шошго</span>
           {tagGroups.map((group) => (
-            <div key={group.id} className="space-y-1.5">
-              <span className="text-xs text-muted-foreground">{group.name}</span>
-              <div className="flex flex-wrap gap-1.5">
-                {(group.options || []).map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => toggleHierarchical(option.id)}
-                    className={chipClass(hierarchicalTagIds.includes(option.id))}
-                  >
-                    {option.value ?? option.name}
-                  </button>
-                ))}
+            <div key={group.id} className="space-y-ui-1.5">
+              <span className={GROUP_LABEL_CLASS}>{group.name}</span>
+              <div className="flex flex-wrap gap-ui-1.5">
+                {(group.options || []).map((option) => {
+                  const isOn = hierarchicalTagIds.includes(option.id);
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={isOn}
+                      onClick={() => toggleHierarchical(option.id)}
+                      className={chipClass(isOn)}
+                    >
+                      {option.value ?? option.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}

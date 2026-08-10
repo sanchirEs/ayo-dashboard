@@ -5,6 +5,13 @@ import { useFieldArray } from "react-hook-form";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  INPUT_SM_CLASS,
+  INPUT_TYPED_SM_CLASS,
+  SECONDARY_BUTTON_CLASS,
+  SECTION_LABEL_CLASS,
+  chipClass,
+} from "../fieldStyles";
 
 export default function VariantsSection({ form, attributes }) {
   const { fields, replace, update } = useFieldArray({ control: form.control, name: "variants" });
@@ -87,24 +94,21 @@ export default function VariantsSection({ form, attributes }) {
         <CardTitle>Вариантууд</CardTitle>
         <CardDescription>Аттрибут сонгоод вариантуудыг үүсгэнэ үү</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-4">
+      <CardContent className="space-y-ui-5">
+        <div className="space-y-ui-4">
           {attributes.map((attribute) => (
-            <div key={attribute.id} className="space-y-2">
-              <span className="text-sm font-medium">{attribute.name}</span>
-              <div className="flex flex-wrap gap-2">
+            <div key={attribute.id} className="space-y-ui-2">
+              <span className={SECTION_LABEL_CLASS}>{attribute.name}</span>
+              <div className="flex flex-wrap gap-ui-2">
                 {attribute.options.map((option) => {
                   const isOn = (selectedOptions[attribute.id] || []).includes(option.id);
                   return (
                     <button
                       key={option.id}
                       type="button"
+                      aria-pressed={isOn}
                       onClick={() => toggleOption(attribute.id, option.id)}
-                      className={`cursor-pointer rounded-md border px-3 py-1.5 text-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-                        isOn
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-input bg-background hover:bg-accent"
-                      }`}
+                      className={chipClass(isOn)}
                     >
                       {option.value}
                     </button>
@@ -115,50 +119,50 @@ export default function VariantsSection({ form, attributes }) {
           ))}
         </div>
 
-        <Button type="button" variant="outline" onClick={generate} className="cursor-pointer">
+        <Button type="button" variant="outline" onClick={generate} className={SECONDARY_BUTTON_CLASS}>
           Вариант үүсгэх
         </Button>
 
         {fields.length > 0 && (
-          <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-[8px] border-[1px] border-border">
+            <table className="w-full text-[14px]">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="px-3 py-2 text-left font-medium">SKU</th>
-                  <th className="px-3 py-2 text-left font-medium">Үнэ</th>
-                  <th className="px-3 py-2 text-left font-medium">Тоо</th>
-                  <th className="px-3 py-2 text-left font-medium">Үндсэн</th>
+                  <th className="px-ui-3 py-ui-2 text-left font-medium">SKU</th>
+                  <th className="px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
+                  <th className="px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
+                  <th className="px-ui-3 py-ui-2 text-left font-medium">Үндсэн</th>
                 </tr>
               </thead>
               <tbody>
                 {fields.map((variant, index) => (
                   <tr key={variant.id} className="border-t border-border transition-colors hover:bg-accent/40">
-                    <td className="px-3 py-2">
-                      <Input {...form.register(`variants.${index}.sku`)} className="h-9" />
+                    <td className="px-ui-3 py-ui-2">
+                      <Input {...form.register(`variants.${index}.sku`)} className={INPUT_SM_CLASS} />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.price`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
-                        className="h-9 w-28"
+                        className={`${INPUT_TYPED_SM_CLASS} w-[112px]`}
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.inventory.quantity`, { setValueAs: coerceToNumber })}
                         type="number"
                         min="0"
-                        className="h-9 w-24"
+                        className={`${INPUT_TYPED_SM_CLASS} w-[96px]`}
                       />
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-ui-3 py-ui-2">
                       <input
                         type="radio"
                         name="defaultVariant"
                         checked={form.watch(`variants.${index}.isDefault`) === true}
                         onChange={() => setDefault(index)}
-                        className="cursor-pointer"
+                        className="h-[16px] w-[16px] cursor-pointer"
                       />
                     </td>
                   </tr>

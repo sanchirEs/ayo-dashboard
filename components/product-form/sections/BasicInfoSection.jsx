@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Field from "../fields/Field";
+import {
+  INPUT_CLASS,
+  TEXTAREA_CLASS,
+  SECONDARY_BUTTON_CLASS,
+  SECTION_LABEL_CLASS,
+} from "../fieldStyles";
 
 export default function BasicInfoSection({ form }) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "specs" });
@@ -16,9 +22,11 @@ export default function BasicInfoSection({ form }) {
         <CardTitle>Үндсэн мэдээлэл</CardTitle>
         <CardDescription>Бүтээгдэхүүний үндсэн мэдээллийг оруулна уу</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-ui-5">
         <Field control={form.control} name="name" label="Бүтээгдэхүүний нэр" required>
-          {(field) => <Input {...field} className="h-10" placeholder="Бүтээгдэхүүний нэр оруулна уу" />}
+          {(field) => (
+            <Input {...field} className={INPUT_CLASS} placeholder="Бүтээгдэхүүний нэр оруулна уу" />
+          )}
         </Field>
 
         <Field
@@ -28,7 +36,7 @@ export default function BasicInfoSection({ form }) {
           required
           hint="Дахин давтагдахгүй байх ёстой"
         >
-          {(field) => <Input {...field} className="h-10" placeholder="SKU оруулна уу" />}
+          {(field) => <Input {...field} className={INPUT_CLASS} placeholder="SKU оруулна уу" />}
         </Field>
 
         {/*
@@ -48,7 +56,7 @@ export default function BasicInfoSection({ form }) {
             <Textarea
               {...field}
               rows={5}
-              className="!h-[144px]"
+              className={`!h-[144px] ${TEXTAREA_CLASS}`}
               placeholder="Бүтээгдэхүүний дэлгэрэнгүй тайлбар..."
             />
           )}
@@ -59,7 +67,7 @@ export default function BasicInfoSection({ form }) {
             <Textarea
               {...field}
               rows={4}
-              className="!h-[112px]"
+              className={`!h-[112px] ${TEXTAREA_CLASS}`}
               placeholder="Энэ бүтээгдэхүүнийг хэрхэн ашиглах талаар..."
             />
           )}
@@ -70,24 +78,24 @@ export default function BasicInfoSection({ form }) {
             <Textarea
               {...field}
               rows={4}
-              className="!h-[112px]"
+              className={`!h-[112px] ${TEXTAREA_CLASS}`}
               placeholder="Бүтээгдэхүүний найрлага, тус бүрийн орцыг жагсаана уу..."
             />
           )}
         </Field>
 
-        <div className="space-y-2">
-          <span className="text-sm font-medium">Техникийн тодорхойлолт</span>
+        <div className="space-y-ui-2">
+          <span className={SECTION_LABEL_CLASS}>Техникийн тодорхойлолт</span>
           {fields.map((spec, index) => (
-            <div key={spec.id} className="flex items-start gap-2">
+            <div key={spec.id} className="flex items-start gap-ui-2">
               <Input
                 {...form.register(`specs.${index}.type`)}
-                className="h-10 flex-1"
+                className={`${INPUT_CLASS} flex-1`}
                 placeholder="Төрөл (ж: Багтаамж)"
               />
               <Input
                 {...form.register(`specs.${index}.value`)}
-                className="h-10 flex-1"
+                className={`${INPUT_CLASS} flex-1`}
                 placeholder="Утга (ж: 50ml)"
               />
               {/*
@@ -103,7 +111,7 @@ export default function BasicInfoSection({ form }) {
                 size="icon"
                 onClick={() => remove(index)}
                 aria-label="Устгах"
-                className="h-10 w-10 shrink-0 cursor-pointer p-0 text-muted-foreground hover:text-destructive"
+                className="h-[40px] w-[40px] shrink-0 cursor-pointer p-0 text-[18px] leading-none text-muted-foreground hover:text-destructive"
               >
                 ×
               </Button>
@@ -114,7 +122,7 @@ export default function BasicInfoSection({ form }) {
             variant="outline"
             size="sm"
             onClick={() => append({ type: "", value: "" })}
-            className="cursor-pointer"
+            className={SECONDARY_BUTTON_CLASS}
           >
             + Тодорхойлолт нэмэх
           </Button>

@@ -19,7 +19,11 @@ const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Header className="flex">
+  // Radix renders Header as an <h3>, which style.css sizes at 24px with its own
+  // line-height. The Trigger inside sets text-[14px], but the Header's line-height
+  // still governs the row's height, so it is neutralised here — same defect as the
+  // <h1> in ProductForm.jsx.
+  <AccordionPrimitive.Header className="flex text-[14px] leading-none">
     <AccordionPrimitive.Trigger
       ref={ref}
       className={cn(
@@ -29,13 +33,20 @@ const AccordionTrigger = React.forwardRef<
         // unopposed. px-0 matches the parent Card's own horizontal padding, so the
         // trigger content stays flush with the rest of the card.
         //
-        // py-4 is NOT enough on its own: Bootstrap ships its own `.py-4` utility
-        // (padding: 1.5rem !important) that collides with Tailwind's same-named,
-        // non-important `.py-4` (1rem) — same class name, different framework,
-        // Bootstrap wins on !important alone regardless of specificity. `!py-4`
-        // compiles to a distinct class (`.\!py-4`) that Bootstrap has no equivalent
-        // for, so it applies Tailwind's own value with matching !important weight.
-        "flex flex-1 cursor-pointer items-center justify-between !py-4 px-0 border-0 rounded-none text-sm font-medium transition-all hover:underline",
+        // py-ui-4, not py-4 (round 3 revision of the round-2 fix): the round-2 fix
+        // used `!py-4` because Bootstrap ships its own `.py-4` utility (padding:
+        // 1.5rem !important) that collides with Tailwind's same-named, non-important
+        // `.py-4` — same class name, different framework — and `!important` was
+        // needed to out-rank it. That worked, but 1rem is still rem-based, so it
+        // rendered at 10px instead of 16px under this app's font-size: 62.5% root.
+        // `py-ui-4` (tailwind.config.js's px-based ui-* scale) sidesteps both
+        // problems by construction: it isn't 1.5rem so the root-font-size scaling
+        // doesn't apply, and it isn't named "py-4" so Bootstrap's collision doesn't
+        // apply either — no `!important` needed, a plain utility now suffices.
+        // text-[14px] (not a named ui-* fontSize key): verified that tailwind-merge
+        // silently drops a custom-named text-* size class whenever a text-* colour
+        // class shares the same cn() call — see tailwind.config.js's comment.
+        "flex flex-1 cursor-pointer items-center justify-between py-ui-4 px-0 border-0 rounded-none text-[14px] font-medium transition-all hover:underline",
         "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
         "[&[data-state=open]>svg]:rotate-180",
         className
@@ -43,7 +54,7 @@ const AccordionTrigger = React.forwardRef<
       {...props}
     >
       {children}
-      <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+      <ChevronDown className="h-ui-4 w-ui-4 shrink-0 text-muted-foreground transition-transform duration-200" />
     </AccordionPrimitive.Trigger>
   </AccordionPrimitive.Header>
 ));
@@ -55,10 +66,10 @@ const AccordionContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Content
     ref={ref}
-    className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
+    className="overflow-hidden text-[14px] data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down"
     {...props}
   >
-    <div className={cn("pb-4 pt-0", className)}>{children}</div>
+    <div className={cn("pb-ui-4 pt-0", className)}>{children}</div>
   </AccordionPrimitive.Content>
 ));
 AccordionContent.displayName = AccordionPrimitive.Content.displayName;

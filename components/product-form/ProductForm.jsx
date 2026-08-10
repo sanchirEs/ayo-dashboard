@@ -121,36 +121,61 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
   };
 
   if (loading) {
-    return <div className="p-6 text-sm text-muted-foreground">Ачааллаж байна...</div>;
+    return <div className="p-ui-6 text-[14px] text-muted-foreground">Ачааллаж байна...</div>;
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(submit)}>
-        <div className="sticky top-0 z-10 -mx-6 mb-6 flex items-center justify-between border-b border-border bg-background px-6 py-3">
-          <h1 className="text-base font-semibold">
+        {/*
+          -mx-ui-6/mb-ui-6/px-ui-6/py-ui-3 (round 3): this app's <html> is
+          font-size: 62.5%, which shrinks rem-based -mx-6/mb-6/px-6/py-3 to 62.5% of
+          their textbook size. This bar is a plain <div>, not a form control, so
+          none of the template's form/select/button rules target it — the only
+          problem is the root font-size, and Tailwind auto-generates the negative
+          variant for any spacing-scale key (including custom ones), so -mx-ui-6
+          works the same way -mx-6 did. Verified in the live compiled CSS.
+        */}
+        <div className="sticky top-0 z-10 -mx-ui-6 mb-ui-6 flex items-center justify-between border-b border-border bg-background px-ui-6 py-ui-3">
+          {/*
+            leading-none is load-bearing, not decoration. style.css styles the bare
+            element as `h1 { font-size: 100px; line-height: 132px }`. text-[16px]
+            overrides only the font-size — line-height is a separate property, and
+            with no utility declaring it the template's absolute 132px stood
+            unopposed, so this one-line heading occupied 132px and inflated the
+            sticky bar to 156px around a 36px button row. That was the large blank
+            band at the top of the page. Any heading in this form that sets
+            text-[Npx] must set a leading-* alongside it.
+          */}
+          <h1 className="text-[16px] font-semibold leading-none">
             {mode === "create" ? "Бараа нэмэх" : "Бараа засах"}
           </h1>
           {/*
-            px-[1rem]/py-[0.5rem]/border-[1px]: Bootstrap ships its own .px-4, .py-2 and
+            border-[1px]/px-[16px]/py-[8px]: Bootstrap ships its own .px-4, .py-2 and
             .border utilities carrying !important, with the exact same class names
             Tailwind's own px-4/py-2/border compile to but different values (Bootstrap's
             spacer scale, and a plain grey border colour) — same name, two frameworks.
             cva's own base classes ("h-9 px-4 py-2", plus "border border-input" for the
-            outline variant) always inject the plain px-4/py-2/border tokens, and
-            tailwind-merge does NOT treat a `!`-prefixed utility as replacing its
-            non-`!` counterpart (verified: `twMerge('px-4 !px-4')` keeps both). So an
-            earlier `!px-4` attempt here still left "px-4" in the class list, Bootstrap's
-            same-named !important rule still matched via that leftover token, and since
-            bootstrap.css is bundled after Tailwind's utilities, it won an !important-vs-
-            !important source-order tie despite our override.
-            The fix that actually works: pass the SAME value through Tailwind's arbitrary
-            syntax instead (px-[1rem] etc). tailwind-merge DOES recognize px-[1rem] as the
-            same conflict group as px-4 (verified: `twMerge('px-4 px-[1rem]')` → only
-            'px-[1rem]' survives), so the plain "px-4"/"py-2"/"border" tokens are removed
-            outright. With the token gone, Bootstrap's selector no longer matches this
-            element at all — no !important war needed, a plain utility wins on
-            specificity alone against `form button`'s non-important shorthand.
+            outline variant) always inject the plain px-4/py-2/border/h-9/rounded-md
+            tokens, and tailwind-merge does NOT treat a `!`-prefixed OR a custom-named
+            "ui-*" utility as replacing its plain counterpart (verified:
+            `twMerge('px-4 !px-4')` and `twMerge('h-9 h-ui-9')` both keep both classes).
+            So neither an earlier `!px-4` attempt nor a `ui-*`-scale one actually wins —
+            the leftover plain token keeps matching Bootstrap's/cva's own rule, and since
+            bootstrap.css is bundled after Tailwind's utilities, an !important-vs-
+            !important tie goes the wrong way.
+            The fix that actually works, proven for BOTH the px-4/py-2/border Bootstrap
+            collision (round 2) and the h-9/rounded-md root-font-size shrink (round 3):
+            pass the intended pixel value through Tailwind's arbitrary bracket syntax
+            (px-[16px] etc). tailwind-merge DOES recognize a bracket value as the same
+            conflict group as the plain utility it's overriding (verified:
+            `twMerge('px-4 px-[1rem]')` and `twMerge('h-9 h-[36px]')` both evict the
+            plain class), so the plain "px-4"/"py-2"/"border"/"h-9"/"rounded-md" tokens
+            are removed outright — no !important war needed, since Bootstrap's/the
+            template's rules can no longer match an element that no longer carries the
+            token they key off. Font size uses the same bracket approach for the same
+            reason text-[Npx] is used everywhere else in this round (see
+            tailwind.config.js's comment on the fontSize collision with tailwind-merge).
             Цуцлах keeps its own `border-input` (Tailwind-only, no Bootstrap collision)
             for colour, now unopposed once the colliding `border` token is gone.
             Хадгалах's `border-0` is unrelated to this mechanism — the default variant
@@ -158,19 +183,19 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
             border in unopposed; border-0 (0 either way, so no collision to worry about)
             already fixed that.
           */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-ui-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => form.reset()}
-              className="cursor-pointer border-[1px] px-[1rem] py-[0.5rem]"
+              className="cursor-pointer h-[36px] rounded-[6px] border-[1px] px-[16px] py-[8px] text-[14px]"
             >
               Цуцлах
             </Button>
             <LoadingButton
               type="submit"
               loading={submitting}
-              className="cursor-pointer border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 px-[1rem] py-[0.5rem]"
+              className="cursor-pointer border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 h-[36px] rounded-[6px] px-[16px] py-[8px] text-[14px]"
             >
               Хадгалах
             </LoadingButton>
@@ -178,13 +203,13 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
         </div>
 
         {(formError || error) && (
-          <div className="mb-6 rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          <div className="mb-ui-6 rounded-ui-md border border-destructive/40 bg-destructive/10 px-ui-4 py-ui-3 text-[14px] text-destructive">
             {formError || error}
           </div>
         )}
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          <div className="flex-1 space-y-6">
+        <div className="flex flex-col gap-ui-6 lg:flex-row lg:items-start">
+          <div className="flex-1 space-y-ui-6">
             <BasicInfoSection form={form} />
             <PricingSection form={form} />
             {productMode === "variants" && (
@@ -200,7 +225,7 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
             stretches to full width by default at small sizes via `align-items: stretch` —
             `w-full` was redundant even before it became harmful. Do not add it back.
           */}
-          <div className="space-y-6 lg:sticky lg:top-20 lg:w-[380px] lg:shrink-0">
+          <div className="space-y-ui-6 lg:sticky lg:top-ui-20 lg:w-[380px] lg:shrink-0">
             <MediaSection form={form} />
             <OrganizeSection
               form={form}

@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { searchCategoryPaths } from "@/lib/products/categoryPaths";
+import { INPUT_CLASS, SECONDARY_BUTTON_CLASS } from "../fieldStyles";
 
 /**
  * Multi-select category picker.
@@ -46,10 +47,10 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-input bg-background p-2">
+    <div className="space-y-ui-2">
+      <div className="flex min-h-[40px] flex-wrap items-center gap-ui-1.5 rounded-[8px] border-[1px] border-input bg-background p-ui-2">
         {selected.length === 0 && (
-          <span className="px-1 text-sm text-muted-foreground">Ангилал сонгогдоогүй</span>
+          <span className="px-ui-1 text-[14px] text-muted-foreground">Ангилал сонгогдоогүй</span>
         )}
         {selected.map((entry) => {
           const isUnresolved = entry.isUnresolved === true;
@@ -57,7 +58,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
             <span
               key={entry.id}
               title={isUnresolved ? "Ангилал олдсонгүй" : entry.pathLabel}
-              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs ${
+              className={`inline-flex items-center gap-ui-1 rounded-[6px] px-ui-2 py-ui-1 text-[12px] leading-[16px] ${
                 isUnresolved
                   ? "bg-destructive/10 text-destructive"
                   : "bg-secondary text-secondary-foreground"
@@ -86,7 +87,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
           size="sm"
           disabled={disabled}
           onClick={() => setOpen(true)}
-          className="ml-auto cursor-pointer disabled:cursor-not-allowed"
+          className={`ml-auto disabled:cursor-not-allowed ${SECONDARY_BUTTON_CLASS}`}
         >
           + Сонгох
         </Button>
@@ -95,7 +96,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-base font-semibold">Ангилал сонгох</DialogTitle>
+            <DialogTitle className="text-[16px] font-semibold leading-none">Ангилал сонгох</DialogTitle>
           </DialogHeader>
 
           <Input
@@ -103,12 +104,12 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Ангилал хайх..."
-            className="h-10"
+            className={INPUT_CLASS}
           />
 
-          <div className="max-h-96 overflow-y-auto rounded-md border border-border">
+          <div className="max-h-[384px] overflow-y-auto rounded-[8px] border-[1px] border-border">
             {results.length === 0 ? (
-              <p className="p-4 text-sm text-muted-foreground">Илэрц олдсонгүй</p>
+              <p className="p-ui-4 text-[14px] text-muted-foreground">Илэрц олдсонгүй</p>
             ) : (
               results.map((entry) => {
                 const isSelected = value.includes(entry.id);
@@ -117,12 +118,13 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
                     key={entry.id}
                     type="button"
                     onClick={() => toggle(entry.id)}
-                    className={`flex w-full cursor-pointer items-center gap-2 border-b border-border px-3 py-2 text-left text-sm transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+                    aria-pressed={isSelected}
+                    className={`flex w-full cursor-pointer items-center gap-ui-2 rounded-none border-0 border-b border-border px-ui-3 py-ui-2 text-left text-[14px] transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                       isSelected ? "bg-accent/50" : ""
                     }`}
                   >
                     <span
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border ${
+                      className={`flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-[4px] border-[1px] text-[11px] leading-none ${
                         isSelected ? "border-primary bg-primary text-primary-foreground" : "border-input"
                       }`}
                     >
@@ -139,13 +141,13 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
             )}
           </div>
 
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">{uniqueValue.length} сонгогдсон</span>
+          <div className="flex items-center justify-between pt-ui-2">
+            <span className="text-[12px] text-muted-foreground">{uniqueValue.length} сонгогдсон</span>
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="cursor-pointer"
+              className={SECONDARY_BUTTON_CLASS}
             >
               Болсон
             </Button>
