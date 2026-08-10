@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { AuthenticationError } from "@/lib/api/error-handler";
 import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
+import SetPasswordAction from "./SetPasswordAction";
 export default async function DataTable({ searchParams }) {
   const TOKEN = await getToken();
   console.log("spa", searchParams);
@@ -84,6 +85,11 @@ export default async function DataTable({ searchParams }) {
                 <div className="body-text">{user.telephone}</div>
                 <div className="body-text">{user.createdAt}</div>
                 <div className="list-icon-function">
+                  <SetPasswordAction
+                    userId={user.id}
+                    username={user.username}
+                    telephone={user.telephone}
+                  />
                   <div className="item edit">
                     <i className="icon-edit-3" />
                   </div>
