@@ -5,6 +5,7 @@ import { useFieldArray } from "react-hook-form";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { getBackendUrl } from "@/lib/api/env";
 import {
   INPUT_SM_CLASS,
   INPUT_TYPED_SM_CLASS,
@@ -13,9 +14,76 @@ import {
   chipClass,
 } from "../fieldStyles";
 
-export default function VariantsSection({ form, attributes }) {
+export default function VariantsSection({ form, attributes, token }) {
   const { fields, replace, update } = useFieldArray({ control: form.control, name: "variants" });
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [uploadingIndex, setUploadingIndex] = useState({});
+  const [uploadError, setUploadError] = useState("");
+
+  /**
+   * Per-variant image upload, ported from the old AddProductComponent.
+   *
+   * buildProductPayload already prefers a variant's own images and falls back to
+   * the shared product images only when it has none, but the rewrite shipped
+   * without any UI to attach them — so every variant silently took the fallback.
+   *
+   * The wire format is preserved exactly: multipart `images`, `folder=products`,
+   * `type=variant_images`, and `isPrimary: false` on every uploaded image. The
+   * payload builder's filter only keeps images whose imageUrl is http(s), so the
+   * hosted URL returned by the backend is what must be stored here.
+   */
+  const uploadVariantImages = async (index, event) => {
+    const files = Array.from(event.target.files || []);
+    event.target.value = ""; // allow re-selecting the same file later
+    if (files.length === 0) return;
+
+    if (!token) {
+      setUploadError("Зураг байршуулахын тулд нэвтэрсэн байх шаардлагатай");
+      return;
+    }
+
+    setUploadError("");
+    setUploadingIndex((prev) => ({ ...prev, [index]: true }));
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("images", file));
+      formData.append("folder", "products");
+      formData.append("type", "variant_images");
+
+      const response = await fetch(`${getBackendUrl()}/api/v1/upload/images`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Зураг байршуулахад алдаа гарлаа");
+      }
+
+      const uploaded = (result.data?.images || []).map((img) => ({
+        imageUrl: img.url,
+        altText: img.original_filename || "",
+        isPrimary: false,
+      }));
+
+      const current = form.getValues(`variants.${index}.images`) || [];
+      form.setValue(`variants.${index}.images`, [...current, ...uploaded], { shouldDirty: true });
+    } catch (e) {
+      setUploadError(e.message || "Зураг байршуулахад алдаа гарлаа");
+    } finally {
+      setUploadingIndex((prev) => ({ ...prev, [index]: false }));
+    }
+  };
+
+  const removeVariantImage = (index, imageIndex) => {
+    const current = form.getValues(`variants.${index}.images`) || [];
+    form.setValue(
+      `variants.${index}.images`,
+      current.filter((_, i) => i !== imageIndex),
+      { shouldDirty: true }
+    );
+  };
 
   // Coerce empty/null/undefined/NaN to 0, preserving numeric values.
   // Matches original updateVariant logic: value === '' ? 0 : parseFloat(value)
@@ -123,6 +191,12 @@ export default function VariantsSection({ form, attributes }) {
           Вариант үүсгэх
         </Button>
 
+        {uploadError && (
+          <p className="text-[12px] text-destructive" role="alert">
+            {uploadError}
+          </p>
+        )}
+
         {/*
           table-fixed with explicit widths on the numeric columns: the default auto
           layout split all four evenly at 158px, which left a generated SKU of 70+
@@ -143,12 +217,13 @@ export default function VariantsSection({ form, attributes }) {
               light horizontal rule between rows is wanted — the wrapper above draws
               the outer frame, so the last row deliberately has no bottom border.
             */}
-            <table className="m-0 w-full min-w-[520px] table-fixed border-collapse border-0 text-[14px]">
+            <table className="m-0 w-full min-w-[640px] table-fixed border-collapse border-0 text-[14px]">
               <thead>
                 <tr>
                   <th className="border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">SKU</th>
-                  <th className="w-[112px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
-                  <th className="w-[100px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
+                  <th className="w-[132px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Зураг</th>
+                  <th className="w-[100px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
+                  <th className="w-[88px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
                   <th className="w-[76px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
                 </tr>
               </thead>
@@ -161,6 +236,39 @@ export default function VariantsSection({ form, attributes }) {
                         title={form.watch(`variants.${index}.sku`) || ""}
                         className={INPUT_SM_CLASS}
                       />
+                    </td>
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
+                      <div className="flex flex-wrap items-center gap-ui-1">
+                        {(form.watch(`variants.${index}.images`) || []).map((img, imgIndex) => (
+                          <span key={img.imageUrl ?? imgIndex} className="relative inline-flex">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img.imageUrl}
+                              alt={img.altText || `Вариант ${index + 1} зураг ${imgIndex + 1}`}
+                              className="h-[32px] w-[32px] rounded-[4px] border-[1px] border-border object-cover"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeVariantImage(index, imgIndex)}
+                              aria-label="Зураг хасах"
+                              className="absolute -right-[5px] -top-[5px] flex h-[15px] w-[15px] items-center justify-center rounded-full border-0 bg-destructive p-0 text-[11px] leading-none text-destructive-foreground"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                        <label className="inline-flex h-[32px] w-[32px] cursor-pointer items-center justify-center rounded-[4px] border-[1px] border-dashed border-input text-[16px] leading-none text-muted-foreground transition-colors hover:bg-accent">
+                          {uploadingIndex[index] ? "…" : "+"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            disabled={!!uploadingIndex[index]}
+                            onChange={(e) => uploadVariantImages(index, e)}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
                     </td>
                     <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
                       <Input

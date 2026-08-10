@@ -213,7 +213,7 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
             <BasicInfoSection form={form} />
             <PricingSection form={form} />
             {productMode === "variants" && (
-              <VariantsSection form={form} attributes={attributes} />
+              <VariantsSection form={form} attributes={attributes} token={token} />
             )}
           </div>
 
