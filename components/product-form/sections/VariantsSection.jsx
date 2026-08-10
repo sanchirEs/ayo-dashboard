@@ -132,26 +132,37 @@ export default function VariantsSection({ form, attributes }) {
         */}
         {fields.length > 0 && (
           <div className="overflow-x-auto rounded-[8px] border-[1px] border-border">
-            <table className="w-full min-w-[520px] table-fixed text-[14px]">
-              <thead className="bg-muted/50">
+            {/*
+              border-collapse / m-0 / the explicit border-* on every th and td:
+              style.css styles the bare elements — `td { border: 1px solid #343444 }`,
+              `th { border-width: 0 1px 1px 0 }`, `table { border-collapse: separate;
+              border-width: 1px 0 0 1px; margin: 0 0 30px }`. Those are element
+              selectors at (0,0,1), so any class outranks them; the black grid and the
+              stray 30px margin appeared only because nothing here declared a border
+              or a margin at all, leaving the template's values unopposed. Only a
+              light horizontal rule between rows is wanted — the wrapper above draws
+              the outer frame, so the last row deliberately has no bottom border.
+            */}
+            <table className="m-0 w-full min-w-[520px] table-fixed border-collapse border-0 text-[14px]">
+              <thead>
                 <tr>
-                  <th className="px-ui-3 py-ui-2 text-left font-medium">SKU</th>
-                  <th className="w-[112px] px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
-                  <th className="w-[100px] px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
-                  <th className="w-[76px] px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
+                  <th className="border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">SKU</th>
+                  <th className="w-[112px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
+                  <th className="w-[100px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
+                  <th className="w-[76px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
                 </tr>
               </thead>
               <tbody>
                 {fields.map((variant, index) => (
-                  <tr key={variant.id} className="border-t border-border transition-colors hover:bg-accent/40">
-                    <td className="px-ui-3 py-ui-2">
+                  <tr key={variant.id} className="transition-colors hover:bg-accent/40">
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.sku`)}
                         title={form.watch(`variants.${index}.sku`) || ""}
                         className={INPUT_SM_CLASS}
                       />
                     </td>
-                    <td className="px-ui-3 py-ui-2">
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.price`, { setValueAs: coerceToNumber })}
                         type="number"
@@ -159,7 +170,7 @@ export default function VariantsSection({ form, attributes }) {
                         className={INPUT_TYPED_SM_CLASS}
                       />
                     </td>
-                    <td className="px-ui-3 py-ui-2">
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
                       <Input
                         {...form.register(`variants.${index}.inventory.quantity`, { setValueAs: coerceToNumber })}
                         type="number"
@@ -167,7 +178,7 @@ export default function VariantsSection({ form, attributes }) {
                         className={INPUT_TYPED_SM_CLASS}
                       />
                     </td>
-                    <td className="px-ui-3 py-ui-2 text-center">
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2 text-center">
                       {/*
                         style.css sets `input[type="radio"] { width:22px; height:22px }`
                         at specificity (0,1,1) — one attribute selector plus one element —
