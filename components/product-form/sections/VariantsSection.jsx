@@ -16,7 +16,24 @@ import {
 
 export default function VariantsSection({ form, attributes, token }) {
   const { fields, replace, update } = useFieldArray({ control: form.control, name: "variants" });
-  const [selectedOptions, setSelectedOptions] = useState({});
+  // Seeded from whatever variants the form was initialised with, so edit mode opens
+  // with the product's existing attribute options already selected. Without this the
+  // chips render empty on a product that plainly has variants, and pressing
+  // "Вариант үүсгэх" would replace the real variants with nothing.
+  const [selectedOptions, setSelectedOptions] = useState(() => {
+    const loaded = form.getValues("variants") || [];
+    const map = {};
+    loaded.forEach((variant) => {
+      (variant.attributes || []).forEach((attr) => {
+        const attributeId = attr.attributeId ?? attr.attribute?.id;
+        const optionId = attr.optionId ?? attr.option?.id;
+        if (!attributeId || !optionId) return;
+        if (!map[attributeId]) map[attributeId] = [];
+        if (!map[attributeId].includes(optionId)) map[attributeId].push(optionId);
+      });
+    });
+    return map;
+  });
   const [uploadingIndex, setUploadingIndex] = useState({});
   const [uploadError, setUploadError] = useState("");
 
@@ -221,10 +238,11 @@ export default function VariantsSection({ form, attributes, token }) {
               <thead>
                 <tr>
                   <th className="border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">SKU</th>
-                  <th className="w-[132px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Зураг</th>
-                  <th className="w-[100px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
-                  <th className="w-[88px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
-                  <th className="w-[76px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
+                  <th className="w-[124px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Зураг</th>
+                  {/* 124px, not 100: MNT prices reach seven digits and were clipping. */}
+                  <th className="w-[124px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
+                  <th className="w-[92px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Тоо</th>
+                  <th className="w-[72px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-center font-medium">Үндсэн</th>
                 </tr>
               </thead>
               <tbody>

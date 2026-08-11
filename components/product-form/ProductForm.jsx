@@ -9,6 +9,7 @@ import LoadingButton from "@/components/customui/LoadingButton";
 import { addProductsSchema } from "@/schemas/productSchema";
 import GetToken from "@/lib/GetTokenClient";
 import { buildProductPayload } from "@/lib/products/buildProductPayload";
+import { normalizeVariantAttributes } from "@/lib/products/variantNormalization";
 import { PRODUCT_FORM_DEFAULTS } from "@/lib/products/productFormDefaults";
 import useProductFormData from "./useProductFormData";
 import BasicInfoSection from "./sections/BasicInfoSection";
@@ -27,7 +28,14 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
-  const [advancedEnabled, setAdvancedEnabled] = useState(false);
+
+  // Edit mode must open the Advanced panel already switched on when the product
+  // carries any of those values, otherwise buildProductPayload drops them: it only
+  // emits flashSale/discountId/promotionId when advancedEnabled is true, so saving
+  // an untouched product would silently clear fields it never showed.
+  const [advancedEnabled, setAdvancedEnabled] = useState(() =>
+    Boolean(initialValues?.flashSale || initialValues?.discountId || initialValues?.promotionId)
+  );
 
   const form = useForm({
     resolver: zodResolver(addProductsSchema),
@@ -84,7 +92,17 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
     try {
       const payload = buildProductPayload(values, {
         mode: productMode,
-        variants,
+        // Second line of defence for edit mode. Variants loaded from the API carry
+        // nested attribute join rows; buildProductPayload passes `attributes`
+        // straight through (it is a verbatim port of the old builder), and the
+        // backend answers anything that isn't a { attributeId, optionId } pair with
+        // a 400. The edit page already flattens on load — this guarantees it even if
+        // a future caller forgets. Applied after the one-default-variant check above
+        // so that validation still sees the real data.
+        variants: variants.map((v) => ({
+          ...v,
+          attributes: normalizeVariantAttributes(v.attributes),
+        })),
         specs,
         categoryIds: form.getValues("categoryIds") || [],
         tags: form.getValues("tags") || [],
