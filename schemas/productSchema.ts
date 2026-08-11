@@ -7,6 +7,24 @@ const {
   requiredNumber,
 } = require("./constantValidation");
 
+/**
+ * `File` is a browser global. `z.instanceof(File)` dereferences it while the
+ * schema object is being constructed — i.e. at module load — so merely importing
+ * this file from anything Next renders on the server threw
+ * `ReferenceError: File is not defined` and failed the production build at the
+ * prerender step. The old product pages worked around it by loading their whole
+ * form through `dynamic(..., { ssr: false })`; this removes the landmine instead,
+ * so any server-rendered module can import these schemas safely.
+ *
+ * Behaviour is unchanged in the browser, where `File` exists and the check is the
+ * same `instanceof`. On the server the branch simply never matches, which is
+ * correct: files are only ever chosen client-side.
+ */
+const fileInstance = z.custom<File>(
+  (value) => typeof File !== "undefined" && value instanceof File,
+  { message: "Зураг сонгоно уу" }
+);
+
 // Image schema for the new backend structure
 const imageSchema = z.object({
   imageUrl: z.string().url({ message: "Зөв URL оруулна уу" }),
@@ -78,7 +96,7 @@ export const addProductsSchema = z.object({
   
   // File uploads for images - can be File objects or processed image data
   images: z.union([
-    z.array(z.instanceof(File)),
+    z.array(fileInstance),
     z.array(imageSchema)
   ]).optional(),
   
@@ -180,7 +198,7 @@ export const editProductsSchema = z.object({
   ], { required_error: "Заавал оруулна уу" }),
   tagsCsv: optionalString,
   images: z.union([
-    z.array(z.instanceof(File)),
+    z.array(fileInstance),
     z.array(imageSchema)
   ]).optional(),
   
