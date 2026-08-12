@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import ImageGallery from "../fields/ImageGallery";
 import ImageUploadField from "@/components/upload/ImageUploadField";
 
 /**
@@ -28,15 +30,16 @@ export default function MediaSection({ form }) {
     isPrimary: offset + index === 0,
   });
 
-  const handleImageChange = (value) => {
-    // When autoUpload=true, onChange is only called by clearAllImages() with [].
-    // File selection uses onUploadComplete instead.
-    if (!value || value.length === 0) {
-      form.setValue("images", [], {
+  const handleRemoveImage = (index) => {
+    const current = form.getValues("images") || [];
+    form.setValue(
+      "images",
+      current.filter((_, i) => i !== index),
+      {
         shouldDirty: true,
         shouldValidate: true,
-      });
-    }
+      }
+    );
   };
 
   return (
@@ -45,7 +48,9 @@ export default function MediaSection({ form }) {
         <CardTitle>Зураг</CardTitle>
         <CardDescription>Эхний зураг үндсэн зураг болно</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-ui-4">
+        {images.length > 0 && <ImageGallery images={images} onRemove={handleRemoveImage} />}
+
         {/*
           The dropzone's own styled-jsx renders `.upload-description` in rem, so it
           lands at 8.75px under this app's 62.5% root font-size. ImageUploadField is
@@ -64,7 +69,14 @@ export default function MediaSection({ form }) {
           value={images}
           autoUpload
           maxFiles={10}
-          onChange={handleImageChange}
+          onChange={(value) => {
+            if (!value || value.length === 0) {
+              form.setValue("images", [], {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+            }
+          }}
           onUploadComplete={(uploaded) => {
             const current = form.getValues("images") || [];
             const added = (uploaded || []).map((img, i) => toFormImage(img, i, current.length));
@@ -77,9 +89,6 @@ export default function MediaSection({ form }) {
             form.setError("images", { type: "manual", message: err?.message || "Зураг байршуулахад алдаа гарлаа" });
           }}
         />
-        {images.length > 0 && (
-          <p className="mt-ui-3 text-[12px] text-muted-foreground">{images.length} зураг байршуулсан</p>
-        )}
       </CardContent>
     </Card>
   );

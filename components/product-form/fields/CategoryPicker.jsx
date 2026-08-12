@@ -120,7 +120,7 @@ export default function CategoryPicker({ entries, value = [], onChange, disabled
                     onClick={() => toggle(entry.id)}
                     aria-pressed={isSelected}
                     className={`flex w-full cursor-pointer items-center gap-ui-2 rounded-none border-0 border-b border-border px-ui-3 py-ui-2 text-left text-[14px] transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
-                      isSelected ? "bg-accent/50" : ""
+                      isSelected ? "bg-accent/50 text-accent-foreground" : ""
                     }`}
                   >
                     <span
