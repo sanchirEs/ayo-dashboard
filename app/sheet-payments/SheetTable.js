@@ -31,6 +31,7 @@ export default async function SheetTable({ searchParams }) {
           initialToken={token}
           tabId={activeTab.tabId}
           tabType={activeTab.type}
+          initialQuery={q}
         />
         <SheetLogPanel initialToken={token} />
       </>

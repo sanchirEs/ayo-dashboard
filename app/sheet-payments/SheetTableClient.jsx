@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getTabRows, refreshTab, confirmTabPickup, confirmTabDelivery, confirmTabRefund } from "@/lib/api/sheetPayments";
 import PinModal from "./PinModal";
@@ -177,9 +178,10 @@ function RefundActionCell({ checked, canAct, onConfirm }) {
 }
 
 function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, onPinRow, onDeliveryConfirm, onRefundConfirm }) {
-  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP" || role === "BRANCH";
-  const canDeliver = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_DELIVERY";
-  const canRefund = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_REFUND";
+  // 2026-08-11: staff roles revoked — confirming is admin-only.
+  const canPickup = role === "ADMIN" || role === "SUPERADMIN";
+  const canDeliver = role === "ADMIN" || role === "SUPERADMIN";
+  const canRefund = role === "ADMIN" || role === "SUPERADMIN";
 
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
@@ -282,9 +284,10 @@ function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, o
   // Storepay/Pocket pickup is a plain staff attestation, not a customer-PIN
   // flow — so it shares the same one-click role gate as delivery/refund
   // rather than the PinModal used by the manual bank-transfer tabs.
-  const canPickup = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_PICKUP" || role === "BRANCH";
-  const canDeliver = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_DELIVERY";
-  const canRefund = role === "ADMIN" || role === "SUPERADMIN" || role === "SHEET_REFUND";
+  // 2026-08-11: staff roles revoked — confirming is admin-only.
+  const canPickup = role === "ADMIN" || role === "SUPERADMIN";
+  const canDeliver = role === "ADMIN" || role === "SUPERADMIN";
+  const canRefund = role === "ADMIN" || role === "SUPERADMIN";
 
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflowX: "auto" }}>
@@ -387,13 +390,14 @@ function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, o
   );
 }
 
-export default function SheetTableClient({ initialData, initialToken, tabId, tabType }) {
+export default function SheetTableClient({ initialData, initialToken, tabId, tabType, initialQuery = "" }) {
+  const router = useRouter();
   const { data: session } = useSession();
   const token = session?.user?.accessToken || initialToken;
   const role = session?.user?.role;
 
   const [data, setData] = useState(initialData);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [pinRow, setPinRow] = useState(null);
@@ -426,7 +430,17 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     const q = e.target.value;
     setQuery(q);
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchRows(q, 1), 300);
+    debounceRef.current = setTimeout(() => {
+      fetchRows(q, 1);
+      const params = new URLSearchParams(window.location.search);
+      if (q) {
+        params.set("q", q);
+      } else {
+        params.delete("q");
+      }
+      params.delete("page");
+      router.push(`/sheet-payments?${params.toString()}`);
+    }, 300);
   };
 
   const handleRefresh = async () => {

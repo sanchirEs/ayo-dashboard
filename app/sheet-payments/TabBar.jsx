@@ -10,7 +10,6 @@ export default function TabBar({ tabs, activeTabId }) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", tabId);
     params.delete("page");
-    params.delete("q");
     router.push(`/sheet-payments?${params.toString()}`);
   }
 
