@@ -404,7 +404,6 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [warningMsg, setWarningMsg] = useState("");
-  const debounceRef = useRef(null);
 
   const showSyncWarning = (sync) => {
     if (sync && sync.matched === false) {
@@ -429,18 +428,25 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
   const handleSearch = (e) => {
     const q = e.target.value;
     setQuery(q);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      fetchRows(q, 1);
-      const params = new URLSearchParams(window.location.search);
-      if (q) {
-        params.set("q", q);
-      } else {
-        params.delete("q");
-      }
-      params.delete("page");
-      router.push(`/sheet-payments?${params.toString()}`);
-    }, 300);
+  };
+
+  const handleSearchSubmit = () => {
+    const q = query;
+    fetchRows(q, 1);
+    const params = new URLSearchParams(window.location.search);
+    if (q) {
+      params.set("q", q);
+    } else {
+      params.delete("q");
+    }
+    params.delete("page");
+    router.push(`/sheet-payments?${params.toString()}`);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleSearchSubmit();
+    }
   };
 
   const handleRefresh = async () => {
@@ -536,6 +542,7 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
             placeholder={searchPlaceholder}
             value={query}
             onChange={handleSearch}
+            onKeyDown={handleSearchKeyDown}
             style={{
               width: "100%", padding: "8px 36px 8px 12px",
               borderRadius: "6px", border: "1px solid #e5e7eb",
@@ -544,9 +551,29 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
             onFocus={(e) => (e.target.style.borderColor = "#3730a3")}
             onBlur={(e) => (e.target.style.borderColor = "#e5e7eb")}
           />
-          <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }}>
+          <button
+            type="button"
+            onClick={handleSearchSubmit}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              color: "#9ca3af",
+              cursor: "pointer",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#6b7280")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#9ca3af")}
+            title="Search"
+          >
             <i className="icon-search" />
-          </span>
+          </button>
         </div>
 
         <span style={{ fontSize: "13px", color: "#6b7280", whiteSpace: "nowrap" }}>
