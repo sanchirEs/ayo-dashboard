@@ -2,7 +2,11 @@
 module.exports = {
   reactStrictMode: true,
   productionBrowserSourceMaps: false,
-  images: { remotePatterns: [{ hostname: "lh3.googleusercontent.com" }, { hostname: "res.cloudinary.com" }] },
+  images: {
+    deviceSizes: [640, 1024, 1920],
+    imageSizes: [128, 256, 512],
+    remotePatterns: [{ hostname: "lh3.googleusercontent.com" }, { hostname: "res.cloudinary.com" }]
+  },
   env: {
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
