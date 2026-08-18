@@ -3360,6 +3360,7 @@ form input[type="color"] {
   overflow: hidden;
   margin-bottom: 0;
   cursor: text;
+  caret-color: var(--Heading);
 }
 
 form textarea::placeholder,
