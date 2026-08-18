@@ -3357,7 +3357,7 @@ form input[type="color"] {
   border: 1px solid var(--Input);
   border-radius: 12px;
   color: var(--Heading);
-  overflow: hidden;
+  overflow: auto;
   margin-bottom: 0;
   cursor: text;
   caret-color: var(--Heading);
