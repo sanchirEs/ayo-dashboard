@@ -3361,6 +3361,9 @@ form input[type="color"] {
   margin-bottom: 0;
   cursor: text;
   caret-color: var(--Heading);
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
 }
 
 form textarea::placeholder,
