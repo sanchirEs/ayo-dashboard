@@ -350,7 +350,16 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                           <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {item.product?.name || "Бүтээгдэхүүн"}
                           </div>
-                          {item.variant && (
+                          {item.variant?.attributes && item.variant.attributes.length > 0 && (
+                            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                              {item.variant.attributes.map((attr, attrIdx) => (
+                                <span key={attrIdx} style={{ display: "inline-block" }}>
+                                  <span style={{ fontWeight: 500 }}>{attr.option.attribute.name}:</span> {attr.option.value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {item.variant && !item.variant.attributes?.length && (
                             <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
                               SKU: {item.variant.sku}
                             </div>

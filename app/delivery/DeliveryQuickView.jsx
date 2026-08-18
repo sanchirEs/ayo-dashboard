@@ -152,7 +152,16 @@ export default function DeliveryQuickView({ open, onOpenChange, delivery }) {
                       <div style={{ fontWeight: "500", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {item.product?.name ?? "Бараа"}
                       </div>
-                      {item.variant?.sku && (
+                      {item.variant?.attributes && item.variant.attributes.length > 0 && (
+                        <div style={{ fontSize: "10px", color: "#6b7280", marginTop: "2px", display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          {item.variant.attributes.map((attr, idx) => (
+                            <span key={idx}>
+                              <span style={{ fontWeight: "500" }}>{attr.option.attribute.name}:</span> {attr.option.value}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {item.variant?.sku && !item.variant.attributes?.length && (
                         <div style={{ fontSize: "11px", color: "#9ca3af" }}>{item.variant.sku}</div>
                       )}
                     </div>

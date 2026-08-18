@@ -465,7 +465,17 @@ function OrdersTab({ filterStatus, onRefresh, token }) {
                         }}>
                           <div style={{ flex: 1, fontSize: 13 }}>
                             <span style={{ fontWeight: 600 }}>{item.product?.name}</span>
-                            {item.variant && <span style={{ color: "#9ca3af" }}> · {item.variant.sku}</span>}
+                            {item.variant?.attributes && item.variant.attributes.length > 0 && (
+                              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>
+                                {item.variant.attributes.map((attr, idx) => (
+                                  <span key={idx}>
+                                    <span style={{ fontWeight: 500 }}>{attr.option.attribute.name}:</span> {attr.option.value}
+                                    {idx < item.variant.attributes.length - 1 && ", "}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {item.variant && !item.variant.attributes?.length && <span style={{ color: "#9ca3af" }}> · {item.variant.sku}</span>}
                             <span style={{ color: "#6b7280" }}> × {item.quantity}</span>
                           </div>
                           <Badge status={item.importStatus} />

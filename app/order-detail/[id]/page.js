@@ -72,7 +72,16 @@ export default async function OrderDetail({ params }) {
                           <Link href={`/product-list`} className="body-title-2">
                             {item.product?.name || 'Unknown Product'}
                           </Link>
-                          {item.variant && (
+                          {item.variant?.attributes && item.variant.attributes.length > 0 && (
+                            <div className="text-tiny text-gray-600 mt-1">
+                              {item.variant.attributes.map((attr, idx) => (
+                                <div key={idx}>
+                                  <span style={{ fontWeight: 500 }}>{attr.option.attribute.name}:</span> {attr.option.value}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {item.variant && !item.variant.attributes?.length && (
                             <div className="text-tiny text-gray-500 mt-1">
                               Variant: {item.variant.sku}
                             </div>

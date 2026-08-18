@@ -21,6 +21,15 @@ export interface OrderItem {
     id: number;
     sku: string;
     price: string;
+    attributes?: Array<{
+      option: {
+        value: string;
+        attribute: {
+          id: number;
+          name: string;
+        };
+      };
+    }>;
   };
 }
 
