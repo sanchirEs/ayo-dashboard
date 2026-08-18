@@ -60,7 +60,7 @@ export interface Order {
   id: number;
   userId: number;
   total: string;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
   deliveryType?: 'DELIVERY' | 'PICKUP';
   createdAt: string;
   modifiedAt: string;
@@ -373,6 +373,7 @@ export function translateStatus(status: string): string {
     'PENDING': 'Хүлээгдэж буй',
     'PROCESSING': 'Баталгаажсан',
     'SHIPPED': 'Илгээсэн',
+    'OUT_FOR_DELIVERY': 'хүргэлтэд гарсан',
     'DELIVERED': 'Хүргэгдсэн',
     'CANCELLED': 'Цуцалсан',
     'RETURNED': 'Буцаагдсан',
@@ -386,6 +387,7 @@ export function getStatusBadgeClass(status: string): string {
     'PENDING': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800',
     'PROCESSING': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
     'SHIPPED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800',
+    'OUT_FOR_DELIVERY': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800',
     'DELIVERED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
     'CANCELLED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800',
     'RETURNED': 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-violet-100 text-violet-800',
@@ -399,6 +401,7 @@ export function getStatusBlockClass(status: string): string {
     'PENDING': 'block-pending',
     'PROCESSING': 'block-tracking',
     'SHIPPED': 'block-tracking',
+    'OUT_FOR_DELIVERY': 'block-tracking',
     'DELIVERED': 'block-available',
     'CANCELLED': 'block-not-available',
     'RETURNED': 'block-not-available',
