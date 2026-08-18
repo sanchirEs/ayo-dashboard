@@ -14,6 +14,7 @@ const categorySchema = z.object({
   name: z.string().min(1, "Category name is required").max(100, "Name too long"),
   description: z.string().optional(),
   parentId: z.union([z.string(), z.number()]).optional().nullable(),
+  isImportCategory: z.boolean().default(false),
 });
 
 export default function NewCategoryForm({ parentId: initialParentId = null }) {
@@ -29,6 +30,7 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
       name: "",
       description: "",
       parentId: initialParentId,
+      isImportCategory: false,
     },
   });
 
@@ -50,6 +52,7 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
               name: values.name,
               description: values.description || "",
               parentId: values.parentId ? Number(values.parentId) : null,
+              isImportCategory: Boolean(values.isImportCategory),
             }),
           }
         , "NewCategoryForm.createCategory");
@@ -126,6 +129,22 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
         {form.formState.errors.description && (
           <div className="text-red-500 text-sm mt-1">
             {form.formState.errors.description.message}
+          </div>
+        )}
+      </fieldset>
+
+      <fieldset className="import-category">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...form.register("isImportCategory")}
+            className="w-4 h-4"
+          />
+          <span className="body-title mb-0">захиалгын бараа эсэх (14-21 хоногт ирэх)</span>
+        </label>
+        {form.formState.errors.isImportCategory && (
+          <div className="text-red-500 text-sm mt-1">
+            {form.formState.errors.isImportCategory.message}
           </div>
         )}
       </fieldset>

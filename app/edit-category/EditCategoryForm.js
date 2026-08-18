@@ -12,6 +12,7 @@ const schema = z.object({
   name: z.string().min(1, "Category name is required"),
   description: z.string().optional(),
   parentId: z.union([z.string(), z.number()]).optional().nullable(),
+  isImportCategory: z.boolean().default(false),
 });
 
 export default function EditCategoryForm({ categoryId }) {
@@ -23,7 +24,7 @@ export default function EditCategoryForm({ categoryId }) {
 
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", description: "", parentId: null },
+    defaultValues: { name: "", description: "", parentId: null, isImportCategory: false },
   });
 
   // Load category details
@@ -40,6 +41,7 @@ export default function EditCategoryForm({ categoryId }) {
             name: data.data.name || "",
             description: data.data.description || "",
             parentId: data.data.parentId || null,
+            isImportCategory: data.data.isImportCategory || false,
           });
         } else {
           setError(data?.message || "Failed to load category");
@@ -69,6 +71,7 @@ export default function EditCategoryForm({ categoryId }) {
               name: values.name,
               description: values.description || "",
               parentId: values.parentId ? Number(values.parentId) : null,
+              isImportCategory: Boolean(values.isImportCategory),
             }),
           }
         , "EditCategoryForm.updateCategory");
@@ -130,6 +133,22 @@ export default function EditCategoryForm({ categoryId }) {
           rows={4}
           style={{ resize: "vertical" }}
         />
+      </fieldset>
+
+      <fieldset className="import-category">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            {...form.register("isImportCategory")}
+            className="w-4 h-4"
+          />
+          <span className="body-title mb-0">захиалгын бараа эсэх (14-21 хоногт ирэх)</span>
+        </label>
+        {form.formState.errors.isImportCategory && (
+          <div className="text-red-500 text-sm mt-1">
+            {form.formState.errors.isImportCategory.message}
+          </div>
+        )}
       </fieldset>
 
       <fieldset className="parent">
