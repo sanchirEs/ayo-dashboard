@@ -3359,6 +3359,7 @@ form input[type="color"] {
   color: var(--Heading);
   overflow: hidden;
   margin-bottom: 0;
+  cursor: text;
 }
 
 form textarea::placeholder,
