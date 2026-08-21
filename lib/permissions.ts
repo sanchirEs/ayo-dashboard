@@ -7,13 +7,24 @@ import { type UserRole } from "@/types/next-auth";
  * reach ONLY the routes in their allowlist. All other roles keep their
  * existing access; admin/vendor route gating is handled in middleware via
  * adminRoutes/vendorRoutes.
+ *
+ * 2026-08-11: all four staff roles were revoked. Their allowlist is the
+ * dead-end page and nothing else. See
+ * docs/superpowers/specs/2026-08-11-revoke-staff-dashboard-access-design.md
+ *
+ * NOT an empty array, deliberately: middleware bounces a blocked role to
+ * getLandingRoute(role), so an empty allowlist blocks the landing page too and
+ * the redirect fires again on arrival — ERR_TOO_MANY_REDIRECTS. Allowlisting
+ * exactly the dead end terminates the bounce.
  */
 
+const REVOKED = ["/unauthorized"];
+
 const ROLE_ALLOWED_ROUTES: Partial<Record<UserRole, string[]>> = {
-  BRANCH: ["/sheet-payments", "/order-list", "/pickup-orders", "/order-detail"],
-  SHEET_PICKUP: ["/sheet-payments", "/order-list"],
-  SHEET_DELIVERY: ["/sheet-payments", "/order-list"],
-  SHEET_REFUND: ["/sheet-payments", "/order-list"],
+  BRANCH: REVOKED,
+  SHEET_PICKUP: REVOKED,
+  SHEET_DELIVERY: REVOKED,
+  SHEET_REFUND: REVOKED,
 };
 
 // Kept as a named export for backward compatibility — lib/permissions.test.ts
@@ -27,10 +38,10 @@ export const ROLE_LANDING: Record<UserRole, string> = {
   VENDOR: "/order-list",
   ADMIN: "/order-list",
   SUPERADMIN: "/order-list",
-  BRANCH: "/pickup-orders",
-  SHEET_PICKUP: "/sheet-payments",
-  SHEET_DELIVERY: "/sheet-payments",
-  SHEET_REFUND: "/sheet-payments",
+  BRANCH: "/unauthorized",
+  SHEET_PICKUP: "/unauthorized",
+  SHEET_DELIVERY: "/unauthorized",
+  SHEET_REFUND: "/unauthorized",
 };
 
 export function getLandingRoute(role: UserRole | undefined): string {
