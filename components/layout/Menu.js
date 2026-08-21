@@ -16,6 +16,7 @@ export default function Menu() {
       "/": 1,
       "/add-product": 2,
       "/product-list": 2,
+      "/barcodes": 2,
       "/category-list": 3,
       "/new-category": 3,
       "/attributes": 4,
@@ -73,89 +74,15 @@ export default function Menu() {
     return router === path;
   };
 
-  // Staff accounts (and the pickup/delivery/refund sheet-payments roles)
-  // see only the sheet payment verification page.
-  if (["STAFF", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"].includes(role)) {
-    return (
-      <div className="center">
-        <div className="center-item">
-          <div className="center-heading">Санхүү</div>
-          <ul className="menu-list">
-            <li
-              className={`menu-item ${router === "/order-list" ? "active" : ""}`}
-            >
-              <Link
-                href="/order-list"
-                className={isSubMenuItemActive("/order-list") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-file-plus" />
-                </div>
-                <div className="text">Захиалгын жагсаалт</div>
-              </Link>
-            </li>
-            <li className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}>
-              <Link href="/sheet-payments" className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}>
-                <div className="icon"><i className="icon-check-square" /></div>
-                <div className="text">ДАНС CHECK</div>
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
-  }
-
-  // Branch (store-location) accounts see a limited menu: orders (view) + Pickup PIN.
-  if (role === "BRANCH") {
-    return (
-      <div className="center">
-        <div className="center-item">
-          <div className="center-heading">Салбар</div>
-          <ul className="menu-list">
-            <li
-              className={`menu-item ${router === "/order-list" ? "active" : ""}`}
-            >
-              <Link
-                href="/order-list"
-                className={isSubMenuItemActive("/order-list") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-file-plus" />
-                </div>
-                <div className="text">Захиалгын жагсаалт</div>
-              </Link>
-            </li>
-            <li
-              className={`menu-item ${router === "/pickup-orders" ? "active" : ""}`}
-            >
-              <Link
-                href="/pickup-orders"
-                className={isSubMenuItemActive("/pickup-orders") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-shopping-bag" />
-                </div>
-                <div className="text">🏬 Очиж авах захиалга</div>
-              </Link>
-            </li>
-            <li
-              className={`menu-item ${router === "/sheet-payments" ? "active" : ""}`}
-            >
-              <Link
-                href="/sheet-payments"
-                className={isSubMenuItemActive("/sheet-payments") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-check-square" />
-                </div>
-                <div className="text">ДАНС CHECK</div>
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-    );
+  // 2026-08-11: staff dashboard access was revoked. These roles have no
+  // reachable page (middleware sends them to /unauthorized), so they get an
+  // empty sidebar rather than links that only bounce them back.
+  if (
+    ["STAFF", "BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"].includes(
+      role
+    )
+  ) {
+    return <div className="center" />;
   }
 
   return (
@@ -349,6 +276,14 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Барааны жагсаалт</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/barcodes"
+                    className={isSubMenuItemActive("/barcodes") ? "active" : ""}
+                  >
+                    <div className="text">Штрих код</div>
                   </Link>
                 </li>
               </ul>
