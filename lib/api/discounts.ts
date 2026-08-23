@@ -81,6 +81,9 @@ export async function searchProducts(
     // Deactivated products are still discountable — the combobox marks them
     // so it's clear the price won't be visible until the product is live.
     isActive: 'all',
+    // /products is house-scoped by default now, so retailer products would
+    // silently vanish from this search. Admins discount both catalogues.
+    catalog: 'all',
   });
 
   try {
@@ -116,7 +119,7 @@ export async function searchProducts(
 export async function getDiscountableProducts(token: string): Promise<ProductDiscount[]> {
   try {
     const BACKEND_URL = getBackendUrl();
-    const response = await fetch(`${BACKEND_URL}/api/v1/products/`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/products/?catalog=all`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
