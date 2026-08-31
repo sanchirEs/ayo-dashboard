@@ -26,7 +26,7 @@ const STATUS_CONFIG = {
   SHIPPED:    { label: "Илгээгдсэн",       dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
   DELIVERED:  { label: "Хүргэгдсэн",       dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
   CANCELLED:  { label: "Цуцлагдсан",       dot: "#ef4444", bg: "#fef2f2", text: "#991b1b" },
-  RETURNED:   { label: "Буцаагдсан",       dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
+  RETURNED:   { label: "Буцаалт",       dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
   PICKED_UP:  { label: "Ирж авсан",        dot: "#06b6d4", bg: "#ecfeff", text: "#0e7490" },
 };
 

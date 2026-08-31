@@ -376,7 +376,7 @@ export function translateStatus(status: string): string {
     'OUT_FOR_DELIVERY': 'хүргэлтэд гарсан',
     'DELIVERED': 'Хүргэгдсэн',
     'CANCELLED': 'Цуцалсан',
-    'RETURNED': 'Буцаагдсан',
+    'RETURNED': 'Буцаалт',
     'PICKED_UP': 'Ирж авсан'
   };
   return translations[status] || status;

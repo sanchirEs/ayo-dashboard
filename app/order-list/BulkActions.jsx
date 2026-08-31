@@ -233,7 +233,7 @@ export default function BulkActions({ selectedOrders, onUpdateComplete }) {
                 { value: 'OUT_FOR_DELIVERY', label: 'хүргэлтэд гарсан', color: '#ea580c' },
                 { value: 'DELIVERED', label: 'Хүргэгдсэн', color: '#065f46' },
                 { value: 'CANCELLED', label: 'Цуцлагдсан', color: '#ef4444' },
-                { value: 'RETURNED', label: 'Буцаагдсан', color: '#7c3aed' },
+                { value: 'RETURNED', label: 'Буцаалт', color: '#7c3aed' },
                 { value: 'PICKED_UP', label: 'Ирж авсан', color: '#0891b2' },
               ].map(({ value, label, color }) => (
                 <button
