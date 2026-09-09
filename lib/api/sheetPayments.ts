@@ -165,16 +165,6 @@ export interface TabRowsResponse {
   totalPages: number;
 }
 
-// Result of trying to find and flip the matching real order's status after a
-// sheet checkbox is confirmed. `null` means the tab isn't linked to real
-// orders (nothing was attempted); `matched: false` means it was attempted
-// but no single order could be found.
-export interface SyncResult {
-  matched: boolean;
-  reason?: string;
-  orderId?: number;
-}
-
 export async function getTabList(token: string): Promise<TabListResponse> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs`,
@@ -251,7 +241,7 @@ export async function verifyTabPin(
   rowIndex: number,
   pin: string,
   token: string
-): Promise<{ status: string; message: string; sync: SyncResult | null }> {
+): Promise<void> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/verify-pin`,
     { method: 'POST', headers: headers(token), body: JSON.stringify({ pin }) },
@@ -261,14 +251,13 @@ export async function verifyTabPin(
     const err = await res.json().catch(() => ({})) as { message?: string };
     throw new Error(err.message || 'Буруу код');
   }
-  return res.json();
 }
 
 export async function confirmTabPickup(
   tabId: string,
   rowIndex: number,
   token: string
-): Promise<{ message: string; sync: SyncResult | null }> {
+): Promise<{ message: string }> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-pickup`,
     { method: 'POST', headers: headers(token) },
@@ -285,7 +274,7 @@ export async function confirmTabDelivery(
   tabId: string,
   rowIndex: number,
   token: string
-): Promise<{ message: string; sync: SyncResult | null }> {
+): Promise<{ message: string }> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-delivery`,
     { method: 'POST', headers: headers(token) },
@@ -302,7 +291,7 @@ export async function confirmTabRefund(
   tabId: string,
   rowIndex: number,
   token: string
-): Promise<{ message: string; sync: SyncResult | null }> {
+): Promise<{ message: string }> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-refund`,
     { method: 'POST', headers: headers(token) },
