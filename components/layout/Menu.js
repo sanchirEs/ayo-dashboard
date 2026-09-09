@@ -74,15 +74,113 @@ export default function Menu() {
     return router === path;
   };
 
-  // 2026-08-11: staff dashboard access was revoked. These roles have no
-  // reachable page (middleware sends them to /unauthorized), so they get an
-  // empty sidebar rather than links that only bounce them back.
+  // 2026-09-09: staff read every operational page and change nothing. They get
+  // their own sidebar rather than the admin one, because the admin sidebar links
+  // to pages the page gate hides from them (/report, /setting, every /new-* and
+  // /edit-* form) and each of those would just bounce back to /order-list.
+  //
+  // Keep STAFF_MENU in step with STAFF_PAGES in lib/permissions.ts: a link to a
+  // page outside that list is a link to a redirect.
   if (
     ["STAFF", "BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"].includes(
       role
     )
   ) {
-    return <div className="center" />;
+    const STAFF_MENU = [
+      {
+        key: 5,
+        heading: "Захиалга",
+        icon: "icon-file-plus",
+        items: [
+          ["/order-list", "Захиалгын жагсаалт"],
+          ["/pickup-orders", "Дэлгүүрээс авах"],
+          ["/delivery", "Хүргэлт"],
+          ["/import-orders", "Захиалгын бараа"],
+          ["/sheet-payments", "Төлбөрийн хуудас"],
+          ["/pickup-logs", "Авалтын түүх"],
+          ["/order-tracking", "Захиалга хянах"],
+        ],
+      },
+      {
+        key: 2,
+        heading: "Бараа",
+        icon: "icon-box",
+        items: [
+          ["/product-list", "Барааны жагсаалт"],
+          ["/category-list", "Ангилал"],
+          ["/brand-list", "Брэнд"],
+          ["/attributes", "Шинж чанар"],
+          ["/tags", "Таг"],
+          ["/retailers", "Гадаад дэлгүүр"],
+        ],
+      },
+      {
+        key: 11,
+        heading: "Урамшуулал",
+        icon: "icon-percent",
+        items: [
+          ["/campaigns", "Кампанит ажил"],
+          ["/coupons", "Купон"],
+          ["/discounts", "Хямдрал"],
+          ["/flash-sale", "Флаш хямдрал"],
+          ["/banners", "Баннер"],
+        ],
+      },
+      {
+        key: 10,
+        heading: "Бусад",
+        icon: "icon-user",
+        items: [
+          ["/all-user", "Хэрэглэгчид"],
+          ["/store-locations", "Салбарууд"],
+        ],
+      },
+    ];
+
+    return (
+      <div className="center">
+        <div className="center-item">
+          <div className="center-heading">Ажилтны самбар</div>
+          <ul className="menu-list">
+            {STAFF_MENU.map((group) => (
+              <li
+                key={group.key}
+                className={`menu-item has-children ${
+                  activeAccordion === group.key ? "active" : ""
+                }`}
+              >
+                <a
+                  className="menu-item-button"
+                  onClick={() => handleAccordion(group.key)}
+                >
+                  <div className="icon">
+                    <i className={group.icon} />
+                  </div>
+                  <div className="text">{group.heading}</div>
+                </a>
+                <ul
+                  className="sub-menu"
+                  style={{
+                    display: `${activeAccordion === group.key ? "block" : "none"}`,
+                  }}
+                >
+                  {group.items.map(([href, label]) => (
+                    <li className="sub-menu-item" key={href}>
+                      <Link
+                        href={href}
+                        className={isSubMenuItemActive(href) ? "active" : ""}
+                      >
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    );
   }
 
   return (

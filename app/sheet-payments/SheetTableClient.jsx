@@ -177,11 +177,23 @@ function RefundActionCell({ checked, canAct, onConfirm }) {
   );
 }
 
+// 2026-09-09: staff read the whole sheet but may run only their own confirm
+// action. These three are the UI half of that rule — the backend enforces it
+// independently in middlewares/staffAccess.js, so hiding a button here is a
+// courtesy, not the control.
+//
+// Shared rather than written out per table: the two tables below had identical
+// copies, which is exactly how the two drift apart.
+const isAdminish = (role) => role === "ADMIN" || role === "SUPERADMIN";
+const canPickupAs = (role) =>
+  isAdminish(role) || role === "SHEET_PICKUP" || role === "BRANCH";
+const canDeliverAs = (role) => isAdminish(role) || role === "SHEET_DELIVERY";
+const canRefundAs = (role) => isAdminish(role) || role === "SHEET_REFUND";
+
 function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, onPinRow, onDeliveryConfirm, onRefundConfirm }) {
-  // 2026-08-11: staff roles revoked — confirming is admin-only.
-  const canPickup = role === "ADMIN" || role === "SUPERADMIN";
-  const canDeliver = role === "ADMIN" || role === "SUPERADMIN";
-  const canRefund = role === "ADMIN" || role === "SUPERADMIN";
+  const canPickup = canPickupAs(role);
+  const canDeliver = canDeliverAs(role);
+  const canRefund = canRefundAs(role);
 
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflow: "hidden" }}>
@@ -284,10 +296,9 @@ function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, o
   // Storepay/Pocket pickup is a plain staff attestation, not a customer-PIN
   // flow — so it shares the same one-click role gate as delivery/refund
   // rather than the PinModal used by the manual bank-transfer tabs.
-  // 2026-08-11: staff roles revoked — confirming is admin-only.
-  const canPickup = role === "ADMIN" || role === "SUPERADMIN";
-  const canDeliver = role === "ADMIN" || role === "SUPERADMIN";
-  const canRefund = role === "ADMIN" || role === "SUPERADMIN";
+  const canPickup = canPickupAs(role);
+  const canDeliver = canDeliverAs(role);
+  const canRefund = canRefundAs(role);
 
   return (
     <div className="wg-table table-all-category" style={{ width: "100%", overflowX: "auto" }}>

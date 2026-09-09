@@ -8,23 +8,71 @@ import { type UserRole } from "@/types/next-auth";
  * existing access; admin/vendor route gating is handled in middleware via
  * adminRoutes/vendorRoutes.
  *
- * 2026-08-11: all four staff roles were revoked. Their allowlist is the
- * dead-end page and nothing else. See
- * docs/superpowers/specs/2026-08-11-revoke-staff-dashboard-access-design.md
- *
- * NOT an empty array, deliberately: middleware bounces a blocked role to
- * getLandingRoute(role), so an empty allowlist blocks the landing page too and
- * the redirect fires again on arrival — ERR_TOO_MANY_REDIRECTS. Allowlisting
- * exactly the dead end terminates the bounce.
+ * 2026-09-09: the 2026-08-11 revoke is reversed, but not to the old model.
+ * Staff now read every operational page and change nothing — except the one
+ * action their role exists to perform, which is enforced on the backend
+ * (ayo-back/src/middlewares/staffAccess.js), not here. See
+ * docs/superpowers/specs/2026-09-09-staff-read-only-access-design.md
  */
 
-const REVOKED = ["/unauthorized"];
+/**
+ * All four roles share one page list: what separates them is which write action
+ * they keep, not what they can see.
+ */
+const STAFF_PAGES = [
+  // Orders and fulfilment
+  "/order-list",
+  "/order-detail",
+  "/order-tracking",
+  "/product-orders",
+  "/delivery",
+  "/import-orders",
+  "/pickup-orders",
+  "/pickup-logs",
+  "/sheet-payments",
+  // Catalogue
+  "/product-list",
+  "/products",
+  "/brand-list",
+  "/brand-detail",
+  "/category-list",
+  "/attributes",
+  "/tags",
+  "/hierarchical-tags",
+  "/retailers",
+  // Merchandising
+  "/campaigns",
+  "/coupons",
+  "/discounts",
+  "/flash-sale",
+  "/banners",
+  // People and places
+  "/all-user", // customer database — granted explicitly by the owner
+  "/store-locations",
+  "/states",
+  // The dead end itself, so a bounce to it terminates (see below).
+  "/unauthorized",
+];
 
+/**
+ * Deliberately absent, and why:
+ *
+ * - `/report`, `/sales`, `/setting`, `/store-settings`, `/sms-broadcast` — the
+ *   owner's four exclusions (financials, configuration, SMS).
+ * - `/add-new-user`, `/create-role`, `/add-product`, `/add-tags`, `/barcodes`,
+ *   and every `/new-*` and `/edit-*` page — their only purpose is to write. To
+ *   a view-only account they are a wall of buttons that all 403.
+ * - `/components`, `/test`, `/list-page` — Remos template leftovers.
+ *
+ * NOT an empty array for any role, deliberately: middleware bounces a blocked
+ * role to getLandingRoute(role), so a list that omits that landing page makes
+ * the redirect fire again on arrival — ERR_TOO_MANY_REDIRECTS.
+ */
 const ROLE_ALLOWED_ROUTES: Partial<Record<UserRole, string[]>> = {
-  BRANCH: REVOKED,
-  SHEET_PICKUP: REVOKED,
-  SHEET_DELIVERY: REVOKED,
-  SHEET_REFUND: REVOKED,
+  BRANCH: STAFF_PAGES,
+  SHEET_PICKUP: STAFF_PAGES,
+  SHEET_DELIVERY: STAFF_PAGES,
+  SHEET_REFUND: STAFF_PAGES,
 };
 
 // Kept as a named export for backward compatibility — lib/permissions.test.ts
@@ -38,10 +86,10 @@ export const ROLE_LANDING: Record<UserRole, string> = {
   VENDOR: "/order-list",
   ADMIN: "/order-list",
   SUPERADMIN: "/order-list",
-  BRANCH: "/unauthorized",
-  SHEET_PICKUP: "/unauthorized",
-  SHEET_DELIVERY: "/unauthorized",
-  SHEET_REFUND: "/unauthorized",
+  BRANCH: "/order-list",
+  SHEET_PICKUP: "/order-list",
+  SHEET_DELIVERY: "/order-list",
+  SHEET_REFUND: "/order-list",
 };
 
 export function getLandingRoute(role: UserRole | undefined): string {
