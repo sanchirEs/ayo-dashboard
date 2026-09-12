@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { AuthenticationError } from "@/lib/api/error-handler";
 import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
 import SetPasswordAction from "./SetPasswordAction";
+import BlockUserAction from "./BlockUserAction";
 export default async function DataTable({ searchParams }) {
   const TOKEN = await getToken();
   console.log("spa", searchParams);
@@ -89,6 +90,13 @@ export default async function DataTable({ searchParams }) {
                     userId={user.id}
                     username={user.username}
                     telephone={user.telephone}
+                  />
+                  <BlockUserAction
+                    userId={user.id}
+                    username={user.username}
+                    telephone={user.telephone}
+                    email={user.email}
+                    role={user.role}
                   />
                   <div className="item edit">
                     <i className="icon-edit-3" />

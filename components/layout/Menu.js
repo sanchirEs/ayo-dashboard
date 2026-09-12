@@ -46,6 +46,7 @@ export default function Menu() {
       "/sales": 9,
       "/all-user": 10,
       "/add-new-user": 10,
+      "/blocklist": 10,
       "/sms-broadcast": 0,
       "/login": 10,
       "/sign-up": 10,
@@ -738,6 +739,14 @@ export default function Menu() {
                     }
                   >
                     <div className="text">Шинэ хэрэглэгч нэмэх</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/blocklist"
+                    className={isSubMenuItemActive("/blocklist") ? "active" : ""}
+                  >
+                    <div className="text">Блоклосон жагсаалт</div>
                   </Link>
                 </li>
                 {/** Removed from sidebar as requested
