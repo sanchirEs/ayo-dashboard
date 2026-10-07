@@ -15,6 +15,7 @@ export interface Product {
   description: string;
   howToUse?: string;
   ingredients?: string;
+  expiryDate?: string | null;
   specs?: ProductSpec[];
   sku: string;
   price: number;

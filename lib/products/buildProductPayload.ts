@@ -65,6 +65,8 @@ export function buildProductPayload(
     description: values.description,
     howToUse: values.howToUse || '',
     ingredients: values.ingredients || '',
+    // null (not '') so editing can clear a previously saved date
+    expiryDate: values.expiryDate || null,
     specs: ctx.specs.filter((s) => s.type.trim() && s.value.trim()),
     categoryIds:
       ctx.categoryIds.length > 0

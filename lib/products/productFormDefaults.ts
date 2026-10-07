@@ -3,6 +3,7 @@ export const PRODUCT_FORM_DEFAULTS = {
   description: '',
   howToUse: '',
   ingredients: '',
+  expiryDate: '',
   sku: '',
   categoryId: '',
   categoryIds: [] as number[],

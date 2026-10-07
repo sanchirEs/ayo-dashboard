@@ -84,6 +84,15 @@ export default function BasicInfoSection({ form }) {
           )}
         </Field>
 
+        <Field
+          control={form.control}
+          name="expiryDate"
+          label="Дуусах хугацаа"
+          hint="Заавал биш. Хэрэглэгчид бүтээгдэхүүний хуудсанд харагдана"
+        >
+          {(field) => <Input {...field} value={field.value ?? ""} type="date" className={INPUT_CLASS} />}
+        </Field>
+
         <div className="space-y-ui-2">
           <span className={SECTION_LABEL_CLASS}>Техникийн тодорхойлолт</span>
           {fields.map((spec, index) => (

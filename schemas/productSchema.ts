@@ -65,6 +65,7 @@ export const addProductsSchema = z.object({
   description: requiredString,
   howToUse: z.string().optional(),
   ingredients: z.string().optional(),
+  expiryDate: z.string().optional().nullable(),
   specs: z.array(productSpecSchema).optional(),
   // Support both single category (backward compatibility) and multiple categories
   categoryId: z.union([
@@ -163,6 +164,7 @@ export const editProductsSchema = z.object({
   description: requiredString,
   howToUse: z.string().optional(),
   ingredients: z.string().optional(),
+  expiryDate: z.string().optional().nullable(),
   specs: z.array(productSpecSchema).optional(),
   price: z.union([
     z.string().refine((v) => {

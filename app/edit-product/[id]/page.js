@@ -75,6 +75,7 @@ function toInitialValues(product, hierarchicalTags) {
     description: product.description || "",
     howToUse: product.howToUse || "",
     ingredients: product.ingredients || "",
+    expiryDate: product.expiryDate ? String(product.expiryDate).slice(0, 10) : "",
     sku: product.sku || "",
     categoryIds,
     brandId: (product.brand?.id ?? product.brandId ?? "").toString(),
