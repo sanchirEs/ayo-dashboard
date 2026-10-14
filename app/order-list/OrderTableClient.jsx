@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import OrderRowClient from "./OrderRowClient";
 import BulkActions from "./BulkActions";
 import { exportToExcel } from "@/lib/exportToExcel";
@@ -17,7 +18,16 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
     limit: typeof initialPagination?.limit === 'number' ? initialPagination.limit : 100,
   }));
   const [selectedOrders, setSelectedOrders] = useState(new Set());
-  
+  const searchParams = useSearchParams();
+
+  // Keep every active filter (status, deliveryType, search, dates, ...) when changing page
+  const pageHref = (pageNum) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(pageNum));
+    params.set('limit', String(pagination.limit));
+    return `?${params.toString()}`;
+  };
+
   // Load selected orders from sessionStorage on mount
   useEffect(() => {
     const saved = sessionStorage.getItem('selectedOrders');
@@ -234,7 +244,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
               <ul className="wg-pagination">
                 <li>
                   <Link 
-                    href={`?page=${Math.max(1, pagination.currentPage - 1)}&limit=${pagination.limit}`}
+                    href={pageHref(Math.max(1, pagination.currentPage - 1))}
                     className={pagination.currentPage <= 1 ? 'disabled' : ''}
                   >
                     <i className="icon-chevron-left" />
@@ -248,7 +258,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
                   
                   return (
                     <li key={pageNum} className={pagination.currentPage === pageNum ? 'active' : ''}>
-                      <Link href={`?page=${pageNum}&limit=${pagination.limit}`}>
+                      <Link href={pageHref(pageNum)}>
                         {pageNum}
                       </Link>
                     </li>
@@ -257,7 +267,7 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
                 
                 <li>
                   <Link 
-                    href={`?page=${Math.min(pagination.totalPages, pagination.currentPage + 1)}&limit=${pagination.limit}`}
+                    href={pageHref(Math.min(pagination.totalPages, pagination.currentPage + 1))}
                     className={pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}
                   >
                     <i className="icon-chevron-right" />
