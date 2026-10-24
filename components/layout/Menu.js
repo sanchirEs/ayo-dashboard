@@ -58,6 +58,9 @@ export default function Menu() {
       "/store-locations/new": 0,
       "/retailers": 0,
       "/partners": 14,
+      "/pos/registers": 15,
+      "/pos/staff": 15,
+      "/pos/settings": 15,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -721,6 +724,46 @@ export default function Menu() {
                   </div>
                   <div className="text">Харилцагч</div>
                 </Link>
+              </li>
+            )}
+            {/* Till setup (registers, staff, settings) is owner-only: not in STAFF_MENU,
+                and hidden from vendors, whom the backend would refuse anyway. */}
+            {["ADMIN", "SUPERADMIN"].includes(role) && (
+              <li
+                className={`menu-item has-children ${
+                  activeAccordion === 15 ? "active" : ""
+                }`}
+              >
+                <a
+                  className="menu-item-button"
+                  onClick={() => handleAccordion(15)}
+                >
+                  <div className="icon">
+                    <i className="icon-shopping-bag" />
+                  </div>
+                  <div className="text">Касс (POS)</div>
+                </a>
+                <ul
+                  className="sub-menu"
+                  style={{
+                    display: `${activeAccordion === 15 ? "block" : "none"}`,
+                  }}
+                >
+                  {[
+                    ["/pos/registers", "Кассууд"],
+                    ["/pos/staff", "Ажилтан"],
+                    ["/pos/settings", "Кассын тохиргоо"],
+                  ].map(([href, label]) => (
+                    <li className="sub-menu-item" key={href}>
+                      <Link
+                        href={href}
+                        className={isSubMenuItemActive(href) ? "active" : ""}
+                      >
+                        <div className="text">{label}</div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             )}
             <li

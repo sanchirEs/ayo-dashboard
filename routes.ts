@@ -21,7 +21,10 @@ export const adminRoutes = [
   "/report",
   "/setting",
   "/create-role",
-  "/partners"
+  "/partners",
+  "/pos/registers",
+  "/pos/staff",
+  "/pos/settings"
 ];
 
 export const apiAuthPrefix = "/api/auth";
