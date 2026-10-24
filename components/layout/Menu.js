@@ -57,6 +57,7 @@ export default function Menu() {
       "/store-locations": 0,
       "/store-locations/new": 0,
       "/retailers": 0,
+      "/partners": 14,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -700,6 +701,25 @@ export default function Menu() {
                     <i className="icon-trending-up" />
                   </div>
                   <div className="text">Sales Analytics</div>
+                </Link>
+              </li>
+            )}
+            {/* Partner ledger (падаан, payments) is owner-only: not in STAFF_MENU,
+                and hidden from vendors, whom the backend would refuse anyway. */}
+            {["ADMIN", "SUPERADMIN"].includes(role) && (
+              <li
+                className={`menu-item ${
+                  router.startsWith("/partner") ? "active" : ""
+                }`}
+              >
+                <Link
+                  href="/partners"
+                  className={router.startsWith("/partner") ? "active" : ""}
+                >
+                  <div className="icon">
+                    <i className="icon-briefcase" />
+                  </div>
+                  <div className="text">Харилцагч</div>
                 </Link>
               </li>
             )}

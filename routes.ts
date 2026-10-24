@@ -20,7 +20,8 @@ export const adminRoutes = [
   "/attributes",
   "/report",
   "/setting",
-  "/create-role"
+  "/create-role",
+  "/partners"
 ];
 
 export const apiAuthPrefix = "/api/auth";

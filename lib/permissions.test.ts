@@ -187,3 +187,14 @@ describe("BRANCH_ALLOWED_ROUTES", () => {
     expect(BRANCH_ALLOWED_ROUTES).not.toContain("/sms-broadcast");
   });
 });
+
+describe("partner pages (POS plan 2)", () => {
+  // The partner ledger is owner-only (spec §20): money owed, payments, падаан.
+  it("keeps every staff role out of /partners and /partner-deliveries", () => {
+    for (const role of ["BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"] as const) {
+      expect(canAccessRoute(role, "/partners")).toBe(false);
+      expect(canAccessRoute(role, "/partners/1/deliveries/new")).toBe(false);
+      expect(canAccessRoute(role, "/partner-deliveries/abc/print")).toBe(false);
+    }
+  });
+});
