@@ -180,3 +180,84 @@ export const variantsByIds = async (ids: number[], token: string) =>
   ids.length === 0
     ? []
     : (await request<{ variants: VariantHit[] }>("variantsByIds", `/variants?ids=${ids.join(",")}`, token)).variants;
+
+// ── barcode links (what cashiers linked at the till) ────────────────────────
+
+export type BarcodeLinkStatus = "APPLIED" | "PENDING_REVIEW" | "REJECTED" | "REVERTED";
+
+export interface BarcodeLinkItem {
+  id: string;
+  status: BarcodeLinkStatus;
+  barcode: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewedBy: number | null;
+  variant: { id: number; sku: string | null; productName: string | null; variantLabel: string; barcode: string | null };
+  staff: { id: string; name: string | null };
+  register: { id: string; name: string | null; locationName: string | null };
+}
+
+export const listBarcodeLinks = (params: { status?: BarcodeLinkStatus; reviewed?: boolean; limit?: number; offset?: number }, token: string) => {
+  const query = new URLSearchParams();
+  if (params.status) query.set("status", params.status);
+  if (params.reviewed !== undefined) query.set("reviewed", String(params.reviewed));
+  if (params.limit) query.set("limit", String(params.limit));
+  if (params.offset) query.set("offset", String(params.offset));
+  const qs = query.toString();
+  return request<{ total: number; items: BarcodeLinkItem[] }>("listBarcodeLinks", `/barcode-links${qs ? `?${qs}` : ""}`, token);
+};
+
+export const reviewBarcodeLink = (id: string, token: string) =>
+  request<{ success: boolean }>("reviewBarcodeLink", `/barcode-links/${id}/review`, token, send("POST"));
+
+export const revertBarcodeLink = (id: string, token: string) =>
+  request<{ success: boolean }>("revertBarcodeLink", `/barcode-links/${id}/revert`, token, send("POST"));
+
+// ── sync issues and the unsent-sales file ───────────────────────────────────
+
+export interface SyncIssue {
+  kind: "REJECTED" | "FLAGGED";
+  at: string;
+  eventType: string;
+  eventId: string;
+  code: string | null;
+  flags: string[];
+  saleNumber: string | null;
+  saleId: string | null;
+  total: number | null;
+  registerId: string;
+  registerName: string | null;
+  locationName: string | null;
+}
+
+export const listSyncIssues = (days: number, token: string) =>
+  request<{ days: number; issues: SyncIssue[] }>("listSyncIssues", `/sync-issues?days=${days}`, token);
+
+export interface SyncImportResult {
+  results: { id: string; status: "ACCEPTED" | "DUPLICATE" | "REJECTED" | "RETRY"; code?: string }[];
+  counts: { ACCEPTED: number; DUPLICATE: number; REJECTED: number; RETRY: number };
+}
+
+/** Multipart, so no JSON Content-Type: the browser sets the boundary. */
+export async function importUnsentFile(file: File, token: string): Promise<SyncImportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const response = await fetch(`${getBackendUrl()}${BASE}/sync-import`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+    cache: "no-store",
+  });
+  let body: (SyncImportResult & { message?: string }) | null = null;
+  try {
+    body = await response.json();
+  } catch {
+    body = null;
+  }
+  if (!response.ok) {
+    const message = body?.message || "Файл оруулж чадсангүй";
+    logApiError("importUnsentFile", { type: "server", message, statusCode: response.status, retryable: response.status >= 500 });
+    throw new Error(message);
+  }
+  return body as SyncImportResult;
+}

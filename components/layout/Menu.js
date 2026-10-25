@@ -61,6 +61,8 @@ export default function Menu() {
       "/pos/registers": 15,
       "/pos/staff": 15,
       "/pos/settings": 15,
+      "/pos/barcode-links": 15,
+      "/pos/sync-issues": 15,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -752,6 +754,8 @@ export default function Menu() {
                   {[
                     ["/pos/registers", "Кассууд"],
                     ["/pos/staff", "Ажилтан"],
+                    ["/pos/barcode-links", "Шинэ баркод"],
+                    ["/pos/sync-issues", "Синк асуудал"],
                     ["/pos/settings", "Кассын тохиргоо"],
                   ].map(([href, label]) => (
                     <li className="sub-menu-item" key={href}>
