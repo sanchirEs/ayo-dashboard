@@ -63,6 +63,14 @@ export default function Menu() {
       "/pos/settings": 15,
       "/pos/barcode-links": 15,
       "/pos/sync-issues": 15,
+      "/stock": 16,
+      "/stock/negative": 16,
+      "/stock/low": 16,
+      "/stock/transfers": 16,
+      "/stock/goods-in": 16,
+      "/stock/counts": 16,
+      "/stock/adjustments": 16,
+      "/stock/sets": 16,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -757,6 +765,50 @@ export default function Menu() {
                     ["/pos/barcode-links", "Шинэ баркод"],
                     ["/pos/sync-issues", "Синк асуудал"],
                     ["/pos/settings", "Кассын тохиргоо"],
+                  ].map(([href, label]) => (
+                    <li className="sub-menu-item" key={href}>
+                      <Link
+                        href={href}
+                        className={isSubMenuItemActive(href) ? "active" : ""}
+                      >
+                        <div className="text">{label}</div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            )}
+            {/* Branch stock operations are owner-only too (POS Plan 5). */}
+            {["ADMIN", "SUPERADMIN"].includes(role) && (
+              <li
+                className={`menu-item has-children ${
+                  activeAccordion === 16 ? "active" : ""
+                }`}
+              >
+                <a
+                  className="menu-item-button"
+                  onClick={() => handleAccordion(16)}
+                >
+                  <div className="icon">
+                    <i className="icon-box" />
+                  </div>
+                  <div className="text">Нөөц</div>
+                </a>
+                <ul
+                  className="sub-menu"
+                  style={{
+                    display: `${activeAccordion === 16 ? "block" : "none"}`,
+                  }}
+                >
+                  {[
+                    ["/stock", "Салбарын нөөц"],
+                    ["/stock/goods-in", "Бараа орлого"],
+                    ["/stock/transfers", "Шилжүүлэг"],
+                    ["/stock/counts", "Тооллого"],
+                    ["/stock/adjustments", "Залруулга"],
+                    ["/stock/low", "Дуусаж буй"],
+                    ["/stock/negative", "Хасах үлдэгдэл"],
+                    ["/stock/sets", "Сет"],
                   ].map(([href, label]) => (
                     <li className="sub-menu-item" key={href}>
                       <Link

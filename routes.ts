@@ -26,7 +26,15 @@ export const adminRoutes = [
   "/pos/staff",
   "/pos/settings",
   "/pos/barcode-links",
-  "/pos/sync-issues"
+  "/pos/sync-issues",
+  "/stock",
+  "/stock/goods-in",
+  "/stock/transfers",
+  "/stock/counts",
+  "/stock/adjustments",
+  "/stock/low",
+  "/stock/negative",
+  "/stock/sets"
 ];
 
 export const apiAuthPrefix = "/api/auth";
