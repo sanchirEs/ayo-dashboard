@@ -191,6 +191,53 @@ function LockSection({ common }) {
   );
 }
 
+const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+/** Opening hours (the "till not seen" alert) and the count approval limit (spec 10.4). */
+function StockSection({ common }) {
+  const { merged } = common.layers;
+  const hours = merged.openingHours ?? { from: "10:00", to: "21:00" };
+  const limit = merged.countApproveLimitMnt ?? 500000;
+  const [draft, setDraft] = useState({ from: hours.from, to: hours.to, limit: asText(limit) });
+  const [errors, setErrors] = useState({});
+  const dirty = draft.from !== hours.from || draft.to !== hours.to || draft.limit !== asText(limit);
+
+  const save = async () => {
+    const found = {};
+    if (!TIME.test(draft.from) || !TIME.test(draft.to) || draft.from >= draft.to) found.hours = "Эхлэх цаг нь дуусахаас өмнө байх ёстой (жишээ нь 10:00 – 21:00)";
+    const limitProblem = rangeError(draft.limit, 0, 1000000000, "₮");
+    if (limitProblem) found.limit = limitProblem;
+    setErrors(found);
+    if (Object.keys(found).length) return false;
+    await saveSettings(common.locationId, { openingHours: { from: draft.from, to: draft.to }, countApproveLimitMnt: Number(draft.limit) }, common.token);
+    await common.reload();
+    return true;
+  };
+
+  return (
+    <SettingsSection
+      {...common}
+      title="Ажиллах цаг ба тооллогын хязгаар"
+      description="Ажиллах цагт касс 30 минутаас дээш харагдахгүй бол анхааруулна. Тооллогын зөрүүний үнэ энэ хязгаараас хэтэрвэл зөвхөн эзэмшигч батална."
+      keys={["openingHours", "countApproveLimitMnt"]}
+      dirty={dirty}
+      save={save}
+    >
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16, maxWidth: 640 }}>
+        <Field label="Нээх цаг" error={errors.hours}>
+          {(props) => <input {...props} type="time" value={draft.from} onChange={(e) => setDraft((d) => ({ ...d, from: e.target.value }))} />}
+        </Field>
+        <Field label="Хаах цаг">
+          {(props) => <input {...props} type="time" value={draft.to} onChange={(e) => setDraft((d) => ({ ...d, to: e.target.value }))} />}
+        </Field>
+        <Field label="Тооллого батлах хязгаар (₮)" error={errors.limit} hint="0 бол бүх тооллогыг эзэмшигч батална">
+          {(props) => <input {...props} inputMode="numeric" value={draft.limit} onChange={(e) => setDraft((d) => ({ ...d, limit: e.target.value.replace(/[^\d]/g, "") }))} />}
+        </Field>
+      </div>
+    </SettingsSection>
+  );
+}
+
 /** What the paper will look like, at the chosen width. Enough to judge wrapping, not a pixel match. */
 function ReceiptPreview({ header, footer, widthMm }) {
   const width = widthMm === 58 ? 214 : 296;
@@ -523,6 +570,7 @@ export default function SettingsClient() {
         <>
           <DiscountSection key={`discount-${scope}-${version}`} common={common} />
           <LockSection key={`lock-${scope}-${version}`} common={common} />
+          <StockSection key={`stock-${scope}-${version}`} common={common} />
           <ReceiptSection key={`receipt-${scope}-${version}`} common={common} />
           <FavouritesSection key={`fav-${scope}-${version}`} common={common} />
         </>

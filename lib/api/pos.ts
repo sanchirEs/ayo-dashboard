@@ -77,6 +77,10 @@ export interface PosSettingsValues {
   refundWindowDays?: number;
   receipt?: ReceiptSettings;
   favourites?: number[];
+  /** A count worth more than this (₮) needs the owner to approve it. */
+  countApproveLimitMnt?: number;
+  /** When tills are expected to be awake (Ulaanbaatar time). */
+  openingHours?: { from: string; to: string };
 }
 
 export interface SettingsLayers {
