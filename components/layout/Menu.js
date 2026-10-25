@@ -71,6 +71,13 @@ export default function Menu() {
       "/stock/counts": 16,
       "/stock/adjustments": 16,
       "/stock/sets": 16,
+      "/pos": 15,
+      "/reports/pos/sales": 17,
+      "/reports/pos/margin": 17,
+      "/reports/pos/stock-value": 17,
+      "/reports/pos/payments": 17,
+      "/reports/pos/shifts": 17,
+      "/reports/pos/adjustments": 17,
     };
 
     // Check if the current path is in the object of accordion routes and set the activeAccordion state accordingly
@@ -760,6 +767,7 @@ export default function Menu() {
                   }}
                 >
                   {[
+                    ["/pos", "POS тойм"],
                     ["/pos/registers", "Кассууд"],
                     ["/pos/staff", "Ажилтан"],
                     ["/pos/barcode-links", "Шинэ баркод"],
@@ -809,6 +817,48 @@ export default function Menu() {
                     ["/stock/low", "Дуусаж буй"],
                     ["/stock/negative", "Хасах үлдэгдэл"],
                     ["/stock/sets", "Сет"],
+                  ].map(([href, label]) => (
+                    <li className="sub-menu-item" key={href}>
+                      <Link
+                        href={href}
+                        className={isSubMenuItemActive(href) ? "active" : ""}
+                      >
+                        <div className="text">{label}</div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            )}
+            {/* POS reports with Excel export (POS Plan 6), owner-only. */}
+            {["ADMIN", "SUPERADMIN"].includes(role) && (
+              <li
+                className={`menu-item has-children ${
+                  activeAccordion === 17 ? "active" : ""
+                }`}
+              >
+                <a
+                  className="menu-item-button"
+                  onClick={() => handleAccordion(17)}
+                >
+                  <div className="icon">
+                    <i className="icon-bar-chart-2" />
+                  </div>
+                  <div className="text">POS тайлан</div>
+                </a>
+                <ul
+                  className="sub-menu"
+                  style={{
+                    display: `${activeAccordion === 17 ? "block" : "none"}`,
+                  }}
+                >
+                  {[
+                    ["/reports/pos/sales", "Борлуулалт"],
+                    ["/reports/pos/margin", "Ашиг"],
+                    ["/reports/pos/stock-value", "Нөөцийн үнэлгээ"],
+                    ["/reports/pos/payments", "Төлбөр"],
+                    ["/reports/pos/shifts", "Ээлжийн зөрүү"],
+                    ["/reports/pos/adjustments", "Залруулга"],
                   ].map(([href, label]) => (
                     <li className="sub-menu-item" key={href}>
                       <Link

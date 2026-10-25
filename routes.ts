@@ -34,7 +34,14 @@ export const adminRoutes = [
   "/stock/adjustments",
   "/stock/low",
   "/stock/negative",
-  "/stock/sets"
+  "/stock/sets",
+  "/pos",
+  "/reports/pos/sales",
+  "/reports/pos/margin",
+  "/reports/pos/stock-value",
+  "/reports/pos/payments",
+  "/reports/pos/shifts",
+  "/reports/pos/adjustments"
 ];
 
 export const apiAuthPrefix = "/api/auth";
