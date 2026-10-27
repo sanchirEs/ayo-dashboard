@@ -40,6 +40,8 @@ function toInitialValues(product, hierarchicalTags) {
   const loadedVariants = normalizeLoadedVariants(product.variants).map((v) => ({
     ...v,
     id: v.id,
+    // null in the database; a controlled input needs a string
+    barcode: v.barcode ?? "",
     price: Number(v.price || 0),
     inventory: { quantity: Number(v.inventory?.quantity || 0) },
     images: (v.images || []).map((img) => ({
@@ -77,6 +79,8 @@ function toInitialValues(product, hierarchicalTags) {
     ingredients: product.ingredients || "",
     expiryDate: product.expiryDate ? String(product.expiryDate).slice(0, 10) : "",
     sku: product.sku || "",
+    // A simple product's barcode lives on its one variant
+    barcode: hasVariants ? "" : (firstVariant?.barcode ?? ""),
     categoryIds,
     brandId: (product.brand?.id ?? product.brandId ?? "").toString(),
     price: price.toString(),

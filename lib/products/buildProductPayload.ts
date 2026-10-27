@@ -6,6 +6,8 @@
  *  - simple mode emits no `variants` at all unless BOTH price and quantity are set
  *  - simple mode's generated variant SKU is `<sku>-DEFAULT`
  *  - variant mode takes the product-level price from the default variant
+ *  - barcode is per variant (simple mode: the one DEFAULT variant). An empty box is sent
+ *    as null, never omitted: on edit, null is how the backend is told to clear it
  */
 
 export type ProductMode = 'simple' | 'variants';
@@ -29,6 +31,7 @@ export interface PayloadImage {
 
 export interface PayloadVariant {
   sku: string;
+  barcode?: string | null;
   price: number;
   isDefault: boolean;
   attributes: { attributeId: number; optionId: number }[];
@@ -54,6 +57,11 @@ export interface BuildPayloadContext {
  */
 const imageUrlOf = (img: UploadedImage): string =>
   (img.imageUrl || img.url || img.secure_url || (img as unknown as string)) as string;
+
+const barcodeOf = (raw: unknown): string | null => {
+  const code = typeof raw === 'string' ? raw.trim() : '';
+  return code || null;
+};
 
 export function buildProductPayload(
   values: Record<string, any>,
@@ -123,6 +131,7 @@ export function buildProductPayload(
   if (ctx.mode === 'variants' && ctx.variants.length > 0) {
     payload.variants = ctx.variants.map((variant, index) => ({
       sku: variant.sku,
+      barcode: barcodeOf(variant.barcode),
       price: Number(variant.price),
       isDefault: variant.isDefault,
       attributes: variant.attributes,
@@ -140,6 +149,7 @@ export function buildProductPayload(
       payload.variants = [
         {
           sku: `${values.sku}-DEFAULT`,
+          barcode: barcodeOf(values.barcode),
           price: Number(values.price),
           isDefault: true,
           attributes: [],

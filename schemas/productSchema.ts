@@ -52,6 +52,8 @@ const productSpecSchema = z.object({
 // Variant schema
 const variantSchema = z.object({
   sku: z.string().min(1, { message: "Вариант SKU оруулна уу" }),
+  // GTIN is checked by the backend, which knows what other variants hold
+  barcode: z.string().nullable().optional(),
   price: z.number().min(0, { message: "Үнэ 0-с дээш байх ёстой" }),
   isDefault: z.boolean().optional().default(false),
   attributes: z.array(variantAttributeSchema).default([]),
@@ -62,6 +64,9 @@ const variantSchema = z.object({
 export const addProductsSchema = z.object({
   name: requiredString,
   sku: requiredString,
+  // Simple products only (variants carry their own). Without this key zod would drop the
+  // value from the submitted `values`, since zodResolver hands back the parsed object.
+  barcode: z.string().optional(),
   description: requiredString,
   howToUse: z.string().optional(),
   ingredients: z.string().optional(),

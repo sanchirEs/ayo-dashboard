@@ -204,6 +204,61 @@ describe('buildProductPayload — shared fields', () => {
   });
 });
 
+describe('buildProductPayload — barcode', () => {
+  const simple = { ...baseValues, price: '1000', quantity: '5' };
+  const variantRow = (over: Record<string, unknown> = {}) => ({
+    sku: 'SKU1-RED',
+    price: 1200,
+    isDefault: true,
+    attributes: [],
+    inventory: { quantity: 2 },
+    images: [],
+    ...over,
+  });
+
+  it('puts the simple-mode barcode on the DEFAULT variant, trimmed', () => {
+    const payload = buildProductPayload({ ...simple, barcode: ' 8809640739422 ' }, baseCtx);
+    expect(payload.variants[0].barcode).toBe('8809640739422');
+  });
+
+  it('sends null (not "") for an empty simple-mode barcode so edit can clear it', () => {
+    expect(buildProductPayload({ ...simple, barcode: '' }, baseCtx).variants[0].barcode).toBeNull();
+    expect(buildProductPayload({ ...simple, barcode: '   ' }, baseCtx).variants[0].barcode).toBeNull();
+  });
+
+  it('sends null when the form has no barcode value at all', () => {
+    expect(buildProductPayload(simple, baseCtx).variants[0].barcode).toBeNull();
+  });
+
+  it('keeps each variant its own barcode in variant mode', () => {
+    const payload = buildProductPayload(baseValues, {
+      ...baseCtx,
+      mode: 'variants',
+      variants: [
+        variantRow({ barcode: '8809640739422' }),
+        variantRow({ sku: 'SKU1-BLUE', isDefault: false, barcode: ' 8809640734526' }),
+        variantRow({ sku: 'SKU1-PINK', isDefault: false, barcode: '' }),
+        variantRow({ sku: 'SKU1-GREEN', isDefault: false }),
+      ],
+    });
+    expect(payload.variants.map((v: any) => v.barcode)).toEqual([
+      '8809640739422',
+      '8809640734526',
+      null,
+      null,
+    ]);
+  });
+
+  it('ignores the simple-mode field when the product has variants', () => {
+    const payload = buildProductPayload(
+      { ...baseValues, barcode: '8809640739422' },
+      { ...baseCtx, mode: 'variants', variants: [variantRow()] }
+    );
+    expect(payload.variants[0].barcode).toBeNull();
+    expect('barcode' in payload).toBe(false);
+  });
+});
+
 describe('buildProductPayload — advanced fields', () => {
   const advancedValues = {
     ...baseValues,

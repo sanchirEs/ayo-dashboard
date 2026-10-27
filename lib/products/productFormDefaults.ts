@@ -5,6 +5,7 @@ export const PRODUCT_FORM_DEFAULTS = {
   ingredients: '',
   expiryDate: '',
   sku: '',
+  barcode: '',
   categoryId: '',
   categoryIds: [] as number[],
   vendorId: '1',

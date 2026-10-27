@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getBackendUrl } from "@/lib/api/env";
+import { BARCODE_INPUT_PROPS } from "../fields/barcodeInputProps";
 import {
   INPUT_SM_CLASS,
   INPUT_TYPED_SM_CLASS,
@@ -159,6 +160,7 @@ export default function VariantsSection({ form, attributes, token }) {
 
         return {
           sku: `${baseSku}-${suffix}`,
+          barcode: "",
           price: Number(basePrice),
           isDefault: index === 0,
           attributes: attrs,
@@ -234,10 +236,12 @@ export default function VariantsSection({ form, attributes, token }) {
               light horizontal rule between rows is wanted — the wrapper above draws
               the outer frame, so the last row deliberately has no bottom border.
             */}
-            <table className="m-0 w-full min-w-[640px] table-fixed border-collapse border-0 text-[14px]">
+            <table className="m-0 w-full min-w-[808px] table-fixed border-collapse border-0 text-[14px]">
               <thead>
                 <tr>
                   <th className="border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">SKU</th>
+                  {/* 168px: an EAN-13 in a 14px input needs about 130px plus the cell padding. */}
+                  <th className="w-[168px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Штрих код</th>
                   <th className="w-[124px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Зураг</th>
                   {/* 124px, not 100: MNT prices reach seven digits and were clipping. */}
                   <th className="w-[124px] border-x-0 border-t-0 border-b-[1px] border-border bg-muted/40 px-ui-3 py-ui-2 text-left font-medium">Үнэ</th>
@@ -252,6 +256,14 @@ export default function VariantsSection({ form, attributes, token }) {
                       <Input
                         {...form.register(`variants.${index}.sku`)}
                         title={form.watch(`variants.${index}.sku`) || ""}
+                        className={INPUT_SM_CLASS}
+                      />
+                    </td>
+                    <td className="border-x-0 border-b-0 border-t-[1px] border-border px-ui-3 py-ui-2">
+                      <Input
+                        {...form.register(`variants.${index}.barcode`)}
+                        {...BARCODE_INPUT_PROPS}
+                        aria-label={`Штрих код ${index + 1}`}
                         className={INPUT_SM_CLASS}
                       />
                     </td>

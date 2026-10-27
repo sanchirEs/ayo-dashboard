@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import Field from "../fields/Field";
+import { BARCODE_HINT, BARCODE_INPUT_PROPS } from "../fields/barcodeInputProps";
 import {
   INPUT_CLASS,
   TEXTAREA_CLASS,
@@ -15,6 +16,7 @@ import {
 
 export default function BasicInfoSection({ form }) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "specs" });
+  const productMode = form.watch("productMode");
 
   return (
     <Card>
@@ -38,6 +40,21 @@ export default function BasicInfoSection({ form }) {
         >
           {(field) => <Input {...field} className={INPUT_CLASS} placeholder="SKU оруулна уу" />}
         </Field>
+
+        {/* A product with variants gives each variant its own barcode, in the variants table. */}
+        {productMode === "simple" && (
+          <Field control={form.control} name="barcode" label="Штрих код" hint={BARCODE_HINT}>
+            {(field) => (
+              <Input
+                {...field}
+                {...BARCODE_INPUT_PROPS}
+                value={field.value ?? ""}
+                className={INPUT_CLASS}
+                placeholder="Хайрцаг дээрх код"
+              />
+            )}
+          </Field>
+        )}
 
         {/*
           !h-[...px]: public/css/style.css sets `form textarea { height: 200px !important }`,
