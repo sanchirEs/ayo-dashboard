@@ -25,12 +25,20 @@ export default function SearchQueryDebounced({ placeholder, query }) {
 
   return (
     <div className="wg-filter w-[25rem] sm:w-[35rem] md:w-[45rem]">
-      <form className="form-search">
+      <form
+        className="form-search"
+        onSubmit={(e) => {
+          // Enter (incl. a barcode scanner's trailing Enter) would otherwise
+          // natively GET-submit the form and replace ?<query>= with the input's name.
+          e.preventDefault();
+          handleSearch.flush();
+        }}
+      >
         <fieldset className="name">
           <input
             type="text"
             placeholder={placeholder}
-            name="name"
+            name={query}
             tabIndex={2}
             onChange={(e) => {
               handleSearch(e.target.value);
