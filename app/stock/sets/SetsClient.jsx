@@ -1,93 +1,99 @@
 "use client";
 
 /**
- * Сет: the fixed recipe of a set product (spec D5). Staff make sets in the shop;
- * this page only defines what goes in one. A new recipe applies to sets made after
- * the change. Saving an empty recipe turns the product back into a plain item.
+ * Сет: make a new set, change the recipe of an existing one, or turn a product
+ * that already exists into a set (spec D5). Staff make the sets in the shop;
+ * this page only defines what goes in one.
  */
 
 import { useEffect, useState } from "react";
-import { getRecipe, saveRecipe } from "@/lib/api/stock";
-import { variantsByIds } from "@/lib/api/pos";
-import { Button, C, ErrorText, Section } from "@/components/pos/ui";
-import { SMALL, LinesEditor, VariantPicker, useToken, variantTitle } from "@/components/stock/shared";
+import { listSets } from "@/lib/api/stock";
+import { formatMnt } from "@/lib/partners/format";
+import { C, ErrorText, Section, inputStyle } from "@/components/pos/ui";
+import { Tabs, VariantPicker, useToken, variantTitle } from "@/components/stock/shared";
+import NewSetForm from "./NewSetForm";
+import RecipeEditor from "./RecipeEditor";
+
+const TABS = [
+  ["new", "Шинэ сет"],
+  ["edit", "Одоо байгаа сетүүд"],
+  ["convert", "Барааг сет болгох"],
+];
+
+function ExistingSets({ token, onPick }) {
+  const [sets, setSets] = useState(null);
+  const [filter, setFilter] = useState("");
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    listSets(token).then(setSets).catch((e) => setError(e.message));
+  }, [token]);
+
+  const term = filter.trim().toLowerCase();
+  const shown = (sets ?? []).filter((s) => !term || s.name.toLowerCase().includes(term) || s.sku.toLowerCase().includes(term));
+
+  return (
+    <Section title="Одоо байгаа сетүүд" description="Сетээ сонгож найрлагыг нь засна.">
+      {sets && sets.length > 0 && (
+        <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Нэр эсвэл SKU-гаар шүүх…" aria-label="Сет шүүх" style={{ ...inputStyle, marginBottom: 12 }} />
+      )}
+      <ErrorText>{error}</ErrorText>
+      {!sets && !error && <p style={{ color: C.muted, margin: 0 }}>Ачаалж байна…</p>}
+      {sets && sets.length === 0 && <p style={{ color: C.faint, margin: 0 }}>Сет алга байна. «Шинэ сет» хэсгээс үүсгэх, эсвэл хуучин «сет» барааг «Барааг сет болгох» хэсгээс сет болгоно уу.</p>}
+      {shown.map((s) => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() => onPick(s)}
+          style={{ display: "flex", justifyContent: "space-between", gap: 16, width: "100%", textAlign: "left", padding: "10px 12px", border: "none", borderBottom: `1px solid ${C.grayBg}`, background: "none", cursor: "pointer", fontSize: 15 }}
+        >
+          <span>
+            <span style={{ color: C.text }}>{variantTitle(s)}</span>
+            <span style={{ display: "block", color: C.muted, fontSize: 12 }}>{s.sku}</span>
+          </span>
+          <span style={{ color: C.muted, fontSize: 13, whiteSpace: "nowrap" }}>{s.componentCount} бараа · {formatMnt(s.price)}</span>
+        </button>
+      ))}
+      {sets && sets.length > 0 && shown.length === 0 && <p style={{ color: C.faint, margin: 0 }}>Олдсонгүй</p>}
+    </Section>
+  );
+}
 
 export default function SetsClient() {
   const token = useToken();
-  const [setVariant, setSetVariant] = useState(null);
-  const [lines, setLines] = useState(null);
-  const [error, setError] = useState(null);
-  const [saved, setSaved] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("new");
+  const [picked, setPicked] = useState(null);
 
-  useEffect(() => {
-    if (!setVariant || !token) return;
-    let stale = false;
-    setLines(null);
-    setSaved(false);
-    setError(null);
-    (async () => {
-      try {
-        const recipe = await getRecipe(setVariant.id, token);
-        const details = await variantsByIds(recipe.map((c) => c.componentVariantId), token);
-        const byId = new Map(details.map((v) => [v.id, v]));
-        if (!stale) setLines(recipe.map((c) => ({ variant: byId.get(c.componentVariantId) ?? { id: c.componentVariantId, name: `Бараа #${c.componentVariantId}`, sku: "" }, qty: c.qty })));
-      } catch (e) {
-        if (!stale) setError(e.message);
-      }
-    })();
-    return () => {
-      stale = true;
-    };
-  }, [setVariant, token]);
-
-  const save = async () => {
-    if (lines.some((l) => !Number.isInteger(l.qty) || l.qty <= 0)) return setError("Тоо ширхэг эерэг бүхэл тоо байх ёстой");
-    setBusy(true);
-    setError(null);
-    setSaved(false);
-    try {
-      await saveRecipe(setVariant.id, lines.map((l) => ({ componentVariantId: l.variant.id, qty: l.qty })), token);
-      setSaved(true);
-    } catch (e) {
-      setError(e.message);
-    }
-    setBusy(false);
+  const switchTab = (next) => {
+    setTab(next);
+    setPicked(null);
   };
 
   return (
     <div className="wg-box">
-      <Section
-        title="Сетийн найрлага"
-        description="Сет болгох барааг сонгоод, дотор нь орох барааг нэмнэ. Найрлага өөрчлөгдсөн нь зөвхөн дараа хийгдэх сетэд үйлчилнэ. Сет өөр сетийн найрлагад орж болохгүй."
-      >
-        {setVariant ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-            <strong style={{ fontSize: 16 }}>{variantTitle(setVariant)}</strong>
-            <span style={{ color: C.muted, fontSize: 13 }}>{setVariant.sku}</span>
-            <Button kind="secondary" onClick={() => setSetVariant(null)} style={SMALL}>Өөр сет сонгох</Button>
-          </div>
-        ) : (
-          <VariantPicker token={token} onPick={setSetVariant} placeholder="Сет болгох барааг хайх…" autoFocus />
-        )}
-      </Section>
+      <Tabs tabs={TABS} value={tab} onChange={switchTab} />
 
-      {setVariant && lines && (
-        <Section title="Найрлага" description="Нэг сетэд орох бараа ба тоо ширхэг.">
-          <LinesEditor token={token} lines={lines} onChange={(next) => { setLines(next); setSaved(false); }} qtyLabel="Нэг сетэд" />
-          <ErrorText>{error}</ErrorText>
-          {saved && (
-            <p role="status" style={{ margin: "14px 0 0", padding: "10px 14px", borderRadius: 10, backgroundColor: C.greenBg, color: C.green, fontSize: 15 }}>
-              {lines.length === 0 ? "Найрлага арилгагдлаа. Энэ бараа энгийн бараа боллоо." : "Найрлага хадгалагдлаа."}
-            </p>
-          )}
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18 }}>
-            <Button onClick={save} disabled={busy}>{busy ? "Хадгалж байна…" : lines.length === 0 ? "Сетээс гаргах" : "Найрлага хадгалах"}</Button>
-          </div>
-        </Section>
-      )}
-      {setVariant && !lines && !error && <p style={{ color: C.muted }}>Ачаалж байна…</p>}
-      {!lines && <ErrorText>{error}</ErrorText>}
+      {tab === "new" && <NewSetForm token={token} />}
+
+      {tab === "edit" &&
+        (picked ? (
+          <RecipeEditor token={token} variant={picked} onBack={() => setPicked(null)} backLabel="Өөр сет сонгох" />
+        ) : (
+          <ExistingSets token={token} onPick={setPicked} />
+        ))}
+
+      {tab === "convert" &&
+        (picked ? (
+          <RecipeEditor token={token} variant={picked} onBack={() => setPicked(null)} backLabel="Өөр бараа сонгох" />
+        ) : (
+          <Section
+            title="Одоо байгаа барааг сет болгох"
+            description="Нэр, үнэ, зураг нь аль хэдийн байгаа барааг (жишээ нь хуучин «сет» бараа) сет болгоно. Шинэ сет бол «Шинэ сет» хэсгээс үүсгэнэ."
+          >
+            <VariantPicker token={token} onPick={setPicked} placeholder="Сет болгох барааг хайх…" autoFocus />
+          </Section>
+        ))}
     </div>
   );
 }

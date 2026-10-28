@@ -222,6 +222,27 @@ export interface RecipeComponent {
   qty: number;
 }
 
+/** A variant that carries a recipe (same shape as a variant search hit, plus its price and line count). */
+export interface SetSummary {
+  id: number;
+  productId: number;
+  name: string;
+  variantLabel: string;
+  sku: string;
+  barcode: string | null;
+  price: number;
+  componentCount: number;
+}
+
+export interface CreatedSet {
+  productId: number;
+  variantId: number;
+  sku: string;
+  name: string;
+  price: number;
+  recipe: RecipeComponent[];
+}
+
 // ── stock reads ─────────────────────────────────────────────────────────────
 
 export const searchStock = async (locationId: number, q: string, token: string) =>
@@ -308,6 +329,11 @@ export const createAdjustment = async (
 ) => (await request<{ adjustment: Adjustment }>("createAdjustment", "/adjustments", token, send("POST", data))).adjustment;
 
 // ── set recipes ─────────────────────────────────────────────────────────────
+
+export const listSets = async (token: string) => (await request<{ sets: SetSummary[] }>("listSets", "/sets", token)).sets;
+
+export const createSet = async (data: { name: string; price: number; components: RecipeComponent[] }, token: string) =>
+  (await request<{ set: CreatedSet }>("createSet", "/sets", token, send("POST", data))).set;
 
 export const getRecipe = async (variantId: number, token: string) =>
   (await request<{ recipe: RecipeComponent[] }>("getRecipe", `/sets/${variantId}/recipe`, token)).recipe;
