@@ -20,6 +20,7 @@ import {
   formatWeight,
   parseGrams,
 } from "@/lib/cargo/format";
+import { nextSkip, prevSkip, rowsLeftFilter } from "@/lib/cargo/paging";
 
 const ACCENT = "#495D35";
 const PAGE_SIZE = 50;
@@ -46,6 +47,8 @@ const PHASE_LABEL = {
   HOUSE: "Өөрийн импорт барааны карго шинэчилж байна",
   CACHE: "Дэлгүүрийн кэш цэвэрлэж байна",
 };
+
+const NO_TOKEN_ERROR = "Нэвтрэлт шалгагдаж байна, түр хүлээгээд дахин оролдоно уу";
 
 const GRAMS_ERROR = `1–${MAX_WEIGHT_G.toLocaleString("en-US")} гр хооронд бүхэл тоо оруулна уу (0 боломжгүй)`;
 
@@ -675,14 +678,21 @@ const ROW_COLUMNS = "56px minmax(180px, 2fr) 100px 90px 150px 80px 90px 180px";
 const ROW_GAP = 12;
 const LIST_MIN_WIDTH = 1010;
 
-function WeighRow({ row, index, token, onSaved, inputRef, onAdvance }) {
+function WeighRow({ row, index, token, onSaved, onSaving, inputRef, onAdvance }) {
   const source = row.source ?? "DEFAULT";
 
   async function save(grams) {
-    const res = await setProductWeight(row.id, grams, token);
-    if (!res.success || !res.data) return { error: res.error || "Хадгалж чадсангүй" };
-    onSaved(row.id, grams, res.data);
-    return {};
+    // No token yet (session still loading): never fire an unauthenticated PATCH.
+    if (!token) return { error: NO_TOKEN_ERROR };
+    onSaving(1);
+    try {
+      const res = await setProductWeight(row.id, grams, token);
+      if (!res.success || !res.data) return { error: res.error || "Хадгалж чадсангүй" };
+      onSaved(row.id, grams, res.data);
+      return {};
+    } finally {
+      onSaving(-1);
+    }
   }
 
   return (
@@ -774,9 +784,13 @@ function WeighList({ token, version, onWeightChanged }) {
   const [filter, setFilter] = useState("unmeasured");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
-  const [page, setPage] = useState(0);
+  // Offset into the server's result set. Tracked directly (not as page * 50):
+  // saved rows leave the set while staying on screen, so see lib/cargo/paging.
+  const [skip, setSkip] = useState(0);
   const [data, setData] = useState({ rows: [], total: 0 });
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(0);
   const [error, setError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
   const requestId = useRef(0);
@@ -786,7 +800,7 @@ function WeighList({ token, version, onWeightChanged }) {
   useEffect(() => {
     const t = setTimeout(() => {
       setQuery(search.trim());
-      setPage(0);
+      setSkip(0);
     }, 350);
     return () => clearTimeout(t);
   }, [search]);
@@ -796,11 +810,18 @@ function WeighList({ token, version, onWeightChanged }) {
     const id = ++requestId.current;
     setLoading(true);
     getCargoProducts(
-      { filter, q: query || undefined, take: PAGE_SIZE, skip: page * PAGE_SIZE },
+      { filter, q: query || undefined, take: PAGE_SIZE, skip },
       token
     ).then((res) => {
       if (id !== requestId.current) return; // a newer request superseded this one
+      if (res.success && !res.data?.rows?.length && skip > 0) {
+        // The set shrank under us (rows weighed elsewhere): step back rather
+        // than show an empty page that hides the rows before it.
+        setSkip(prevSkip(skip, PAGE_SIZE));
+        return;
+      }
       setLoading(false);
+      setLoaded(true);
       if (res.success) {
         setData(res.data ?? { rows: [], total: 0 });
         setError(null);
@@ -808,7 +829,7 @@ function WeighList({ token, version, onWeightChanged }) {
         setError(res.error || "Жагсаалт ачаалагдсангүй");
       }
     });
-  }, [token, filter, query, page, version, reloadKey]);
+  }, [token, filter, query, skip, version, reloadKey]);
 
   // A saved row stays in place (even in "Жинлээгүй") so the owner sees the new
   // price; it drops out on the next refetch.
@@ -834,14 +855,23 @@ function WeighList({ token, version, onWeightChanged }) {
     [onWeightChanged]
   );
 
+  const onSaving = useCallback((delta) => setSaving((n) => n + delta), []);
+
   const rows = data.rows ?? [];
-  const total = data.total ?? 0;
-  const from = total === 0 ? 0 : page * PAGE_SIZE + 1;
-  const to = Math.min(total, (page + 1) * PAGE_SIZE);
+  // Rows saved out of this filter are still on screen but no longer in the
+  // server's set — the footer counts and the next offset must account for them.
+  const left = rowsLeftFilter(filter, rows);
+  const total = Math.max(0, (data.total ?? 0) - left);
+  const from = total === 0 ? 0 : skip + 1;
+  const to = Math.max(0, skip + rows.length - left);
+  const hasNext = skip + rows.length < (data.total ?? 0);
+  // A save still in flight has not moved its row out of the set yet, so an
+  // offset computed now could skip one — hold paging until saves land.
+  const pagingBusy = loading || saving > 0;
 
   function changeFilter(next) {
     setFilter(next);
-    setPage(0);
+    setSkip(0);
   }
 
   return (
@@ -931,6 +961,7 @@ function WeighList({ token, version, onWeightChanged }) {
               index={i}
               token={token}
               onSaved={handleSaved}
+              onSaving={onSaving}
               inputRef={(el) => {
                 inputRefs.current[i] = el;
               }}
@@ -938,7 +969,14 @@ function WeighList({ token, version, onWeightChanged }) {
             />
           ))}
 
-          {!rows.length && !loading && !error && (
+          {/* Until the session token exists nothing has been fetched, so an empty
+              list means "not loaded yet", not "nothing left to weigh". */}
+          {!rows.length && !error && (!token || !loaded) && (
+            <div className="body-text text-center" style={{ padding: "28px 0", color: "#6b7280" }}>
+              Уншиж байна...
+            </div>
+          )}
+          {!rows.length && !loading && !error && token && loaded && (
             <div className="body-text text-center" style={{ padding: "28px 0", color: "#6b7280" }}>
               {filter === "unmeasured" && !query
                 ? "Жинлэх бараа үлдсэнгүй."
@@ -950,22 +988,22 @@ function WeighList({ token, version, onWeightChanged }) {
 
       <div className="flex items-center justify-between gap10 flex-wrap" style={{ marginTop: 14 }}>
         <div className="text-tiny" style={{ color: "#6b7280" }}>
-          {total > 0 ? `${from}–${to} / ${total}` : "0"}
+          {total > 0 ? `${to >= from ? `${from}–${to}` : "—"} / ${total}` : "0"}
         </div>
         <div className="flex gap10">
           <button
             type="button"
             className="tf-button style-1"
-            disabled={page === 0 || loading}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={skip === 0 || pagingBusy}
+            onClick={() => setSkip((s) => prevSkip(s, PAGE_SIZE))}
           >
             Өмнөх
           </button>
           <button
             type="button"
             className="tf-button style-1"
-            disabled={to >= total || loading}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={!hasNext || pagingBusy}
+            onClick={() => setSkip((s) => nextSkip(s, rows.length, left))}
           >
             Дараах
           </button>
@@ -1004,6 +1042,7 @@ function CategoryNode({ node, depth, token, onSaved }) {
   const hasChildren = node.children.length > 0;
 
   async function save(grams) {
+    if (!token) return { error: NO_TOKEN_ERROR };
     const res = await setCategoryWeight(node.id, grams, token);
     if (!res.success || !res.data) return { error: res.error || "Хадгалж чадсангүй" };
     onSaved();
@@ -1102,6 +1141,10 @@ function CategoryWeights({ token, onWeightsChanged }) {
         title="Ангиллын жин"
         subtitle="Ангилалд жин өгвөл дотор нь байгаа, өөрийн жингүй бүх бараа тэр жингээр бодогдоно. Хоосон талбарт саарал тоо нь дээд ангиллаас өвлөсөн жин."
       />
+      <Notice tone="info" style={{ marginBottom: 12 }}>
+        Ангиллын жин хадгалагдсан ч дэлгүүрийн үнэ тэр дороо өөрчлөгдөхгүй — “Бүх үнийг шинэчлэх” дарсны
+        дараа үнэд тусна.
+      </Notice>
       {error && (
         <Notice tone="danger" style={{ marginBottom: 12 }}>
           {error}
