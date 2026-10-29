@@ -215,6 +215,9 @@ function ProductsTab({ onRefresh, token }) {
 
   const load = useCallback(async () => {
     setLoading(true);
+    // A reload shows what is stored now, so a "weight not saved" note from an
+    // earlier confirm no longer describes the rows.
+    setWeightErrors({});
     const res = await getImportProducts(token);
     setProducts(res.data || []);
     setLoading(false);
@@ -229,6 +232,7 @@ function ProductsTab({ onRefresh, token }) {
     // The status change is done and the customers are texted. A weight that
     // fails to save is reported on the row; it never undoes the status.
     let weightNote = null;
+    let weightFailure = null;
     setWeightErrors((s) => { const n = { ...s }; delete n[productId]; return n; });
     if (weight) {
       const w = await setProductWeight(productId, weight.weightG, token);
@@ -238,16 +242,19 @@ function ProductsTab({ onRefresh, token }) {
           : `Жин ${formatWeight(weight.weightG)}` +
             (w.data.cargoMnt > 0 ? ` · карго ${formatMnt(w.data.cargoMnt)}` : "");
       } else {
-        setWeightErrors((s) => ({ ...s, [productId]: w.error || "Жин хадгалж чадсангүй" }));
+        weightFailure = w.error || "Жин хадгалж чадсангүй";
+        setWeightErrors((s) => ({ ...s, [productId]: weightFailure }));
       }
     }
 
     const key = `${productId}-${toStatus}`;
     setDoneState((s) => ({ ...s, [key]: { done: true, message: res.message, weightNote } }));
     setModal(null);
-    setTimeout(() => {
+    setTimeout(async () => {
       setDoneState((s) => { const n = { ...s }; delete n[key]; return n; });
-      load();
+      await load();
+      // load() cleared the old notes; this confirm's own failure still stands.
+      if (weightFailure) setWeightErrors((s) => ({ ...s, [productId]: weightFailure }));
       onRefresh();
     }, 2500);
     return null;

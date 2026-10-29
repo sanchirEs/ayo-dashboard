@@ -82,9 +82,10 @@ function Stat({ label, children, sub }) {
  * @param productId  the product being edited
  * @param sku        its SKU, used to find its cargo row
  * @param token      session access token
- * @param onSaved    called after a weight was saved; saving reprices the product,
- *                   so the page reloads the form rather than let it write the old
- *                   price back
+ * @param onSaved    called with the save's answer ({ price, cargoMnt, ... }) after a
+ *                   weight was saved; saving reprices the product, so the page
+ *                   refreshes the form's price fields rather than let a later
+ *                   Save write the old price back
  */
 export default function CargoWeightCard({ productId, sku, token, onSaved }) {
   const [loading, setLoading] = useState(true);

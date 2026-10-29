@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import ProductForm from "@/components/product-form/ProductForm";
 import CargoWeightCard from "@/components/cargo/CargoWeightCard";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/hierarchicalTags";
 import { normalizeLoadedVariants } from "@/lib/products/variantNormalization";
 import { PRODUCT_FORM_DEFAULTS } from "@/lib/products/productFormDefaults";
+import { priceUpdates } from "@/lib/products/priceUpdates";
 import toastManager from "@/lib/toast";
 
 /**
@@ -101,6 +102,9 @@ function toInitialValues(product, hierarchicalTags) {
   };
 }
 
+const STALE_PRICE_MESSAGE =
+  "Карго нь барааны үнийг өөрчилсөн боловч маягт шинэчлэгдсэнгүй. Хуудсыг дахин ачаалж байж хадгална уу.";
+
 export default function EditProductPage({ params }) {
   const resolved = use(params);
   const id = Number(resolved?.id);
@@ -111,8 +115,14 @@ export default function EditProductPage({ params }) {
   // decides whether the cargo card shows, and the form never submits it.
   const [importInfo, setImportInfo] = useState(null);
   const [loadError, setLoadError] = useState("");
-  // Bumped to remount the form with freshly loaded values (see handleWeightSaved).
-  const [formKey, setFormKey] = useState(0);
+  // The open form's react-hook-form instance, so a repriced product can have its
+  // price fields patched in place (see handleWeightSaved).
+  const formRef = useRef(null);
+  // The product's price as last loaded; a weight save that answers with the same
+  // price moved nothing, so there is nothing stale to refresh.
+  const loadedPriceRef = useRef(null);
+  // The weight was saved and the price moved, but the form could not be refreshed.
+  const [priceStale, setPriceStale] = useState(false);
 
   // The product as the form and the cargo card need it, or null when it is gone.
   const fetchProduct = useCallback(async () => {
@@ -124,6 +134,7 @@ export default function EditProductPage({ params }) {
     return {
       importInfo: { isImported: product.isImportedProduct === true, sku: product.sku || "" },
       values: toInitialValues(product, hierarchicalTags),
+      price: Number(product.price),
     };
   }, [id, token]);
 
@@ -143,6 +154,7 @@ export default function EditProductPage({ params }) {
           return;
         }
 
+        loadedPriceRef.current = loaded.price;
         setImportInfo(loaded.importInfo);
         setInitialValues(loaded.values);
       } catch {
@@ -155,25 +167,38 @@ export default function EditProductPage({ params }) {
     };
   }, [id, token, fetchProduct]);
 
-  // Weighing reprices the product on the server. The form still holds the old
-  // price, and saving it would write that price back over the cargo-inclusive
-  // one, so reload the product and remount the form with what is stored now.
-  const handleWeightSaved = useCallback(async () => {
-    try {
-      const loaded = await fetchProduct();
-      if (!loaded) throw new Error("product not reloaded");
-      setImportInfo(loaded.importInfo);
-      setInitialValues(loaded.values);
-      setFormKey((k) => k + 1);
-    } catch {
-      toastManager.warning("Үнэ шинэчлэгдсэн. Хуудсыг дахин ачаалж байж хадгална уу.", {
-        title: "Карго",
-      });
-    }
-  }, [fetchProduct]);
+  // Weighing reprices the product on the server while this form is open with the
+  // old price, and saving it would write that price back. So when the price moved,
+  // re-read the product and patch just the price fields in place (resetField also
+  // moves their default, so "Цуцлах" cannot restore the old price). Everything else
+  // the user has typed stays. A house, pinned or unchanged-cargo product keeps its
+  // price and needs nothing.
+  const handleWeightSaved = useCallback(
+    async (saved) => {
+      if (Number(saved?.price) === loadedPriceRef.current) return;
+      try {
+        const loaded = await fetchProduct();
+        const form = formRef.current;
+        if (!loaded || !form) throw new Error("price not refreshed");
+        for (const [path, value] of priceUpdates(form.getValues(), loaded.values)) {
+          form.resetField(path, { defaultValue: value });
+        }
+        loadedPriceRef.current = loaded.price;
+      } catch {
+        // Better a form that cannot be saved than one that quietly reverts the price.
+        setPriceStale(true);
+        toastManager.warning(STALE_PRICE_MESSAGE, { title: "Карго" });
+      }
+    },
+    [fetchProduct]
+  );
 
   const updateProduct = useCallback(
     async (payload, { form, token: submitToken }) => {
+      // The form still carries a price the server has since changed: refuse rather
+      // than write it back (the button is disabled too; this covers Enter).
+      if (priceStale) return { ok: false, message: STALE_PRICE_MESSAGE };
+
       const response = await fetchWithAuthHandling(
         `${getBackendUrl()}/api/v1/products/${id}`,
         {
@@ -215,7 +240,7 @@ export default function EditProductPage({ params }) {
 
       return { ok: true, data: data.data };
     },
-    [id]
+    [id, priceStale]
   );
 
   const layoutProps = {
@@ -252,11 +277,17 @@ export default function EditProductPage({ params }) {
           onSaved={handleWeightSaved}
         />
       )}
+      {priceStale && (
+        <div className="mb-ui-6 rounded-ui-md border border-destructive/40 bg-destructive/10 px-ui-4 py-ui-3 text-[14px] text-destructive">
+          {STALE_PRICE_MESSAGE}
+        </div>
+      )}
       <ProductForm
-        key={formKey}
         mode="edit"
         initialValues={initialValues}
         onSubmit={updateProduct}
+        formRef={formRef}
+        submitDisabled={priceStale}
       />
     </Layout>
   );

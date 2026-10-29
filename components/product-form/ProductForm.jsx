@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -21,7 +21,10 @@ import AdvancedSection from "./sections/AdvancedSection";
 
 const VENDOR_ID = 1;
 
-export default function ProductForm({ mode = "create", initialValues, onSubmit }) {
+// formRef (optional): receives the react-hook-form instance, for a page that must
+// patch a few fields of the open form without remounting it (and losing the edits).
+// submitDisabled (optional): blocks Хадгалах while the page knows the form is stale.
+export default function ProductForm({ mode = "create", initialValues, onSubmit, formRef, submitDisabled = false }) {
   const token = GetToken();
   const { categoryEntries, brands, attributes, tagPresets, tagGroups, loading, error } =
     useProductFormData(token);
@@ -50,6 +53,14 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
     },
     mode: "onChange",
   });
+
+  useEffect(() => {
+    if (!formRef) return undefined;
+    formRef.current = form;
+    return () => {
+      formRef.current = null;
+    };
+  }, [form, formRef]);
 
   const productMode = form.watch("productMode");
 
@@ -213,6 +224,7 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit }
             <LoadingButton
               type="submit"
               loading={submitting}
+              disabled={submitDisabled}
               className="cursor-pointer border-0 bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 h-[36px] rounded-[6px] px-[16px] py-[8px] text-[14px]"
             >
               Хадгалах
