@@ -3,6 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import ProductForm from "@/components/product-form/ProductForm";
+import CargoWeightCard from "@/components/cargo/CargoWeightCard";
 import GetToken from "@/lib/GetTokenClient";
 import { getBackendUrl } from "@/lib/api/env";
 import { fetchWithAuthHandling } from "@/lib/api/fetch-with-auth";
@@ -106,7 +107,25 @@ export default function EditProductPage({ params }) {
   const token = GetToken();
 
   const [initialValues, setInitialValues] = useState(null);
+  // Read off the fetched product rather than mapped into form values: it only
+  // decides whether the cargo card shows, and the form never submits it.
+  const [importInfo, setImportInfo] = useState(null);
   const [loadError, setLoadError] = useState("");
+  // Bumped to remount the form with freshly loaded values (see handleWeightSaved).
+  const [formKey, setFormKey] = useState(0);
+
+  // The product as the form and the cargo card need it, or null when it is gone.
+  const fetchProduct = useCallback(async () => {
+    const [product, hierarchicalTags] = await Promise.all([
+      getProductById(id, token),
+      getProductHierarchicalTags(id).catch(() => null),
+    ]);
+    if (!product) return null;
+    return {
+      importInfo: { isImported: product.isImportedProduct === true, sku: product.sku || "" },
+      values: toInitialValues(product, hierarchicalTags),
+    };
+  }, [id, token]);
 
   useEffect(() => {
     if (!token || !Number.isFinite(id)) return;
@@ -115,19 +134,17 @@ export default function EditProductPage({ params }) {
 
     (async () => {
       try {
-        const [product, hierarchicalTags] = await Promise.all([
-          getProductById(id, token),
-          getProductHierarchicalTags(id).catch(() => null),
-        ]);
+        const loaded = await fetchProduct();
 
         if (cancelled) return;
 
-        if (!product) {
+        if (!loaded) {
           setLoadError("Бараа олдсонгүй");
           return;
         }
 
-        setInitialValues(toInitialValues(product, hierarchicalTags));
+        setImportInfo(loaded.importInfo);
+        setInitialValues(loaded.values);
       } catch {
         if (!cancelled) setLoadError("Өгөгдөл ачаалахад алдаа гарлаа");
       }
@@ -136,7 +153,24 @@ export default function EditProductPage({ params }) {
     return () => {
       cancelled = true;
     };
-  }, [id, token]);
+  }, [id, token, fetchProduct]);
+
+  // Weighing reprices the product on the server. The form still holds the old
+  // price, and saving it would write that price back over the cargo-inclusive
+  // one, so reload the product and remount the form with what is stored now.
+  const handleWeightSaved = useCallback(async () => {
+    try {
+      const loaded = await fetchProduct();
+      if (!loaded) throw new Error("product not reloaded");
+      setImportInfo(loaded.importInfo);
+      setInitialValues(loaded.values);
+      setFormKey((k) => k + 1);
+    } catch {
+      toastManager.warning("Үнэ шинэчлэгдсэн. Хуудсыг дахин ачаалж байж хадгална уу.", {
+        title: "Карго",
+      });
+    }
+  }, [fetchProduct]);
 
   const updateProduct = useCallback(
     async (payload, { form, token: submitToken }) => {
@@ -210,7 +244,20 @@ export default function EditProductPage({ params }) {
 
   return (
     <Layout {...layoutProps}>
-      <ProductForm mode="edit" initialValues={initialValues} onSubmit={updateProduct} />
+      {importInfo?.isImported && (
+        <CargoWeightCard
+          productId={id}
+          sku={importInfo.sku}
+          token={token}
+          onSaved={handleWeightSaved}
+        />
+      )}
+      <ProductForm
+        key={formKey}
+        mode="edit"
+        initialValues={initialValues}
+        onSubmit={updateProduct}
+      />
     </Layout>
   );
 }

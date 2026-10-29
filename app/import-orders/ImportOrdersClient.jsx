@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 import {
   getImportProducts,
@@ -8,6 +9,10 @@ import {
   advanceProductStatus,
   dispatchArrivedItems,
 } from "@/lib/api/importOrders";
+import { setProductWeight } from "@/lib/api/cargo";
+import { SOURCE_LABEL, formatMnt, formatWeight } from "@/lib/cargo/format";
+import { WEIGHT_INPUT_ERROR, resolveWeightInput } from "@/lib/cargo/screens";
+import { WeightSourceChip } from "@/components/cargo/CargoWeightCard";
 
 const STATUS_COLORS = {
   WAITING:    { bg: "#fff7ed", text: "#c2410c", border: "#fed7aa", label: "Хүлээж байна"            },
@@ -76,12 +81,31 @@ function AdvanceModal({ modal, onClose, onConfirm }) {
   const [msgText, setMsgText] = useState(modal.defaultMessage);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
+  // Landing in Mongolia is when the product is in hand to weigh.
+  const weighs = modal.toStatus === "ARRIVED";
+  const [weightText, setWeightText] = useState(
+    modal.cargoWeightG != null ? String(modal.cargoWeightG) : ""
+  );
+  const [weightError, setWeightError] = useState(null);
 
   const handleSubmit = async () => {
     if (!msgText.trim()) return;
+
+    // Check the weight before anything is sent: the status change texts the
+    // customers and cannot be taken back, so a typo must stop it here.
+    let weight;
+    if (weighs) {
+      const parsed = resolveWeightInput(weightText, modal.cargoWeightG);
+      if (!parsed.ok) {
+        setWeightError(WEIGHT_INPUT_ERROR);
+        return;
+      }
+      if (parsed.changed) weight = { weightG: parsed.weightG };
+    }
+
     setLoading(true);
     setError(null);
-    const err = await onConfirm(modal.productId, modal.fromStatus, modal.toStatus, msgText);
+    const err = await onConfirm(modal.productId, modal.fromStatus, modal.toStatus, msgText, weight);
     if (err) {
       setLoading(false);
       setError(err);
@@ -114,6 +138,39 @@ function AdvanceModal({ modal, onClose, onConfirm }) {
             fontFamily: "inherit", boxSizing: "border-box",
           }}
         />
+
+        {weighs && (
+          <div style={{ marginTop: 14 }}>
+            <label htmlFor="advance-weight" style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>
+              Жин (гр)
+              <span style={{ fontWeight: 400, color: "#9ca3af" }}> · нэг ширхэгийн</span>
+            </label>
+            <input
+              id="advance-weight"
+              type="text"
+              inputMode="numeric"
+              value={weightText}
+              placeholder={modal.weightG != null ? String(modal.weightG) : ""}
+              disabled={loading}
+              onChange={(e) => { setWeightText(e.target.value); setWeightError(null); }}
+              style={{
+                display: "block", marginTop: 4, width: 140, border: "1px solid #d1d5db",
+                borderRadius: 8, padding: "8px 12px", fontSize: 13, boxSizing: "border-box",
+              }}
+            />
+            {weightError ? (
+              <div style={{ color: "#dc2626", fontSize: 12, marginTop: 6 }}>❌ {weightError}</div>
+            ) : (
+              <div style={{ color: "#9ca3af", fontSize: 11, marginTop: 6 }}>
+                {modal.cargoWeightG != null
+                  ? "Жин өөрчилбөл барааны карго шинэчлэгдэнэ."
+                  : modal.weightG != null
+                    ? `Жинлээгүй — одоо ${formatWeight(modal.weightG)} (${SOURCE_LABEL[modal.source] ?? "—"}) жингээр карго бодогдож байна.`
+                    : "Жинлээгүй байна."}
+              </div>
+            )}
+          </div>
+        )}
 
         {error && (
           <div style={{ color: "#dc2626", fontSize: 12, marginTop: 8 }}>❌ {error}</div>
@@ -153,6 +210,8 @@ function ProductsTab({ onRefresh, token }) {
   const [loading, setLoading]     = useState(true);
   const [modal, setModal]         = useState(null);
   const [doneState, setDoneState] = useState({});
+  // productId -> why its weight was not saved after the status change went through
+  const [weightErrors, setWeightErrors] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -163,20 +222,35 @@ function ProductsTab({ onRefresh, token }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleConfirm = async (productId, fromStatus, toStatus, message) => {
+  const handleConfirm = async (productId, fromStatus, toStatus, message, weight) => {
     const res = await advanceProductStatus(productId, fromStatus, toStatus, message, token);
-    if (res.success) {
-      const key = `${productId}-${toStatus}`;
-      setDoneState((s) => ({ ...s, [key]: { done: true, message: res.message } }));
-      setModal(null);
-      setTimeout(() => {
-        setDoneState((s) => { const n = { ...s }; delete n[key]; return n; });
-        load();
-        onRefresh();
-      }, 2500);
-      return null;
+    if (!res.success) return res.error || "Алдаа гарлаа";
+
+    // The status change is done and the customers are texted. A weight that
+    // fails to save is reported on the row; it never undoes the status.
+    let weightNote = null;
+    setWeightErrors((s) => { const n = { ...s }; delete n[productId]; return n; });
+    if (weight) {
+      const w = await setProductWeight(productId, weight.weightG, token);
+      if (w.success && w.data) {
+        weightNote = weight.weightG === null
+          ? "Жин устгагдлаа"
+          : `Жин ${formatWeight(weight.weightG)}` +
+            (w.data.cargoMnt > 0 ? ` · карго ${formatMnt(w.data.cargoMnt)}` : "");
+      } else {
+        setWeightErrors((s) => ({ ...s, [productId]: w.error || "Жин хадгалж чадсангүй" }));
+      }
     }
-    return res.error || "Алдаа гарлаа";
+
+    const key = `${productId}-${toStatus}`;
+    setDoneState((s) => ({ ...s, [key]: { done: true, message: res.message, weightNote } }));
+    setModal(null);
+    setTimeout(() => {
+      setDoneState((s) => { const n = { ...s }; delete n[key]; return n; });
+      load();
+      onRefresh();
+    }, 2500);
+    return null;
   };
 
   if (loading) return (
@@ -225,6 +299,25 @@ function ProductsTab({ onRefresh, token }) {
                 {product.deliveryNote && (
                   <div style={{ color: "#9ca3af", fontSize: 11, marginTop: 2 }}>{product.deliveryNote}</div>
                 )}
+                {typeof product.weightG === "number" && (
+                  <div style={{
+                    marginTop: 4, display: "flex", alignItems: "center", gap: 6,
+                    flexWrap: "wrap", fontSize: 12, color: "#6b7280",
+                  }}>
+                    <span>Жин: {formatWeight(product.weightG)}</span>
+                    <WeightSourceChip source={product.source} />
+                    {product.cargoMnt > 0 && <span>· Карго: {formatMnt(product.cargoMnt)} / ш</span>}
+                  </div>
+                )}
+                {weightErrors[product.id] && (
+                  <div style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>
+                    ⚠ Жин хадгалагдсангүй: {weightErrors[product.id]}.{" "}
+                    <Link href="/cargo" style={{ color: "#1d4ed8", textDecoration: "underline" }}>
+                      Карго хуудаснаас
+                    </Link>{" "}
+                    дахин оруулна уу.
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
@@ -255,6 +348,9 @@ function ProductsTab({ onRefresh, token }) {
                     return (
                       <div key={t.to} style={{ color: "#15803d", fontSize: 12, fontWeight: 600 }}>
                         ✅ {done.message}
+                        {done.weightNote && (
+                          <div style={{ fontWeight: 400, marginTop: 2 }}>⚖ {done.weightNote}</div>
+                        )}
                       </div>
                     );
                   }
@@ -268,6 +364,9 @@ function ProductsTab({ onRefresh, token }) {
                         toStatus: t.to,
                         count,
                         defaultMessage: t.defaultMsg(product.name),
+                        cargoWeightG: product.cargoWeightG ?? null,
+                        weightG: product.weightG,
+                        source: product.source,
                       })}
                       style={{
                         background: "#1e293b", color: "#fff", border: "none",

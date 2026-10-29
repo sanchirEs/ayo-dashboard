@@ -9,6 +9,8 @@ import {
   recomputePrices,
   regateProducts,
 } from "@/lib/api/retailers";
+import { recomputeMessage, regateMessage } from "@/lib/retailers/messages";
+import { formatMnt } from "@/lib/partners/format";
 
 const ACCENT = "#495D35";
 
@@ -65,7 +67,7 @@ function Badge({ tone, children }) {
   );
 }
 
-function RetailerCard({ retailer, categories, token, onChanged }) {
+function RetailerCard({ retailer, categories, cargoRatePerKg, token, onChanged }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState({});
   const [busy, setBusy] = useState(null);
@@ -127,10 +129,7 @@ function RetailerCard({ retailer, categories, token, onChanged }) {
     }
     setMsg({
       tone: "ok",
-      text:
-        kind === "recompute"
-          ? `Үнэ дахин бодлоо: ${res.data.updated}/${res.data.examined} мөр шинэчлэгдсэн.`
-          : `Дахин шалгалаа: ${res.data.changed}/${res.data.examined} мөр төлөв өөрчлөгдсөн.`,
+      text: kind === "recompute" ? recomputeMessage(res.data) : regateMessage(res.data),
     });
     onChanged();
   }
@@ -274,6 +273,15 @@ function RetailerCard({ retailer, categories, token, onChanged }) {
         </div>
       )}
 
+      {/* Cargo is added to the price after the markup; its rate lives on its own page. */}
+      {!editing && cargoRatePerKg != null && (
+        <div className="text-tiny" style={{ marginTop: 12 }}>
+          <Link href="/cargo" style={{ color: ACCENT, fontWeight: 600 }}>
+            Карго: {formatMnt(cargoRatePerKg)}/кг →
+          </Link>
+        </div>
+      )}
+
       {msg && (
         <div
           className="text-tiny"
@@ -334,7 +342,7 @@ function Stat({ label, value, warn, danger }) {
   );
 }
 
-export default function RetailersClient({ initialRetailers, initialError, categories }) {
+export default function RetailersClient({ initialRetailers, initialError, categories, cargoRatePerKg }) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
 
@@ -380,6 +388,7 @@ export default function RetailersClient({ initialRetailers, initialError, catego
           key={r.id}
           retailer={r}
           categories={categories}
+          cargoRatePerKg={cargoRatePerKg}
           token={token}
           onChanged={refresh}
         />

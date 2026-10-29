@@ -14,6 +14,7 @@ import {
   translateStatus,
 } from "@/lib/api/orders";
 import { resolveImageUrl } from "@/lib/api/env";
+import { orderCargoTotal } from "@/lib/cargo/screens";
 
 // ── Status config ──────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -188,6 +189,8 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   const subtotal = order
     ? order.orderItems?.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0) ?? parseFloat(order.total) - parseFloat(order.shippingCost || 0)
     : 0;
+  // The cargo share already inside the goods total (per-unit snapshot x qty).
+  const cargo = orderCargoTotal(order?.orderItems);
   const shipping = parseFloat(order?.shippingCost || 0);
   const total = parseFloat(order?.total || 0);
 
@@ -353,6 +356,12 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     <span>Нийт бүтээгдэхүүн</span>
                     <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(subtotal)}</span>
                   </div>
+                  {cargo > 0 && (
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#9ca3af", paddingLeft: 12 }}>
+                      <span>Үүнээс карго</span>
+                      <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(cargo)}</span>
+                    </div>
+                  )}
                   {shipping > 0 && (
                     <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
                       <span>Хүргэлтийн төлбөр</span>

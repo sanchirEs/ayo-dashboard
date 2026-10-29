@@ -10,6 +10,7 @@ import { getBackendUrl } from './env';
 import { tokenService } from './token-service';
 import { handleApiError, logApiError } from './error-handler';
 import { fetchWithAuthHandling } from './fetch-with-auth';
+import type { CargoWeightSource } from './cargo';
 
 // ==================== TYPES ====================
 
@@ -21,6 +22,17 @@ export interface ImportProduct {
   estimatedDeliveryDays: number;
   deliveryNote: string | null;
   imageUrl: string | null;
+  /**
+   * Cargo fields (ayo-back importOrderController). Optional so a dashboard
+   * deployed ahead of the backend renders without them rather than crashing.
+   */
+  /** The product's own measured weight in grams, null when never weighed. */
+  cargoWeightG?: number | null;
+  /** Per-unit cargo stored with the current price, null when none. */
+  cargoMnt?: number | null;
+  /** Effective weight after measured -> category -> default. */
+  weightG?: number;
+  source?: CargoWeightSource;
   counts: {
     waiting: number;
     leftKorea: number;

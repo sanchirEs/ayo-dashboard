@@ -138,6 +138,8 @@ export interface ReceiptLine {
   variantId: number;
   qty: number;
   unitCost: number;
+  /** This line's per-unit share of the receipt's cargo cost: a decimal string (cents), null when none. */
+  cargoUnitCost?: string | number | null;
 }
 
 export interface GoodsReceipt {
@@ -149,6 +151,8 @@ export interface GoodsReceipt {
   note: string | null;
   receivedAt: string;
   stockApplied: boolean;
+  /** Total cargo paid for the whole receipt, spread over its lines; null when none. */
+  cargoCostMnt?: number | null;
   lines: ReceiptLine[];
 }
 
@@ -279,7 +283,14 @@ export const listGoodsReceipts = async (token: string, locationId?: number) =>
   (await request<{ receipts: GoodsReceipt[] }>("listGoodsReceipts", `/goods-receipts${query({ locationId, take: 100 })}`, token)).receipts;
 
 export const receiveGoods = async (
-  data: { locationId: number; supplierId: number | null; note?: string; lines: { variantId: number; qty: number; unitCost: number }[] },
+  data: {
+    locationId: number;
+    supplierId: number | null;
+    note?: string;
+    /** Whole ₮ for the whole receipt; omit when there is no cargo cost. */
+    cargoCostMnt?: number;
+    lines: { variantId: number; qty: number; unitCost: number }[];
+  },
   token: string,
 ) => (await request<{ receipt: GoodsReceipt }>("receiveGoods", "/goods-receipts", token, send("POST", data))).receipt;
 

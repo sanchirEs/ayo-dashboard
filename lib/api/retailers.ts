@@ -338,11 +338,11 @@ export async function getStatusSummary(slug: string, token?: string | null) {
  * 20k rows) — call after changing fxRateToMnt or markupPct.
  */
 export async function recomputePrices(slug: string, token?: string | null) {
-  return request<{ examined: number; updated: number }>(
+  return request<{ products: number; variants: number }>(
     `/admin/${slug}/recompute-prices`,
     { method: 'POST' },
     'recomputePrices',
-    { examined: 0, updated: 0 },
+    { products: 0, variants: 0 },
     token
   );
 }

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createSupplier, listGoodsReceipts, listSuppliers, receiveGoods, updateSupplier } from "@/lib/api/stock";
 import { formatMnt } from "@/lib/partners/format";
+import { formatMntCents, landedUnitCost, parseCargoCostMnt } from "@/lib/cargo/screens";
 import { Button, C, Dialog, ErrorText, Field, Pill, Table, ago, inputStyle, labelStyle } from "@/components/pos/ui";
 import { SMALL, LinesEditor, LocationSelect, Toolbar, useLocations, useToken, useVariantNames } from "@/components/stock/shared";
 
@@ -18,15 +19,19 @@ function NewReceipt({ token, locations, suppliers, onClose, onSaved }) {
   const [supplierId, setSupplierId] = useState("");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState([]);
+  const [cargoText, setCargoText] = useState("");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const total = lines.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unitCost) || 0), 0);
+  // Blank or 0 = no cargo cost; NaN = not a positive whole number (checked on save).
+  const cargoCostMnt = parseCargoCostMnt(cargoText);
 
   const save = async () => {
     if (locationId == null) return setError("Аль салбарт орох вэ гэдгийг сонгоно уу");
     if (lines.some((l) => !Number.isInteger(l.qty) || l.qty <= 0)) return setError("Тоо ширхэг эерэг бүхэл тоо байх ёстой");
     if (lines.some((l) => !Number.isInteger(l.unitCost) || l.unitCost < 0)) return setError("Өртөг 0 буюу түүнээс их бүхэл тоо байх ёстой (үнэгүй бол 0)");
+    if (Number.isNaN(cargoCostMnt)) return setError("Карго зардал эерэг бүхэл тоо байх ёстой");
     setBusy(true);
     setError(null);
     try {
@@ -35,6 +40,8 @@ function NewReceipt({ token, locations, suppliers, onClose, onSaved }) {
           locationId,
           supplierId: supplierId === "" ? null : Number(supplierId),
           note: note.trim() || undefined,
+          // Only sent when there is one; the backend reads its absence as no cargo.
+          ...(cargoCostMnt ? { cargoCostMnt } : {}),
           lines: lines.map((l) => ({ variantId: l.variant.id, qty: l.qty, unitCost: l.unitCost })),
         },
         token,
@@ -62,12 +69,25 @@ function NewReceipt({ token, locations, suppliers, onClose, onSaved }) {
         </label>
       </Toolbar>
       <LinesEditor token={token} lines={lines} onChange={setLines} withCost />
-      <label style={{ display: "block", marginTop: 14 }}>
-        <span style={labelStyle}>Тайлбар</span>
-        <input value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} />
-      </label>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 14 }}>
+        <label style={{ flex: "1 1 260px" }}>
+          <span style={labelStyle}>Тайлбар</span>
+          <input value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} />
+        </label>
+        <label style={{ flex: "0 1 220px" }}>
+          <span style={labelStyle}>Карго зардал (нийт ₮)</span>
+          <input
+            value={cargoText}
+            onChange={(e) => setCargoText(e.target.value)}
+            inputMode="numeric"
+            placeholder="Заавал биш"
+            style={inputStyle}
+          />
+        </label>
+      </div>
       <p style={{ textAlign: "right", margin: "14px 0 0", color: C.muted }}>
         Нийт өртөг: <strong style={{ color: C.text }}>{formatMnt(total)}</strong>
+        {cargoCostMnt > 0 && <> + карго <strong style={{ color: C.text }}>{formatMnt(cargoCostMnt)}</strong></>}
       </p>
       <ErrorText>{error}</ErrorText>
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 18 }}>
@@ -215,13 +235,20 @@ export default function GoodsInClient() {
       ),
       supplier: r.supplier?.name ?? "—",
       lines: `${r.lines.length} төрөл · ${r.lines.reduce((s, l) => s + l.qty, 0)} ш`,
-      cost: formatMnt(cost),
+      cost: (
+        <span>
+          {formatMnt(cost)}
+          {r.cargoCostMnt > 0 && <span style={{ display: "block", fontSize: 12, color: C.muted }}>+ карго {formatMnt(r.cargoCostMnt)}</span>}
+        </span>
+      ),
       at: ago(r.receivedAt),
       receipt: r,
     };
   });
 
   const open = expanded && receipts?.find((r) => r.id === expanded);
+  // Cargo columns only appear on a receipt that carries cargo, so older receipts look as before.
+  const openHasCargo = open && open.lines.some((l) => Number(l.cargoUnitCost) > 0);
 
   return (
     <div className="wg-box">
@@ -246,16 +273,39 @@ export default function GoodsInClient() {
         empty={receipts === null && !error ? "Ачаалж байна…" : "Орлого алга."}
       />
       {open && (
-        <Dialog title={`${open.number} · ${nameOf(open.locationId)}`} onClose={() => setExpanded(null)} width={680}>
+        <Dialog title={`${open.number} · ${nameOf(open.locationId)}`} onClose={() => setExpanded(null)} width={openHasCargo ? 860 : 680}>
           {open.note && <p style={{ margin: "0 0 12px", color: C.muted }}>{open.note}</p>}
+          {open.cargoCostMnt > 0 && (
+            <p style={{ margin: "0 0 12px", color: C.muted }}>
+              Карго зардал: <strong style={{ color: C.text }}>{formatMnt(open.cargoCostMnt)}</strong>
+            </p>
+          )}
           <Table
             cols={[
               { key: "name", label: "Бараа" },
               { key: "qty", label: "Тоо", align: "right", width: 80 },
               { key: "unitCost", label: "Нэгж өртөг", align: "right", width: 120 },
-              { key: "sum", label: "Дүн", align: "right", width: 120 },
+              ...(openHasCargo
+                ? [
+                    { key: "cargo", label: "Карго", align: "right", width: 120 },
+                    { key: "landed", label: "Бүрэн өртөг", align: "right", width: 130 },
+                  ]
+                : []),
+              { key: "sum", label: "Дүн", align: "right", width: 130 },
             ]}
-            rows={open.lines.map((l) => ({ key: l.id ?? l.variantId, name: nameFor(l.variantId), qty: l.qty, unitCost: formatMnt(l.unitCost), sum: formatMnt(l.qty * l.unitCost) }))}
+            rows={open.lines.map((l) => {
+              const landed = landedUnitCost(l.unitCost, l.cargoUnitCost);
+              return {
+                key: l.id ?? l.variantId,
+                name: nameFor(l.variantId),
+                qty: l.qty,
+                unitCost: formatMnt(l.unitCost),
+                cargo: Number(l.cargoUnitCost) > 0 ? formatMntCents(l.cargoUnitCost) : "—",
+                landed: formatMntCents(landed),
+                // With cargo the line is worth its landed cost; without, exactly what it was.
+                sum: openHasCargo ? formatMntCents(l.qty * landed) : formatMnt(l.qty * l.unitCost),
+              };
+            })}
             empty="—"
           />
         </Dialog>
