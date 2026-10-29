@@ -365,7 +365,11 @@ export default function StoreSettingsClient({ initialSettings }) {
     );
   }
 
-  const generalSettings = settings.filter((s) => s.group !== "DELIVERY_ZONE");
+  // CARGO settings (rate, default weight) are edited on the Карго page, next to
+  // the coverage numbers they change.
+  const generalSettings = settings.filter(
+    (s) => s.group !== "DELIVERY_ZONE" && s.group !== "CARGO"
+  );
   const zoneSettings = settings.filter((s) => s.group === "DELIVERY_ZONE");
 
   return (

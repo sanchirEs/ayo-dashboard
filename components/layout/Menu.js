@@ -57,6 +57,7 @@ export default function Menu() {
       "/store-locations": 0,
       "/store-locations/new": 0,
       "/retailers": 0,
+      "/cargo": 0,
       "/partners": 14,
       "/pos/registers": 15,
       "/pos/staff": 15,
@@ -1067,6 +1068,19 @@ export default function Menu() {
               <div className="text">Эх сурвалж</div>
             </Link>
           </li>
+          {["ADMIN", "SUPERADMIN"].includes(role) && (
+            <li className={`menu-item ${router.startsWith("/cargo") ? "active" : ""}`}>
+              <Link
+                href="/cargo"
+                className={router.startsWith("/cargo") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-package" />
+                </div>
+                <div className="text">Карго</div>
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
       {false && (

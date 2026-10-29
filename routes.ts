@@ -22,6 +22,7 @@ export const adminRoutes = [
   "/setting",
   "/create-role",
   "/partners",
+  "/cargo",
   "/pos/registers",
   "/pos/staff",
   "/pos/settings",
