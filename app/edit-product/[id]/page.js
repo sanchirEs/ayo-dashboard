@@ -118,10 +118,8 @@ export default function EditProductPage({ params }) {
   // The open form's react-hook-form instance, so a repriced product can have its
   // price fields patched in place (see handleWeightSaved).
   const formRef = useRef(null);
-  // The product's price as last loaded; a weight save that answers with the same
-  // price moved nothing, so there is nothing stale to refresh.
-  const loadedPriceRef = useRef(null);
-  // The weight was saved and the price moved, but the form could not be refreshed.
+  // The weight was saved, which may have moved prices, but the form could not be
+  // refreshed.
   const [priceStale, setPriceStale] = useState(false);
 
   // The product as the form and the cargo card need it, or null when it is gone.
@@ -134,7 +132,6 @@ export default function EditProductPage({ params }) {
     return {
       importInfo: { isImported: product.isImportedProduct === true, sku: product.sku || "" },
       values: toInitialValues(product, hierarchicalTags),
-      price: Number(product.price),
     };
   }, [id, token]);
 
@@ -154,7 +151,6 @@ export default function EditProductPage({ params }) {
           return;
         }
 
-        loadedPriceRef.current = loaded.price;
         setImportInfo(loaded.importInfo);
         setInitialValues(loaded.values);
       } catch {
@@ -168,14 +164,16 @@ export default function EditProductPage({ params }) {
   }, [id, token, fetchProduct]);
 
   // Weighing reprices the product on the server while this form is open with the
-  // old price, and saving it would write that price back. So when the price moved,
-  // re-read the product and patch just the price fields in place (resetField also
-  // moves their default, so "Цуцлах" cannot restore the old price). Everything else
-  // the user has typed stays. A house, pinned or unchanged-cargo product keeps its
-  // price and needs nothing.
+  // old prices, and saving it would write those prices back. So after every weight
+  // save, re-read the product and patch just the price fields in place (resetField
+  // also moves their default, so "Цуцлах" cannot restore the old price). Everything
+  // else the user has typed stays. Never skipped on an unchanged product price: a
+  // pinned product price with unpinned variants keeps its price while the variant
+  // prices move. priceUpdates answers [] when nothing moved, so this is cheap to
+  // always run. A failed re-read blocks Save in every case, since without it there
+  // is no telling whether prices moved.
   const handleWeightSaved = useCallback(
-    async (saved) => {
-      if (Number(saved?.price) === loadedPriceRef.current) return;
+    async () => {
       try {
         const loaded = await fetchProduct();
         const form = formRef.current;
@@ -183,7 +181,6 @@ export default function EditProductPage({ params }) {
         for (const [path, value] of priceUpdates(form.getValues(), loaded.values)) {
           form.resetField(path, { defaultValue: value });
         }
-        loadedPriceRef.current = loaded.price;
       } catch {
         // Better a form that cannot be saved than one that quietly reverts the price.
         setPriceStale(true);

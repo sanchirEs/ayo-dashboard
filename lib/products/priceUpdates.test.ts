@@ -35,6 +35,26 @@ describe('priceUpdates', () => {
     ]);
   });
 
+  it('still updates a moved variant when the product price is pinned and did not move', () => {
+    // Weighing a product whose own price is pinned leaves that price alone while
+    // its unpinned variants reprice; the form must not save the old variant prices.
+    const current = {
+      price: '45000',
+      variants: [
+        { id: 21, price: 45000 },
+        { id: 22, price: 52000 },
+      ],
+    };
+    const fresh = {
+      price: '45000',
+      variants: [
+        { id: 21, price: 45000 },
+        { id: 22, price: 52600 },
+      ],
+    };
+    expect(priceUpdates(current, fresh)).toEqual([['variants.1.price', 52600]]);
+  });
+
   it('leaves a variant alone when it is gone or has no id', () => {
     const current = { price: '1', variants: [{ id: 5, price: 1 }, { price: 2 }] };
     const fresh = { price: '1', variants: [{ id: 6, price: 9 }] };
