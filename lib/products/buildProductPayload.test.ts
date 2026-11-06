@@ -64,20 +64,6 @@ describe('buildProductPayload — simple mode', () => {
     const payload = buildProductPayload(baseValues, baseCtx);
     expect(payload.price).toBe(0);
   });
-
-  it('sends no variant id when creating a product', () => {
-    const payload = buildProductPayload({ ...baseValues, price: '1000', quantity: '5' }, baseCtx);
-    expect('id' in payload.variants[0]).toBe(false);
-  });
-
-  // Without the id the backend matched by SKU, so a SKU edit created a second variant.
-  it('carries the edited product\'s variant id, so a SKU change renames that variant', () => {
-    const payload = buildProductPayload(
-      { ...baseValues, sku: '8809686388769', price: '1000', quantity: '5' },
-      { ...baseCtx, simpleVariantId: 788 }
-    );
-    expect(payload.variants[0]).toMatchObject({ id: 788, sku: '8809686388769-DEFAULT' });
-  });
 });
 
 describe('buildProductPayload — variant mode', () => {
@@ -118,14 +104,6 @@ describe('buildProductPayload — variant mode', () => {
     const payload = buildProductPayload(baseValues, { ...baseCtx, mode: 'variants' });
     expect(payload.price).toBe(0);
     expect(payload.variants).toBeUndefined();
-  });
-
-  it('keeps a loaded variant\'s id so editing its SKU renames it; new rows go without one', () => {
-    const payload = buildProductPayload(baseValues, {
-      ...baseCtx, mode: 'variants', variants: [{ ...variants[0], id: 41 }, variants[1]],
-    });
-    expect(payload.variants[0].id).toBe(41);
-    expect('id' in payload.variants[1]).toBe(false);
   });
 
   it('prefers variant-specific images over main-form images', () => {

@@ -12,7 +12,7 @@ import {
   getProductHierarchicalTags,
   replaceProductHierarchicalTags,
 } from "@/lib/api/hierarchicalTags";
-import { normalizeLoadedVariants, pickSimpleVariant } from "@/lib/products/variantNormalization";
+import { normalizeLoadedVariants } from "@/lib/products/variantNormalization";
 import { PRODUCT_FORM_DEFAULTS } from "@/lib/products/productFormDefaults";
 import { priceUpdates } from "@/lib/products/priceUpdates";
 import toastManager from "@/lib/toast";
@@ -57,12 +57,9 @@ function toInitialValues(product, hierarchicalTags) {
   // the old page: a single variant is how simple products are stored.
   const hasVariants = loadedVariants.length > 1;
 
-  // The one-price fields show the variant a save as Энгийн бараа keeps, so its
-  // stock and barcode are not overwritten with another variant's (840: the first
-  // variant had 0 in stock, the kept one 33).
-  const simpleVariant = pickSimpleVariant(product.variants);
-  const price = simpleVariant ? Number(simpleVariant.price) : Number(product.price || 0);
-  const quantity = simpleVariant?.inventory?.quantity ?? product.stock ?? 0;
+  const firstVariant = product.variants?.[0];
+  const price = firstVariant ? Number(firstVariant.price) : Number(product.price || 0);
+  const quantity = firstVariant?.inventory?.quantity ?? product.stock ?? 0;
 
   // altText must be non-empty — imageSchema requires min(1) and would otherwise
   // reject the untouched product on save.
@@ -85,7 +82,7 @@ function toInitialValues(product, hierarchicalTags) {
     expiryDate: product.expiryDate ? String(product.expiryDate).slice(0, 10) : "",
     sku: product.sku || "",
     // A simple product's barcode lives on its one variant
-    barcode: simpleVariant?.barcode ?? "",
+    barcode: hasVariants ? "" : (firstVariant?.barcode ?? ""),
     categoryIds,
     brandId: (product.brand?.id ?? product.brandId ?? "").toString(),
     price: price.toString(),
@@ -117,7 +114,6 @@ export default function EditProductPage({ params }) {
   // Read off the fetched product rather than mapped into form values: it only
   // decides whether the cargo card shows, and the form never submits it.
   const [importInfo, setImportInfo] = useState(null);
-  const [simpleVariantId, setSimpleVariantId] = useState(undefined);
   const [loadError, setLoadError] = useState("");
   // The open form's react-hook-form instance, so a repriced product can have its
   // price fields patched in place (see handleWeightSaved).
@@ -136,8 +132,6 @@ export default function EditProductPage({ params }) {
     return {
       importInfo: { isImported: product.isImportedProduct === true, sku: product.sku || "" },
       values: toInitialValues(product, hierarchicalTags),
-      // Sent when saved as Энгийн бараа: this variant stays, the others are deleted.
-      simpleVariantId: pickSimpleVariant(product.variants)?.id,
     };
   }, [id, token]);
 
@@ -158,7 +152,6 @@ export default function EditProductPage({ params }) {
         }
 
         setImportInfo(loaded.importInfo);
-        setSimpleVariantId(loaded.simpleVariantId);
         setInitialValues(loaded.values);
       } catch {
         if (!cancelled) setLoadError("Өгөгдөл ачаалахад алдаа гарлаа");
@@ -292,7 +285,6 @@ export default function EditProductPage({ params }) {
         onSubmit={updateProduct}
         formRef={formRef}
         submitDisabled={priceStale}
-        simpleVariantId={simpleVariantId}
       />
     </Layout>
   );

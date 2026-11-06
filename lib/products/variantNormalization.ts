@@ -60,21 +60,6 @@ export function normalizeVariantAttributes(attributes: RawAttribute[] | null | u
  * wins; if none is flagged, the first variant is promoted (matching the backend's own
  * tie-break in productServices.normalizeVariants).
  */
-/**
- * The variant a product keeps when it is saved as Энгийн бараа (one price): its only
- * variant without attributes, else its default, else its first. Same rule as
- * ayo-back productServices.adoptSwitchedVariant. The edit page fills the one-price
- * fields from it and sends its id, so the save edits it and deletes the others.
- */
-export function pickSimpleVariant<T extends { isDefault?: unknown; attributes?: unknown[] | null }>(
-  variants: T[] | null | undefined
-): T | undefined {
-  if (!Array.isArray(variants) || variants.length === 0) return undefined;
-  const plain = variants.filter((v) => !v.attributes || v.attributes.length === 0);
-  if (plain.length === 1) return plain[0];
-  return variants.find((v) => v.isDefault === true) ?? variants[0];
-}
-
 export function normalizeLoadedVariants<T extends { isDefault?: unknown; attributes?: RawAttribute[] }>(
   variants: T[] | null | undefined
 ): (Omit<T, 'isDefault' | 'attributes'> & { isDefault: boolean; attributes: NormalizedAttribute[] })[] {

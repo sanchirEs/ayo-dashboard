@@ -24,9 +24,7 @@ const VENDOR_ID = 1;
 // formRef (optional): receives the react-hook-form instance, for a page that must
 // patch a few fields of the open form without remounting it (and losing the edits).
 // submitDisabled (optional): blocks Хадгалах while the page knows the form is stale.
-// simpleVariantId (edit, simple product): sent with the one variant so a SKU change
-// renames it instead of creating a second one.
-export default function ProductForm({ mode = "create", initialValues, onSubmit, formRef, submitDisabled = false, simpleVariantId }) {
+export default function ProductForm({ mode = "create", initialValues, onSubmit, formRef, submitDisabled = false }) {
   const token = GetToken();
   const { categoryEntries, brands, attributes, tagPresets, tagGroups, loading, error } =
     useProductFormData(token);
@@ -122,7 +120,6 @@ export default function ProductForm({ mode = "create", initialValues, onSubmit, 
         uploadedImages: form.getValues("images") || [],
         advancedEnabled,
         vendorId: VENDOR_ID,
-        simpleVariantId,
       });
 
       // The page owns the network call, so edit mode differs only in its onSubmit.

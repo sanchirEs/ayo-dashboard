@@ -8,9 +8,6 @@
  *  - variant mode takes the product-level price from the default variant
  *  - barcode is per variant (simple mode: the one DEFAULT variant). An empty box is sent
  *    as null, never omitted: on edit, null is how the backend is told to clear it
- *  - an edited variant is sent with its id (simple mode: ctx.simpleVariantId). Matched
- *    by SKU alone, a SKU change created a second variant beside the one holding the
- *    orders and stock
  */
 
 export type ProductMode = 'simple' | 'variants';
@@ -33,7 +30,6 @@ export interface PayloadImage {
 }
 
 export interface PayloadVariant {
-  id?: number;
   sku: string;
   barcode?: string | null;
   price: number;
@@ -52,8 +48,6 @@ export interface BuildPayloadContext {
   uploadedImages: UploadedImage[];
   advancedEnabled: boolean;
   vendorId: number;
-  /** Edit mode, simple product: the id of its one variant. */
-  simpleVariantId?: number;
 }
 
 /**
@@ -136,7 +130,6 @@ export function buildProductPayload(
 
   if (ctx.mode === 'variants' && ctx.variants.length > 0) {
     payload.variants = ctx.variants.map((variant, index) => ({
-      ...(variant.id ? { id: variant.id } : {}),
       sku: variant.sku,
       barcode: barcodeOf(variant.barcode),
       price: Number(variant.price),
@@ -155,7 +148,6 @@ export function buildProductPayload(
     if (values.price && values.quantity) {
       payload.variants = [
         {
-          ...(ctx.simpleVariantId ? { id: ctx.simpleVariantId } : {}),
           sku: `${values.sku}-DEFAULT`,
           barcode: barcodeOf(values.barcode),
           price: Number(values.price),
