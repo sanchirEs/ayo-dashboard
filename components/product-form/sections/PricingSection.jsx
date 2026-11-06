@@ -8,6 +8,8 @@ import { INPUT_TYPED_CLASS, GROUP_LABEL_CLASS } from "../fieldStyles";
 
 export default function PricingSection({ form }) {
   const mode = form.watch("productMode");
+  // Variants the product was loaded with; saving as Энгийн бараа keeps one of them.
+  const savedVariantCount = form.formState.defaultValues?.variants?.length || 0;
 
   return (
     <Card>
@@ -39,6 +41,13 @@ export default function PricingSection({ form }) {
             </label>
           ))}
         </RadioGroup>
+
+        {mode === "simple" && savedVariantCount > 1 && (
+          <p className="rounded-[8px] border-[1px] border-amber-300 bg-amber-50 p-ui-3 text-[13px] leading-[18px] text-amber-900">
+            Хадгалахад нэг вариант үлдэж, бусад {savedVariantCount - 1} вариант устна. Захиалга, нөөц, POS
+            борлуулалттай вариантыг устгах боломжгүй тул тийм вариант байвал хадгалахгүй.
+          </p>
+        )}
 
         {mode === "simple" && (
           <div className="grid grid-cols-1 gap-ui-4 sm:grid-cols-2">
