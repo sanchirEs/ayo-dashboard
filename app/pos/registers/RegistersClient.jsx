@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { createRegister, listLocations, listRegisters, newPairingCode, revokeRegister } from "@/lib/api/pos";
+import { repairRisk } from "@/lib/pos/repair";
 import { formatCountdown, secondsLeft } from "@/lib/pos/validation";
 import { Button, C, Dialog, ErrorText, Field, Pill, Table, ago } from "@/components/pos/ui";
 
@@ -264,6 +265,41 @@ function PairDialog({ token, locations, existing, onClose, onChanged }) {
   );
 }
 
+/**
+ * Before a code for a till that already has a computer: that computer stops working the
+ * moment another one types the code. (2026-11-03: a code for Соёолж's till, used on an
+ * office laptop, left the shop showing "Сүлжээгүй" with its sales stuck for hours.)
+ */
+function RepairConfirmDialog({ register, live, onClose, onConfirm }) {
+  const place = register.locationName ? ` (${register.locationName})` : "";
+  return (
+    <Dialog title="Энэ касс аль хэдийн холбогдсон" onClose={onClose} width={460}>
+      <p style={{ margin: "0 0 12px", fontSize: 15, color: C.text, lineHeight: 1.5 }}>
+        {live ? (
+          <>
+            «{register.name}»{place} касс <strong>яг одоо ажиллаж байна</strong> ({ago(register.lastSeenAt)}).
+          </>
+        ) : (
+          <>«{register.name}»{place} кассад компьютер холбогдсон байна.</>
+        )}{" "}
+        Шинэ кодыг өөр компьютер дээр оруулбал тэр касс шууд ажиллахаа болино: «Касс салгагдсан» гэж гарч, борлуулалтаа
+        серверт илгээж чадахгүй.
+      </p>
+      <p style={{ margin: "0 0 16px", fontSize: 15, color: C.muted, lineHeight: 1.5 }}>
+        Кассын компьютер солих, эсвэл тэр касс өөрөө «Дахин холбох» гэж байгаа үед л код гаргана. Туршихдаа TST кассыг ашиглана уу.
+      </p>
+      <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+        <Button kind="secondary" onClick={onClose} data-autofocus>
+          Болих
+        </Button>
+        <Button kind={live ? "danger" : "primary"} onClick={onConfirm}>
+          Шинэ код гаргах
+        </Button>
+      </div>
+    </Dialog>
+  );
+}
+
 function RevokeDialog({ register, token, onClose, onDone }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -305,7 +341,7 @@ export default function RegistersClient() {
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // null | { kind: "new" } | { kind: "code", register } | { kind: "revoke", register }
+  // null | { kind: "new" } | { kind: "confirm-code", register, live } | { kind: "code", register } | { kind: "revoke", register }
   const [dialog, setDialog] = useState(null);
 
   const load = useCallback(async () => {
@@ -344,7 +380,14 @@ export default function RegistersClient() {
     ),
     actions: r.active ? (
       <span style={{ display: "inline-flex", gap: 8 }}>
-        <Button kind="secondary" style={ROW_BUTTON} onClick={() => setDialog({ kind: "code", register: r })}>
+        <Button
+          kind="secondary"
+          style={ROW_BUTTON}
+          onClick={() => {
+            const risk = repairRisk(r);
+            setDialog(risk ? { kind: "confirm-code", register: r, live: risk.live } : { kind: "code", register: r });
+          }}
+        >
           Шинэ код
         </Button>
         <Button kind="danger" style={ROW_BUTTON} onClick={() => setDialog({ kind: "revoke", register: r })}>
@@ -383,6 +426,14 @@ export default function RegistersClient() {
 
       {dialog?.kind === "new" && (
         <PairDialog token={token} locations={locations} onClose={() => setDialog(null)} onChanged={load} />
+      )}
+      {dialog?.kind === "confirm-code" && (
+        <RepairConfirmDialog
+          register={dialog.register}
+          live={dialog.live}
+          onClose={() => setDialog(null)}
+          onConfirm={() => setDialog({ kind: "code", register: dialog.register })}
+        />
       )}
       {dialog?.kind === "code" && (
         <PairDialog token={token} locations={locations} existing={dialog.register} onClose={() => setDialog(null)} onChanged={load} />
