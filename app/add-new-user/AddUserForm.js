@@ -14,7 +14,7 @@ const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Админ (бүх хуудас)" },
   // 2026-11-06: the "smaller admin" — orders, products, promotions, catalogue,
   // banners, branches, cargo. See lib/permissions.ts MANAGER_PAGES.
-  { value: "MANAGER", label: "Менежер (захиалга, бараа, урамшуулал)" },
+  { value: "MANAGER", label: "Ажилтан (захиалга, бараа, урамшуулал)" },
   { value: "VENDOR", label: "Борлуулагч" },
 ];
 

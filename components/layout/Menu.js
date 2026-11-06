@@ -268,9 +268,7 @@ export default function Menu() {
     return (
       <div className="center">
         <div className="center-item">
-          <div className="center-heading">
-            {role === "MANAGER" ? "Удирдлагын самбар" : "Ажилтны самбар"}
-          </div>
+          <div className="center-heading">Ажилтны самбар</div>
           <ul className="menu-list">
             {STAFF_MENU.map((group) => (
               <li

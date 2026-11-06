@@ -49,7 +49,7 @@ export function getRoleDisplayName(role: UserRole): string {
     SHEET_PICKUP: "Pickup баталгаажуулагч",
     SHEET_DELIVERY: "Хүргэлт баталгаажуулагч",
     SHEET_REFUND: "Буцаалт баталгаажуулагч",
-    MANAGER: "Менежер"
+    MANAGER: "Ажилтан"
   };
   
   return roleNames[role] || "Unknown";
