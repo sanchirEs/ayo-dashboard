@@ -76,7 +76,7 @@ function BroadcastDetail({ broadcastId, token }) {
       {uniqueErrors.length > 0 && (
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "12px 14px" }}>
           <div style={{ fontWeight: 700, fontSize: "12px", color: "#991b1b", marginBottom: "8px" }}>
-            ⚠️ Алдааны мэдээлэл (CallPro хариу)
+            ⚠️ Алдааны мэдээлэл (SMS үйлчилгээний хариу)
           </div>
           {uniqueErrors.map((err, i) => (
             <div key={i} style={{ fontFamily: "monospace", fontSize: "12px", color: "#7f1d1d", background: "#fff", border: "1px solid #fecaca", borderRadius: "4px", padding: "6px 10px", marginBottom: i < uniqueErrors.length - 1 ? "6px" : 0 }}>
@@ -84,7 +84,7 @@ function BroadcastDetail({ broadcastId, token }) {
             </div>
           ))}
           <div style={{ fontSize: "11px", color: "#9ca3af", marginTop: "8px" }}>
-            Нийт {errorLogs.length} мессеж амжилтгүй болсон • CallPro API тохиргоог шалгана уу
+            Нийт {errorLogs.length} мессеж амжилтгүй болсон • SMS үйлчилгээний тохиргоог шалгана уу
           </div>
         </div>
       )}

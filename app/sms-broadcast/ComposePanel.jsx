@@ -1,10 +1,11 @@
 "use client";
 import { useState } from "react";
+import { analyzeSms, transliterateMn, SMS_SEGMENT_PRICE_MNT } from "@/lib/smsSegments";
 
 const SMS_MAX = 160;
 
 export default function ComposePanel({
-  title, onTitleChange, message, onMessageChange,
+  title, onTitleChange, message, onMessageChange, transliterate, onTransliterateChange,
   templates, selectedCount, onSend, sendState, sendResult, onSaveTemplate,
 }) {
   const [showTemplateName, setShowTemplateName] = useState(false);
@@ -15,7 +16,11 @@ export default function ComposePanel({
 
   const canSend = title.trim() && message.trim() && selectedCount > 0 && sendState === "idle";
   const charPct = Math.min((message.length / SMS_MAX) * 100, 100);
-  const charColor = message.length > 140 ? "#ef4444" : message.length > 120 ? "#f59e0b" : "#10b981";
+  const { encoding, segments } = analyzeSms(message, { transliterate });
+  const charColor = segments > 2 ? "#ef4444" : segments === 2 ? "#f59e0b" : "#10b981";
+  const pricePerPerson = segments * SMS_SEGMENT_PRICE_MNT;
+  const totalPrice = pricePerPerson * selectedCount;
+  const sentText = transliterate ? transliterateMn(message) : message;
 
   const inputStyle = {
     width: "100%", padding: "9px 12px",
@@ -156,7 +161,7 @@ export default function ComposePanel({
         <textarea
           rows={5}
           maxLength={SMS_MAX}
-          placeholder="Хямдрал 22:00т эхэлнэ! Бэлэн үү? 🛍️"
+          placeholder="Хямдрал 22:00т эхэлнэ! Бэлэн үү?"
           value={message}
           onChange={(e) => onMessageChange(e.target.value)}
           style={{ ...inputStyle, resize: "vertical", lineHeight: "1.5", fontFamily: "inherit" }}
@@ -167,6 +172,32 @@ export default function ComposePanel({
         </div>
         {message.length >= SMS_MAX && (
           <div style={{ fontSize: "11px", color: "#ef4444", marginTop: "4px" }}>160 тэмдэгтийн хязгаарт хүрлээ</div>
+        )}
+
+        {/* Cost */}
+        <label style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "12px", fontSize: "13px", color: "#374151", cursor: "pointer" }}>
+          <input type="checkbox" checked={transliterate} onChange={(e) => onTransliterateChange(e.target.checked)} />
+          Латинаар илгээх
+        </label>
+        <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "2px" }}>Нэг SMS-д кирилл 70, латин 160 тэмдэгт багтана</div>
+        {message.trim() && (
+          <div style={{ marginTop: "10px", padding: "10px 12px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", fontSize: "12px", color: "#374151", lineHeight: "1.5" }}>
+            <div>
+              <strong style={{ color: charColor }}>{segments} SMS</strong> × {SMS_SEGMENT_PRICE_MNT}₮ = {pricePerPerson}₮ нэг хүнд
+            </div>
+            <div>
+              Нийт: <strong>{totalPrice.toLocaleString("en-US")}₮</strong> ({selectedCount} хүн)
+            </div>
+            {transliterate && encoding === "ucs2" && (
+              <div style={{ color: "#c2410c", marginTop: "4px" }}>Эможи эсвэл тусгай тэмдэгт байгаа тул латин хэмнэлт өгөхгүй.</div>
+            )}
+            {segments > 1 && (
+              <div style={{ color: "#c2410c", marginTop: "4px" }}>Зарим оператор дээр {segments} тусдаа мессеж болж очно.</div>
+            )}
+            {transliterate && (
+              <div style={{ color: "#6b7280", marginTop: "6px", overflowWrap: "anywhere" }}>{sentText}</div>
+            )}
+          </div>
         )}
       </div>
 
@@ -255,12 +286,13 @@ export default function ComposePanel({
               <div style={{ fontWeight: 700, fontSize: "17px", color: "#111827", marginBottom: "6px" }}>Мессеж илгээхдээ итгэлтэй байна уу?</div>
               <div style={{ fontSize: "13px", color: "#6b7280" }}>
                 <strong style={{ color: "#111827" }}>{selectedCount}</strong> хэрэглэгчид SMS илгээнэ
+                {" · "}нийт <strong style={{ color: "#111827" }}>{totalPrice.toLocaleString("en-US")}₮</strong>
               </div>
             </div>
             <div style={{ background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "12px 16px", marginBottom: "20px" }}>
               <div style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", marginBottom: "4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Мессежийн агуулга</div>
               <div style={{ fontSize: "13px", color: "#374151", lineHeight: "1.5" }}>
-                {message.substring(0, 120)}{message.length > 120 ? "..." : ""}
+                {sentText.substring(0, 120)}{sentText.length > 120 ? "..." : ""}
               </div>
             </div>
             <div style={{ display: "flex", gap: "10px" }}>

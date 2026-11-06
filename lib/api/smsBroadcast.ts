@@ -94,7 +94,7 @@ export async function previewBroadcastUsers(
 }
 
 export async function sendBroadcast(
-  payload: { title: string; message: string; userIds: number[]; saveAsTemplate?: { name: string }; filters?: BroadcastFilters },
+  payload: { title: string; message: string; userIds: number[]; saveAsTemplate?: { name: string }; filters?: BroadcastFilters; transliterate?: boolean },
   token?: string | null
 ): Promise<{ success: boolean; data?: { broadcastId: number; queued: number; skipped: number }; error?: string }> {
   try {

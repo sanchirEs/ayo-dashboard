@@ -31,6 +31,7 @@ export default function SmsBroadcastClient({ initialBroadcasts }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [transliterate, setTransliterate] = useState(false);
   const [templates, setTemplates] = useState([]);
   const [broadcasts, setBroadcasts] = useState(initialBroadcasts || []);
   const [sendState, setSendState] = useState('idle');
@@ -73,12 +74,13 @@ export default function SmsBroadcastClient({ initialBroadcasts }) {
       setSendError(null);
       setTitle('');
       setMessage('');
+      setTransliterate(false);
       return;
     }
     setSendState('sending');
     setSendError(null);
     const res = await sendBroadcast(
-      { title, message, userIds: Array.from(selectedIds), filters },
+      { title, message, userIds: Array.from(selectedIds), filters, transliterate },
       token
     );
     if (res.success && res.data) {
@@ -124,6 +126,8 @@ export default function SmsBroadcastClient({ initialBroadcasts }) {
           onTitleChange={setTitle}
           message={message}
           onMessageChange={setMessage}
+          transliterate={transliterate}
+          onTransliterateChange={setTransliterate}
           templates={templates}
           selectedCount={selectedIds.size}
           onSend={handleSend}
