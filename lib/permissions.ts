@@ -75,7 +75,55 @@ const STAFF_PAGES = [
  */
 const BRANCH_PAGES = ["/order-list", "/unauthorized"];
 
+/**
+ * MANAGER, the "smaller admin" (owner, 2026-11-06): everything an admin can do
+ * on these sections, nothing outside them. Backend twin:
+ * ayo-back/src/middlewares/managerAccess.js MANAGER_PREFIXES.
+ */
+export const MANAGER_PAGES = [
+  // Orders and fulfilment
+  "/order-list",
+  "/order-detail",
+  "/order-tracking",
+  "/product-orders",
+  "/delivery",
+  "/import-orders",
+  "/pickup-orders",
+  "/pickup-logs",
+  // Products
+  "/product-list",
+  "/products",
+  "/add-product",
+  "/edit-product",
+  "/barcodes",
+  // Promotions
+  "/discounts",
+  "/flash-sale",
+  "/campaigns",
+  "/new-campaign",
+  "/coupons",
+  "/new-coupon",
+  // Catalogue
+  "/category-list",
+  "/new-category",
+  "/edit-category",
+  "/attributes",
+  "/brand-list",
+  "/brand-detail",
+  "/new-brand",
+  "/edit-brand",
+  "/tags",
+  "/add-tags",
+  "/hierarchical-tags",
+  // Merchandising and places
+  "/banners",
+  "/store-locations",
+  "/cargo",
+  "/unauthorized",
+];
+
 const ROLE_ALLOWED_ROUTES: Partial<Record<UserRole, string[]>> = {
+  MANAGER: MANAGER_PAGES,
   BRANCH: BRANCH_PAGES,
   SHEET_PICKUP: STAFF_PAGES,
   SHEET_DELIVERY: STAFF_PAGES,
@@ -97,6 +145,7 @@ export const ROLE_LANDING: Record<UserRole, string> = {
   SHEET_PICKUP: "/order-list",
   SHEET_DELIVERY: "/order-list",
   SHEET_REFUND: "/order-list",
+  MANAGER: "/order-list",
 };
 
 export function getLandingRoute(role: UserRole | undefined): string {

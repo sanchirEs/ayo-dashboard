@@ -82,7 +82,7 @@ export default function NewBrandForm() {
   }
 
   // Check if user has permission to create brands
-  const canCreateBrand = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERADMIN';
+  const canCreateBrand = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
 
   if (!canCreateBrand) {
     return (

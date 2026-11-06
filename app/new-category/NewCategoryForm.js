@@ -73,7 +73,7 @@ export default function NewCategoryForm({ parentId: initialParentId = null }) {
   }
 
   // Check if user has permission to create categories
-  const canCreateCategory = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERADMIN';
+  const canCreateCategory = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
 
   if (!canCreateCategory) {
     return (

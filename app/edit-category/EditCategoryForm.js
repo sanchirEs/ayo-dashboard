@@ -87,7 +87,7 @@ export default function EditCategoryForm({ categoryId }) {
     });
   }
 
-  const canEdit = session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN";
+  const canEdit = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
   if (!canEdit) {
     return (
       <div className="text-center py-8">

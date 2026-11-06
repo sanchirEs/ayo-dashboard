@@ -12,6 +12,9 @@ import { createUserByAdmin } from "@/lib/api/adminUsers";
 // The backend rejects them too (ASSIGNABLE_ROLES in authServices.js).
 const ROLE_OPTIONS = [
   { value: "ADMIN", label: "Админ (бүх хуудас)" },
+  // 2026-11-06: the "smaller admin" — orders, products, promotions, catalogue,
+  // banners, branches, cargo. See lib/permissions.ts MANAGER_PAGES.
+  { value: "MANAGER", label: "Менежер (захиалга, бараа, урамшуулал)" },
   { value: "VENDOR", label: "Борлуулагч" },
 ];
 
@@ -21,7 +24,7 @@ const schema = z
     telephone: z.string().min(8, "Утасны дугаар буруу байна"),
     password: z.string().min(6, "Нууц үг хамгийн багадаа 6 тэмдэгт байна"),
     confirmPassword: z.string(),
-    role: z.enum(["ADMIN", "VENDOR"]),
+    role: z.enum(["ADMIN", "MANAGER", "VENDOR"]),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Нууц үг таарахгүй байна",

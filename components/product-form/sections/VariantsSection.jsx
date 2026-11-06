@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getBackendUrl } from "@/lib/api/env";
 import { BARCODE_INPUT_PROPS } from "../fields/barcodeInputProps";
+import { buildVariantRows } from "@/lib/products/variantRows";
 import {
   INPUT_SM_CLASS,
   INPUT_TYPED_SM_CLASS,
@@ -146,27 +147,12 @@ export default function VariantsSection({ form, attributes, token }) {
       combinations = next;
     }
 
-    const baseSku = form.getValues("sku") || "PROD";
-    const basePrice = form.getValues("price") || 0;
-
+    // Combinations the product already has keep their rows (id, price, stock...).
     replace(
-      combinations.map((attrs, index) => {
-        const names = attrs.map(({ attributeId, optionId }) => {
-          const attribute = attributes.find((a) => a.id === attributeId);
-          const option = attribute?.options.find((o) => o.id === optionId);
-          return `${attribute?.name}-${option?.value}`;
-        });
-        const suffix = names.join("-").toUpperCase().replace(/\s+/g, "-");
-
-        return {
-          sku: `${baseSku}-${suffix}`,
-          barcode: "",
-          price: Number(basePrice),
-          isDefault: index === 0,
-          attributes: attrs,
-          inventory: { quantity: 0 },
-          images: [],
-        };
+      buildVariantRows(combinations, form.getValues("variants") || [], {
+        baseSku: form.getValues("sku") || "PROD",
+        basePrice: form.getValues("price") || 0,
+        attributes,
       })
     );
   };

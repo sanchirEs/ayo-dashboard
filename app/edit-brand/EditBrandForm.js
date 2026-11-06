@@ -99,7 +99,7 @@ export default function EditBrandForm({ brandId }) {
     });
   }
 
-  const canEdit = session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN";
+  const canEdit = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
   
   if (!canEdit) {
     return (

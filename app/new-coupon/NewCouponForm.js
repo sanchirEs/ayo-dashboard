@@ -81,7 +81,7 @@ export default function NewCouponForm() {
   }
 
   // Check if user has permission to create coupons
-  const canCreateCoupon = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERADMIN';
+  const canCreateCoupon = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
 
   if (!canCreateCoupon) {
     return (

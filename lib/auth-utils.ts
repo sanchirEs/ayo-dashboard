@@ -48,7 +48,8 @@ export function getRoleDisplayName(role: UserRole): string {
     BRANCH: "Салбар",
     SHEET_PICKUP: "Pickup баталгаажуулагч",
     SHEET_DELIVERY: "Хүргэлт баталгаажуулагч",
-    SHEET_REFUND: "Буцаалт баталгаажуулагч"
+    SHEET_REFUND: "Буцаалт баталгаажуулагч",
+    MANAGER: "Менежер"
   };
   
   return roleNames[role] || "Unknown";
@@ -66,7 +67,8 @@ export function getRoleBadgeColor(role: UserRole): string {
     BRANCH: "bg-amber-100 text-amber-800",
     SHEET_PICKUP: "bg-sky-100 text-sky-800",
     SHEET_DELIVERY: "bg-emerald-100 text-emerald-800",
-    SHEET_REFUND: "bg-rose-100 text-rose-800"
+    SHEET_REFUND: "bg-rose-100 text-rose-800",
+    MANAGER: "bg-indigo-100 text-indigo-800"
   };
   
   return colors[role] || "bg-gray-100 text-gray-800";

@@ -14,7 +14,7 @@ export async function POST(request) {
     }
 
     // Check if user is admin
-    const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN";
+    const isAdmin = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
     
     if (!isAdmin) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });

@@ -14,7 +14,7 @@ export async function POST(request) {
     }
 
     // Check if user is admin for force delete
-    const isAdmin = session?.user?.role === "ADMIN" || session?.user?.role === "SUPERADMIN";
+    const isAdmin = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
     
     // Build the URL with force parameter if admin and force is requested
     let deleteUrl = `${require("@/lib/api/env").getBackendUrl()}/api/v1/categories/${id}`;

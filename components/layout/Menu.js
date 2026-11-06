@@ -105,7 +105,14 @@ export default function Menu() {
   // Keep STAFF_MENU in step with STAFF_PAGES in lib/permissions.ts: a link to a
   // page outside that list is a link to a redirect.
   if (
-    ["STAFF", "BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"].includes(
+    [
+      "STAFF",
+      "BRANCH",
+      "SHEET_PICKUP",
+      "SHEET_DELIVERY",
+      "SHEET_REFUND",
+      "MANAGER",
+    ].includes(
       role
     )
   ) {
@@ -170,12 +177,100 @@ export default function Menu() {
       },
     ];
 
-    const STAFF_MENU = role === "BRANCH" ? BRANCH_MENU : SHEET_MENU;
+    // 2026-11-06, owner: MANAGER is the "smaller admin" — full control of
+    // these sections only. Keep in step with MANAGER_PAGES in lib/permissions.ts.
+    const MANAGER_MENU = [
+      {
+        key: 5,
+        heading: "Захиалга",
+        icon: "icon-file-plus",
+        items: [
+          ["/order-list", "Захиалгын жагсаалт"],
+          ["/product-orders", "📦 Бүтээгдэхүүнээр"],
+          ["/pickup-orders", "Дэлгүүрээс авах"],
+          ["/delivery", "Хүргэлт"],
+          ["/import-orders", "Захиалгын бараа"],
+          ["/pickup-logs", "Авалтын түүх"],
+          ["/order-tracking", "Захиалга хянах"],
+        ],
+      },
+      {
+        key: 2,
+        heading: "Бараа",
+        icon: "icon-box",
+        items: [
+          ["/product-list", "Барааны жагсаалт"],
+          ["/add-product", "Бараа нэмэх"],
+          ["/barcodes", "Штрих код"],
+        ],
+      },
+      {
+        key: 3,
+        heading: "Ангилал, шинж чанар",
+        icon: "icon-layers",
+        items: [
+          ["/category-list", "Ангилал"],
+          ["/new-category", "Шинэ ангилал"],
+          ["/attributes", "Шинж чанар"],
+        ],
+      },
+      {
+        key: 13,
+        heading: "Брэнд",
+        icon: "icon-award",
+        items: [
+          ["/brand-list", "Брэнд"],
+          ["/new-brand", "Брэнд нэмэх"],
+        ],
+      },
+      {
+        key: 6,
+        heading: "Таг",
+        icon: "icon-tag",
+        items: [
+          ["/tags", "Таг"],
+          ["/add-tags", "Таг нэмэх"],
+          ["/hierarchical-tags", "Нэмэлт ангилал"],
+        ],
+      },
+      {
+        key: 8, // matches the /discounts and /flash-sale auto-open key
+        heading: "Урамшуулал",
+        icon: "icon-percent",
+        items: [
+          ["/discounts", "🏷️ Хямдрал"],
+          ["/flash-sale", "⚡ Flash Sale"],
+          ["/campaigns", "Кампанит ажил"],
+          ["/new-campaign", "Шинэ урамшуулал үүсгэх"],
+          ["/coupons", "Купон"],
+          ["/new-coupon", "Шинэ купон"],
+        ],
+      },
+      {
+        key: 0,
+        heading: "Бусад",
+        icon: "icon-settings",
+        items: [
+          ["/banners", "Баннер"],
+          ["/store-locations", "Салбарууд"],
+          ["/cargo", "Карго"],
+        ],
+      },
+    ];
+
+    const STAFF_MENU =
+      role === "BRANCH"
+        ? BRANCH_MENU
+        : role === "MANAGER"
+          ? MANAGER_MENU
+          : SHEET_MENU;
 
     return (
       <div className="center">
         <div className="center-item">
-          <div className="center-heading">Ажилтны самбар</div>
+          <div className="center-heading">
+            {role === "MANAGER" ? "Удирдлагын самбар" : "Ажилтны самбар"}
+          </div>
           <ul className="menu-list">
             {STAFF_MENU.map((group) => (
               <li

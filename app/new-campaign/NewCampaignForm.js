@@ -137,7 +137,7 @@ export default function NewCampaignForm() {
   }
 
   // Check if user has permission
-  const canCreateCampaign = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPERADMIN';
+  const canCreateCampaign = ["ADMIN", "SUPERADMIN", "MANAGER"].includes(session?.user?.role);
 
   if (!canCreateCampaign) {
     return (

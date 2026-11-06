@@ -206,3 +206,70 @@ describe("partner pages (POS plan 2)", () => {
     }
   });
 });
+
+// 2026-11-06, owner: MANAGER is the "smaller admin" — full control of orders,
+// products, promotions, catalogue, banners, branches and cargo; nothing else.
+describe("MANAGER", () => {
+  it("opens every page in its sections, including the add/edit forms", () => {
+    for (const page of [
+      "/order-list",
+      "/order-detail/2352",
+      "/delivery",
+      "/pickup-orders",
+      "/import-orders",
+      "/product-list",
+      "/add-product",
+      "/edit-product/12",
+      "/discounts",
+      "/flash-sale",
+      "/campaigns",
+      "/new-campaign",
+      "/coupons",
+      "/new-coupon",
+      "/category-list",
+      "/new-category",
+      "/edit-category/4",
+      "/attributes",
+      "/attributes/new",
+      "/brand-list",
+      "/new-brand",
+      "/edit-brand/3",
+      "/tags",
+      "/add-tags",
+      "/hierarchical-tags",
+      "/banners",
+      "/store-locations",
+      "/store-locations/new",
+      "/cargo",
+    ]) {
+      expect(canAccessRoute("MANAGER", page), `MANAGER → ${page}`).toBe(true);
+    }
+  });
+
+  it("stays out of reports, users, settings, SMS, POS, stock and partners", () => {
+    for (const page of [
+      "/report",
+      "/sales",
+      "/reports/pos/sales",
+      "/all-user",
+      "/add-new-user",
+      "/create-role",
+      "/setting",
+      "/store-settings",
+      "/sms-broadcast",
+      "/sheet-payments",
+      "/pos/registers",
+      "/stock",
+      "/partners",
+      "/blocklist",
+      "/retailers",
+    ]) {
+      expect(canAccessRoute("MANAGER", page), `MANAGER → ${page}`).toBe(false);
+    }
+  });
+
+  it("lands on the order list", () => {
+    expect(getLandingRoute("MANAGER")).toBe("/order-list");
+    expect(shouldRedirectRestrictedRole("MANAGER", "/order-list")).toBe(false);
+  });
+});
