@@ -8,7 +8,11 @@ import {
   apiAuthPrefix,
 } from "@/routes";
 import { isAdmin, isVendor } from "@/lib/auth-utils";
-import { shouldRedirectRestrictedRole, getLandingRoute } from "@/lib/permissions";
+import {
+  shouldRedirectRestrictedRole,
+  getLandingRoute,
+  isRestrictedRole,
+} from "@/lib/permissions";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -46,6 +50,13 @@ export default auth((req) => {
   // it into a 302 the client reads as an auth failure.
   if (shouldRedirectRestrictedRole(userRole, nextUrl.pathname)) {
     return Response.redirect(new URL(getLandingRoute(userRole), nextUrl));
+  }
+
+  // A restricted role that passed its own allowlist is done. The admin/vendor
+  // lists below predate staff roles: "/order-list" is a vendorRoute, so falling
+  // through sent every branch login to /unauthorized on its landing page.
+  if (isRestrictedRole(userRole)) {
+    return null;
   }
 
   // Role-based access control

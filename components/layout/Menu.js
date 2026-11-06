@@ -109,7 +109,17 @@ export default function Menu() {
       role
     )
   ) {
-    const STAFF_MENU = [
+    // 2026-11-06, owner: branch accounts see the order list only.
+    const BRANCH_MENU = [
+      {
+        key: 5,
+        heading: "Захиалга",
+        icon: "icon-file-plus",
+        items: [["/order-list", "Захиалгын жагсаалт"]],
+      },
+    ];
+
+    const SHEET_MENU = [
       {
         key: 5,
         heading: "Захиалга",
@@ -160,6 +170,8 @@ export default function Menu() {
       },
     ];
 
+    const STAFF_MENU = role === "BRANCH" ? BRANCH_MENU : SHEET_MENU;
+
     return (
       <div className="center">
         <div className="center-item">
@@ -193,7 +205,9 @@ export default function Menu() {
                         href={href}
                         className={isSubMenuItemActive(href) ? "active" : ""}
                       >
-                        {label}
+                        {/* Same markup as the admin menu: the template styles
+                            sub-menu labels through `.text`. */}
+                        <div className="text">{label}</div>
                       </Link>
                     </li>
                   ))}

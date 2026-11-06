@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import OrderRowClient from "./OrderRowClient";
 import BulkActions from "./BulkActions";
 import { exportToExcel } from "@/lib/exportToExcel";
+import { useSession } from "next-auth/react";
 
 export default function OrderTableClient({ orders: initialOrders, pagination: initialPagination }) {
   // Defensive defaults: production data may differ from dev, and RSC boundaries can deliver
@@ -19,6 +20,10 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
   }));
   const [selectedOrders, setSelectedOrders] = useState(new Set());
   const searchParams = useSearchParams();
+  // Branch accounts are view-only (2026-11-06): the backend 403s every bulk
+  // action, so don't show them buttons that can only fail.
+  const { data: session } = useSession();
+  const canBulkEdit = session?.user?.role !== "BRANCH";
 
   // Keep every active filter (status, deliveryType, search, dates, ...) when changing page
   const pageHref = (pageNum) => {
@@ -132,10 +137,12 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
             <span style={{ fontSize: '13px', color: '#1e40af', fontWeight: '500' }}>
               {selectedOrders.size} сонгосон
             </span>
-            <BulkActions 
-              selectedOrders={selectedOrders}
-              onUpdateComplete={handleBulkUpdateComplete}
-            />
+            {canBulkEdit && (
+              <BulkActions
+                selectedOrders={selectedOrders}
+                onUpdateComplete={handleBulkUpdateComplete}
+              />
+            )}
           </div>
           
           <button

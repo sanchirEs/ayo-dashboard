@@ -68,8 +68,15 @@ const STAFF_PAGES = [
  * role to getLandingRoute(role), so a list that omits that landing page makes
  * the redirect fire again on arrival — ERR_TOO_MANY_REDIRECTS.
  */
+/**
+ * 2026-11-06, owner: branch accounts open and browse the order list, nothing
+ * else (backend matches: staffAccess.js READ_ONLY_PREFIXES, no writes).
+ * `/unauthorized` stays so a bounce to it terminates.
+ */
+const BRANCH_PAGES = ["/order-list", "/unauthorized"];
+
 const ROLE_ALLOWED_ROUTES: Partial<Record<UserRole, string[]>> = {
-  BRANCH: STAFF_PAGES,
+  BRANCH: BRANCH_PAGES,
   SHEET_PICKUP: STAFF_PAGES,
   SHEET_DELIVERY: STAFF_PAGES,
   SHEET_REFUND: STAFF_PAGES,

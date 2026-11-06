@@ -17,7 +17,10 @@ const STAFF_ROLES = [
   "SHEET_REFUND",
 ] as const;
 
-/** Pages every staff role must be able to open. */
+/** The SHEET_* roles share the full staff view; BRANCH is narrower (2026-11-06). */
+const SHEET_ROLES = ["SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"] as const;
+
+/** Pages every SHEET_* role must be able to open. */
 const VISIBLE_PAGES = [
   "/order-list",
   "/order-detail/2352",
@@ -49,8 +52,8 @@ const HIDDEN_PAGES = [
 ];
 
 describe("canAccessRoute", () => {
-  it("lets every staff role open every operational page", () => {
-    for (const role of STAFF_ROLES) {
+  it("lets every SHEET_* role open every operational page", () => {
+    for (const role of SHEET_ROLES) {
       for (const page of VISIBLE_PAGES) {
         expect(canAccessRoute(role, page), `${role} → ${page}`).toBe(true);
       }
@@ -65,9 +68,17 @@ describe("canAccessRoute", () => {
     }
   });
 
+  // 2026-11-06, owner: branch accounts open and browse the order list only.
+  it("lets BRANCH open the order list and nothing else", () => {
+    expect(canAccessRoute("BRANCH", "/order-list")).toBe(true);
+    for (const page of VISIBLE_PAGES.filter((p) => p !== "/order-list")) {
+      expect(canAccessRoute("BRANCH", page), `BRANCH → ${page}`).toBe(false);
+    }
+  });
+
   it("matches nested paths under an allowed page", () => {
-    expect(canAccessRoute("BRANCH", "/order-detail/2352")).toBe(true);
-    expect(canAccessRoute("BRANCH", "/sheet-payments/tabs/storepay")).toBe(true);
+    expect(canAccessRoute("SHEET_PICKUP", "/order-detail/2352")).toBe(true);
+    expect(canAccessRoute("SHEET_PICKUP", "/sheet-payments/tabs/storepay")).toBe(true);
   });
 
   it("does not let an allowed prefix leak into a similarly named page", () => {
@@ -77,9 +88,9 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute("BRANCH", "/all-users-export")).toBe(false);
   });
 
-  it("gives all four roles the same view", () => {
+  it("gives the three SHEET_* roles the same view", () => {
     for (const page of [...VISIBLE_PAGES, ...HIDDEN_PAGES]) {
-      const [first, ...rest] = STAFF_ROLES.map((r) => canAccessRoute(r, page));
+      const [first, ...rest] = SHEET_ROLES.map((r) => canAccessRoute(r, page));
       for (const other of rest) expect(other).toBe(first);
     }
   });
@@ -126,7 +137,7 @@ describe("shouldRedirectRestrictedRole", () => {
   });
 
   it("lets staff through to their operational pages", () => {
-    for (const role of STAFF_ROLES) {
+    for (const role of SHEET_ROLES) {
       for (const page of VISIBLE_PAGES) {
         expect(shouldRedirectRestrictedRole(role, page), `${role} → ${page}`).toBe(
           false
@@ -180,11 +191,8 @@ describe("getLandingRoute", () => {
 });
 
 describe("BRANCH_ALLOWED_ROUTES", () => {
-  it("is the shared staff page list, including the /unauthorized dead end", () => {
-    expect(BRANCH_ALLOWED_ROUTES).toContain("/order-list");
-    expect(BRANCH_ALLOWED_ROUTES).toContain("/all-user");
-    expect(BRANCH_ALLOWED_ROUTES).toContain("/unauthorized");
-    expect(BRANCH_ALLOWED_ROUTES).not.toContain("/sms-broadcast");
+  it("is the order list plus the /unauthorized dead end, nothing more", () => {
+    expect([...BRANCH_ALLOWED_ROUTES].sort()).toEqual(["/order-list", "/unauthorized"]);
   });
 });
 
