@@ -9,16 +9,16 @@ import ImageUploadField from "@/components/upload/ImageUploadField";
  * Images have exactly one writer.
  *
  * The old component had two — an onChange handler writing raw File objects and a
- * useEffect writing Cloudinary URL objects — into the same `images` field, so
+ * useEffect writing uploaded-image URL objects — into the same `images` field, so
  * whichever ran last won and uploads could silently fail to attach.
  *
  * Uploads are normalized to `{ imageUrl, altText, isPrimary }` before they touch
  * the form. `addProductsSchema.images` only accepts `File[]` or that exact shape,
- * so storing a raw Cloudinary response here would fail validation and block
+ * so storing a raw upload response here would fail validation and block
  * submission. `altText` must be non-empty — imageSchema requires min(1).
  *
  * onChange handles the clear-all case (empty array). File selection with autoUpload
- * uses onUploadComplete instead, which normalizes Cloudinary objects. Both paths
+ * uses onUploadComplete instead, which normalizes the upload responses. Both paths
  * write the same normalized shape to the form.
  */
 export default function MediaSection({ form }) {

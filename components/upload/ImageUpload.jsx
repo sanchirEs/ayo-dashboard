@@ -189,7 +189,7 @@ export default function ImageUpload({
                 height: img.height,
                 uploaded: true,
                 uploading: false,
-                cloudinary_public_id: img.id
+                storage_key: img.id
               }));
 
               const updatedImages = [...images, ...uploadedImages];
@@ -258,10 +258,10 @@ export default function ImageUpload({
         );
 
         if (!response.ok) {
-          console.warn('Failed to delete image from Cloudinary:', await response.text());
+          console.warn('Failed to delete image from storage:', await response.text());
         }
       } catch (error) {
-        console.warn('Error deleting image from Cloudinary:', error);
+        console.warn('Error deleting image from storage:', error);
       }
     }
 

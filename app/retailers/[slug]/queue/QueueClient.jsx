@@ -19,8 +19,8 @@ import {
  * 500 rows READY and only then discovering they all fail is the failure mode
  * this screen exists to prevent.
  *
- * Thumbnails hotlink the retailer CDN on purpose — Cloudinary is over quota and
- * only the published subset should ever be uploaded.
+ * Thumbnails hotlink the retailer CDN on purpose — published retailer products
+ * keep hotlinking too; nothing here is copied to our own image storage.
  */
 
 const STATUS_META = {

@@ -59,7 +59,7 @@ export interface BuildPayloadContext {
 /**
  * `imageUrl` is checked first because MediaSection stores images in the shape
  * `schemas/productSchema.ts` validates (`{ imageUrl, altText, isPrimary }`).
- * `url` / `secure_url` remain supported for raw Cloudinary responses.
+ * `url` / `secure_url` remain supported for raw upload responses.
  */
 const imageUrlOf = (img: UploadedImage): string =>
   (img.imageUrl || img.url || img.secure_url || (img as unknown as string)) as string;

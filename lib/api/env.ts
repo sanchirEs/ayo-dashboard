@@ -16,7 +16,7 @@ export function getBackendUrl(): string {
 export function resolveImageUrl(input: string | undefined | null): string {
   const fallback = '/images/products/1.png';
   if (!input || typeof input !== 'string') return fallback;
-  // Allow absolute URLs (e.g., Cloudinary) to pass through unchanged
+  // Allow absolute URLs (e.g., https://img.ayo.mn/...) to pass through unchanged
   if (input.startsWith('http://') || input.startsWith('https://')) return input;
   const base = getBackendUrl();
   // Treat as relative path to backend

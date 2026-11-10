@@ -7,8 +7,11 @@ module.exports = {
     imageSizes: [128, 256, 512],
     remotePatterns: [
       { hostname: "lh3.googleusercontent.com" },
+      // Legacy: no stored data points at Cloudinary any more (all moved to R2
+      // 2026-11-10). Kept so a stale URL renders as a broken image instead of
+      // next/image throwing; safe to drop after 2026-12.
       { hostname: "res.cloudinary.com" },
-      // Cloudflare R2 (Cloudinary replacement): custom domain + bucket dev URL.
+      // Cloudflare R2: custom domain + bucket dev URL.
       { protocol: "https", hostname: "img.ayo.mn" },
       { protocol: "https", hostname: "pub-bd8e3dc045ee4776807fa778eb66424f.r2.dev" },
     ],

@@ -22,7 +22,7 @@ export default function ImageUploadField({
   type = 'products',
   className = '',
   showProgress = true,
-  autoUpload = false, // If true, uploads to Cloudinary immediately
+  autoUpload = false, // If true, uploads immediately
   onUploadComplete,
   onUploadError,
   onPrimaryChange, // Callback when primary image changes
@@ -117,8 +117,8 @@ export default function ImageUploadField({
     }
 
     if (autoUpload && TOKEN) {
-      // Upload to Cloudinary immediately
-      await uploadToCloudinary(validFiles);
+      // Upload immediately
+      await uploadFiles(validFiles);
     } else {
       // Generate previews and add to form
       generatePreviews(validFiles);
@@ -182,8 +182,8 @@ export default function ImageUploadField({
     });
   }, [primaryImageId]);
 
-  // Upload to Cloudinary with progress tracking
-  const uploadToCloudinary = useCallback(async (files) => {
+  // Upload with progress tracking
+  const uploadFiles = useCallback(async (files) => {
     if (!TOKEN) {
       setUploadErrors(['Authentication required for upload']);
       onUploadError?.('Authentication required');
@@ -220,24 +220,24 @@ export default function ImageUploadField({
             const response = JSON.parse(xhr.responseText);
             
             if (xhr.status === 201 && response.success) {
-              const cloudinaryImages = response.data.images.map((img, index) => ({
+              const uploadedBatch = response.data.images.map((img, index) => ({
                 id: img.id,
                 src: img.optimized_url || img.url, // Use optimized URL or fallback to regular URL
                 name: img.original_filename,
                 size: img.size,
                 type: img.format,
                 uploaded: true,
-                cloudinary_public_id: img.id,
+                storage_key: img.id,
                 url: img.url,
                 thumbnail_url: img.thumbnail_url,
                 isPrimary: false // Will be set later if needed
               }));
 
               // Update uploaded images state
-              setUploadedImages(prev => [...prev, ...cloudinaryImages]);
+              setUploadedImages(prev => [...prev, ...uploadedBatch]);
               
               // Update preview images
-              const updatedImages = [...previewImages, ...cloudinaryImages];
+              const updatedImages = [...previewImages, ...uploadedBatch];
               
               // Handle primary image logic separately to avoid setState during render
               let finalImages = updatedImages;
@@ -259,12 +259,12 @@ export default function ImageUploadField({
               
               // Show success toast
               toastManager?.success(
-                `Successfully uploaded ${cloudinaryImages.length} image${cloudinaryImages.length > 1 ? 's' : ''}`,
+                `Successfully uploaded ${uploadedBatch.length} image${uploadedBatch.length > 1 ? 's' : ''}`,
                 { title: 'Upload Complete' }
               );
               
-              onUploadComplete?.(cloudinaryImages);
-              resolve(cloudinaryImages);
+              onUploadComplete?.(uploadedBatch);
+              resolve(uploadedBatch);
             } else {
               const error = response.message || 'Upload failed';
               setUploadErrors([error]);
@@ -325,7 +325,7 @@ export default function ImageUploadField({
         );
 
         if (!response.ok) {
-          console.warn('Failed to delete image from Cloudinary');
+          console.warn('Failed to delete image from storage');
           toastManager?.warning('Failed to delete image from cloud storage', { title: 'Delete Warning' });
         } else {
           toastManager?.success('Image deleted successfully', { title: 'Image Removed' });

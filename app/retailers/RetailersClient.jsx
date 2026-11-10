@@ -141,7 +141,7 @@ function RetailerCard({ retailer, categories, cargoRatePerKg, token, onChanged }
         <div className="flex items-center gap10">
           {retailer.logoUrl ? (
             // Retailer logos are arbitrary external URLs — plain <img> avoids
-            // adding a remotePattern per retailer and keeps them off Cloudinary.
+            // adding a remotePattern per retailer and keeps them off our image storage.
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={retailer.logoUrl}
