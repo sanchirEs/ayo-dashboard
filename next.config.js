@@ -5,7 +5,13 @@ module.exports = {
   images: {
     deviceSizes: [640, 1024, 1920],
     imageSizes: [128, 256, 512],
-    remotePatterns: [{ hostname: "lh3.googleusercontent.com" }, { hostname: "res.cloudinary.com" }]
+    remotePatterns: [
+      { hostname: "lh3.googleusercontent.com" },
+      { hostname: "res.cloudinary.com" },
+      // Cloudflare R2 (Cloudinary replacement): custom domain + bucket dev URL.
+      { protocol: "https", hostname: "img.ayo.mn" },
+      { protocol: "https", hostname: "pub-bd8e3dc045ee4776807fa778eb66424f.r2.dev" },
+    ],
   },
   env: {
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
