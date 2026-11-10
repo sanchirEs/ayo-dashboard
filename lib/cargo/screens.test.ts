@@ -37,26 +37,36 @@ describe('resolveWeightInput', () => {
 });
 
 describe('orderCargoTotal', () => {
-  it('sums per-unit cargo x quantity over the lines', () => {
+  it('sums per-unit cargo x quantity over the on-top lines', () => {
     expect(
       orderCargoTotal([
-        { cargoMnt: 1300, quantity: 2 },
-        { cargoMnt: 500, quantity: 1 },
-        { cargoMnt: null, quantity: 4 },
+        { cargoMnt: 1300, quantity: 2, cargoOnTop: true },
+        { cargoMnt: 500, quantity: 1, cargoOnTop: true },
+        { cargoMnt: null, quantity: 4, cargoOnTop: true },
       ])
     ).toBe(3100);
   });
 
+  it('skips lines whose cargo is not on top (retailer lines, older orders)', () => {
+    expect(
+      orderCargoTotal([
+        { cargoMnt: 19500, quantity: 1, cargoOnTop: true },
+        { cargoMnt: 8000, quantity: 2, cargoOnTop: false },
+        { cargoMnt: 700, quantity: 1 },
+      ])
+    ).toBe(19500);
+  });
+
   it('treats a missing field as 0 and never throws', () => {
-    expect(orderCargoTotal([{ quantity: 3 }, {}, { cargoMnt: 100 }])).toBe(0);
+    expect(orderCargoTotal([{ quantity: 3, cargoOnTop: true }, {}, { cargoMnt: 100, cargoOnTop: true }])).toBe(0);
     expect(orderCargoTotal(undefined)).toBe(0);
     expect(orderCargoTotal(null)).toBe(0);
     expect(orderCargoTotal([])).toBe(0);
-    expect(orderCargoTotal([null as any, { cargoMnt: 'x' as any, quantity: 2 }])).toBe(0);
+    expect(orderCargoTotal([null as any, { cargoMnt: 'x' as any, quantity: 2, cargoOnTop: true }])).toBe(0);
   });
 
   it('accepts numeric strings', () => {
-    expect(orderCargoTotal([{ cargoMnt: '1300' as any, quantity: '2' as any }])).toBe(2600);
+    expect(orderCargoTotal([{ cargoMnt: '1300' as any, quantity: '2' as any, cargoOnTop: true }])).toBe(2600);
   });
 });
 

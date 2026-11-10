@@ -10,8 +10,10 @@ export interface OrderItem {
   variantId?: number;
   quantity: number;
   price: string;
-  /** Per-unit cargo share inside `price`, snapshotted at order time (import lines). */
+  /** Per-unit cargo snapshotted at order time (import lines). */
   cargoMnt?: number | null;
+  /** true: cargoMnt x quantity is charged on top of `price` (our own weighed imports). */
+  cargoOnTop?: boolean;
   product: {
     id: number;
     name: string;

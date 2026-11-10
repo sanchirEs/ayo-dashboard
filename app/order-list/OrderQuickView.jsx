@@ -189,7 +189,8 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
   const subtotal = order
     ? order.orderItems?.reduce((s, i) => s + parseFloat(i.price) * i.quantity, 0) ?? parseFloat(order.total) - parseFloat(order.shippingCost || 0)
     : 0;
-  // The cargo share already inside the goods total (per-unit snapshot x qty).
+  // Cargo charged on top of the goods (lines flagged cargoOnTop, per-unit x qty):
+  // goods - coupon + cargo + shipping = total.
   const cargo = orderCargoTotal(order?.orderItems);
   const shipping = parseFloat(order?.shippingCost || 0);
   const total = parseFloat(order?.total || 0);
@@ -357,8 +358,8 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(subtotal)}</span>
                   </div>
                   {cargo > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#9ca3af", paddingLeft: 12 }}>
-                      <span>Үүнээс карго</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#6b7280" }}>
+                      <span>Карго</span>
                       <span style={{ fontVariantNumeric: "tabular-nums" }}>{formatPrice(cargo)}</span>
                     </div>
                   )}

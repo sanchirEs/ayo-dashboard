@@ -34,6 +34,7 @@ export function resolveWeightInput(
 
 interface CargoLine {
   cargoMnt?: number | string | null;
+  cargoOnTop?: boolean | null;
   quantity?: number | string | null;
 }
 
@@ -43,12 +44,18 @@ function positive(value: unknown): number {
 }
 
 /**
- * The cargo share inside an order's goods total: per-unit snapshot x quantity,
- * summed. A missing or malformed field counts as 0 (older orders have none).
+ * Cargo charged ON TOP of an order's goods (owner ruling 2026-11-10): per-unit
+ * snapshot x quantity, summed over lines flagged `cargoOnTop` (our own weighed
+ * imports). Retailer lines and older orders carry no flag and add nothing.
+ * The order total is goods - coupon + this + shipping. A missing or malformed
+ * field counts as 0.
  */
 export function orderCargoTotal(items: Array<CargoLine | null> | null | undefined): number {
   if (!Array.isArray(items)) return 0;
-  return items.reduce((sum, item) => sum + positive(item?.cargoMnt) * positive(item?.quantity), 0);
+  return items.reduce(
+    (sum, item) => (item?.cargoOnTop === true ? sum + positive(item.cargoMnt) * positive(item.quantity) : sum),
+    0
+  );
 }
 
 // ==================== GOODS IN ====================

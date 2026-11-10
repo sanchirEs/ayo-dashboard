@@ -392,7 +392,7 @@ function RateCard({ overview, token, onSettingsChanged }) {
     <div className="wg-box" style={{ marginBottom: 20 }}>
       <CardTitle
         title="Тариф"
-        subtitle="Карго = жин × тариф. Тариф эсвэл анхдагч жин өөрчилсний дараа “Бүх үнийг шинэчлэх” дарснаар үнэнд тусна."
+        subtitle="Карго = жин × тариф. Өөрийн (Costco / Olive Young-оос бусад) жинлэсэн импорт бараанд карго нь үнэ дээр нэмэгдэж тусад нь төлөгдөнө. Тариф эсвэл анхдагч жин өөрчилсний дараа “Бүх үнийг шинэчлэх” дарснаар тусна."
       />
       <div style={{ display: "flex", gap: 40, flexWrap: "wrap" }}>
         <SettingField
@@ -610,7 +610,7 @@ function StatusCard({ overview, job, onJobChange, token, onFinished }) {
 
       {stale > 0 && (
         <Notice tone="warn" style={{ marginTop: 14 }}>
-          {stale} барааны үнэ карго тооцоогүй байна
+          {stale} барааны карго шинэчлэгдээгүй байна
         </Notice>
       )}
 
@@ -763,7 +763,15 @@ function WeighRow({ row, index, token, onSaved, onSaving, inputRef, onAdvance })
         <Chip tone={SOURCE_TONE[source] ?? "muted"}>{SOURCE_LABEL[source] ?? source}</Chip>
       </div>
 
-      <div className="body-text">{row.cargoMnt > 0 ? formatMnt(row.cargoMnt) : "—"}</div>
+      {/* Our own weighed imports charge this on top of the price (ayo-back utils/cargoOnTop.js). */}
+      <div
+        className="body-text"
+        title={row.retailerSlug === null && row.cargoWeightG > 0 ? "Үнэ дээр нэмэгдэж төлөгдөнө" : undefined}
+      >
+        {row.cargoMnt > 0
+          ? `${row.retailerSlug === null && row.cargoWeightG > 0 ? "+ " : ""}${formatMnt(row.cargoMnt)}`
+          : "—"}
+      </div>
 
       <div className="body-text">{formatMnt(row.price)}</div>
 
@@ -878,7 +886,7 @@ function WeighList({ token, version, onWeightChanged }) {
     <div className="wg-box" style={{ marginBottom: 20 }}>
       <CardTitle
         title="Жинлэх жагсаалт"
-        subtitle="Жинг оруулаад Enter дарахад хадгалагдаж, барааны үнэ тэр дороо шинэчлэгдэнэ. Дараагийн мөр рүү автоматаар шилжинэ. Хоосон хадгалбал жин арилна."
+        subtitle="Жинг оруулаад Enter дарахад хадгалагдаж, барааны карго (Costco / Olive Young бол үнэ) тэр дороо шинэчлэгдэнэ. Дараагийн мөр рүү автоматаар шилжинэ. Хоосон хадгалбал жин арилна."
       />
 
       <div className="flex items-center justify-between gap10 flex-wrap" style={{ marginBottom: 14 }}>

@@ -2,7 +2,8 @@
 
 /**
  * Cargo card for an import product's edit page: effective weight, the cargo
- * inside the price, and a box to weigh the product. Lives outside the product
+ * (charged on top of the price for our own weighed imports — ayo-back
+ * utils/cargoOnTop.js), and a box to weigh the product. Lives outside the product
  * form (its own save, its own endpoint), so it works from its own state.
  *
  * The product JSON carries only `cargoMnt`, not the measured weight, so the card
@@ -155,6 +156,13 @@ export default function CargoWeightCard({ productId, sku, token, onSaved }) {
   const cargoMnt = Number(row?.cargoMnt) || 0;
   // null = a house import product; undefined = not known (row built from a save)
   const isHouse = row?.retailerSlug === null;
+  // House imports charge cargo on top of the price once they have a measured weight.
+  const isMeasured = Number(row?.cargoWeightG) > 0;
+  const cargoSub = isHouse
+    ? isMeasured
+      ? "Үнэ дээр нэмэгдэж төлөгдөнө"
+      : "Жинлэсний дараа үнэ дээр нэмэгдэнэ"
+    : undefined;
 
   return (
     <div className="wg-box" style={{ marginBottom: 20 }}>
@@ -195,7 +203,7 @@ export default function CargoWeightCard({ productId, sku, token, onSaved }) {
                 <WeightSourceChip source={row.source} />
               </Stat>
               {cargoMnt > 0 && (
-                <Stat label="Карго" sub={isHouse ? "Үнэд автоматаар нэмэгдэхгүй" : "Үнэд карго багтсан"}>
+                <Stat label="Карго" sub={cargoSub}>
                   <span className="body-title-2" style={{ color: "#111827" }}>
                     {formatMnt(cargoMnt)}
                   </span>
