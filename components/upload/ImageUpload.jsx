@@ -243,11 +243,11 @@ export default function ImageUpload({
   const removeImage = useCallback(async (imageId) => {
     const imageToRemove = images.find(img => img.id === imageId);
     
-    if (imageToRemove?.cloudinary_public_id && imageToRemove.uploaded) {
-      // Delete from Cloudinary
+    if (imageToRemove?.url && imageToRemove.uploaded && TOKEN) {
+      // Drop the unsaved upload; the backend keeps it if any row uses it.
       try {
         const response = await fetch(
-          `${getBackendUrl()}/api/v1/upload/images/${imageToRemove.cloudinary_public_id}`,
+          `${getBackendUrl()}/api/v1/upload/images?url=${encodeURIComponent(imageToRemove.url)}`,
           {
             method: 'DELETE',
             headers: {

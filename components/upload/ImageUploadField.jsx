@@ -309,11 +309,12 @@ export default function ImageUploadField({
   const removeImage = useCallback(async (imageId) => {
     const imageToRemove = previewImages.find(img => img.id === imageId);
     
-    // If it's uploaded to Cloudinary, delete it
-    if (imageToRemove?.uploaded && imageToRemove.cloudinary_public_id && TOKEN) {
+    // Just uploaded and not saved yet: drop the file from storage. The backend
+    // only deletes it if no product/banner/brand row uses it.
+    if (imageToRemove?.uploaded && imageToRemove.url && TOKEN) {
       try {
         const response = await fetch(
-          `${getBackendUrl()}/api/v1/upload/images/${imageToRemove.cloudinary_public_id}`,
+          `${getBackendUrl()}/api/v1/upload/images?url=${encodeURIComponent(imageToRemove.url)}`,
           {
             method: 'DELETE',
             headers: {
