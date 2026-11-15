@@ -224,7 +224,6 @@ export default function AllTransactionsClient() {
       ["Өмнөх баримтын буцаалт", data.receipts?.totals?.earlierRefundCount
         ? `Энэ хугацаанд өмнөх хугацааны ${data.receipts.totals.earlierRefundCount} баримтаас ${fmt(data.receipts.totals.earlierRefunded)}₮ буцаасан. Борлуулалт тайлан үүнийг хасдаг: Цэвэр борлуулалт − энэ дүн = Борлуулалт тайлангийн цэвэр дүн.`
         : "Байхгүй."],
-      ["Төлбөр тайлан", "Одоогийн «Төлбөр» тайлан буцаалтыг хасахын оронд нэмж харуулж байна (алдаа). Энэ файлын Төлбөр хуудас зөв."],
       ["Баримтгүй QPay", "QPay төлөгдсөн ч касс баримтаа илгээгээгүй. Нийт дүнд орохгүй, шалгах хэрэгтэй."],
       ...LEDGER_TABS.filter((t) => data[t.key]?.truncated).map((t) => ["АНХААР", `${t.title}: 50,000-аас олон мөр байсан тул зөвхөн эхний 50,000 орсон. Хугацааг богиносгоно уу.`]),
       ...LEDGER_TABS.filter((t) => data[t.key]?.error).map((t) => ["АНХААР", `${t.title}: татаж чадсангүй (${data[t.key].error}).`]),
