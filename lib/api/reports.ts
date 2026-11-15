@@ -72,3 +72,52 @@ export async function getOverview(token: string): Promise<PosOverview> {
   }
   return body as PosOverview;
 }
+
+// --- Бүх гүйлгээ (ledger): raw rows per tab, and one whole receipt ---------------------
+
+export interface LedgerParams {
+  from: string;
+  to: string;
+  locationIds?: number[];
+  cashierId?: string | null;
+}
+
+export interface LedgerResult {
+  rows: Record<string, unknown>[];
+  totals: Record<string, unknown>;
+  truncated: boolean;
+  notes: string[];
+}
+
+async function getJson<T>(path: string, token: string, what: string): Promise<T> {
+  const response = await fetch(`${getBackendUrl()}/api/v1/backoffice/reports${path}`, {
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  const body = await response.json().catch(() => null);
+  if (!response.ok || !body) {
+    const message = body?.message || "Тайлан татаж чадсангүй";
+    logApiError(what, { type: "server", message, statusCode: response.status, retryable: response.status >= 500 });
+    throw new Error(message);
+  }
+  return body as T;
+}
+
+export async function fetchLedger(tab: string, params: LedgerParams, token: string): Promise<LedgerResult> {
+  const qs = new URLSearchParams({ from: params.from, to: params.to });
+  if (params.locationIds && params.locationIds.length > 0) qs.set("locationIds", params.locationIds.join(","));
+  if (params.cashierId) qs.set("cashierId", params.cashierId);
+  const body = await getJson<LedgerResult>(`/ledger/${encodeURIComponent(tab)}?${qs}`, token, "fetchLedger");
+  return { rows: body.rows ?? [], totals: body.totals ?? {}, truncated: Boolean(body.truncated), notes: body.notes ?? [] };
+}
+
+export interface LedgerReceipt {
+  sale: Record<string, unknown>;
+  lines: Record<string, unknown>[];
+  payments: Record<string, unknown>[];
+  returns: (Record<string, unknown> & { lines: Record<string, unknown>[] })[];
+}
+
+export async function fetchLedgerReceipt(saleId: string, token: string): Promise<LedgerReceipt> {
+  return getJson<LedgerReceipt>(`/ledger/receipt/${encodeURIComponent(saleId)}`, token, "fetchLedgerReceipt");
+}
