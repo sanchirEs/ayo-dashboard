@@ -81,7 +81,12 @@ export default function PosOverviewClient() {
           <Section
             title={`Өнөөдөр · ${data.date}`}
             description="Кассаар хийсэн борлуулалт (буцаалт хассан). Онлайн борлуулалт «Тайлан → Борлуулалт»-д."
-            actions={<strong style={{ fontSize: 22 }}>{formatMnt(totalNet)}</strong>}
+            actions={
+              <span style={{ display: "inline-flex", gap: 16, alignItems: "baseline" }}>
+                <Link href="/reports/pos/all" style={{ color: C.blue }}>Бүх гүйлгээ →</Link>
+                <strong style={{ fontSize: 22 }}>{formatMnt(totalNet)}</strong>
+              </span>
+            }
           >
             {data.today.length === 0 ? (
               <p style={{ color: C.muted, margin: 0 }}>Өнөөдөр борлуулалт хараахан алга.</p>

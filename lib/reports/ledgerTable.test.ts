@@ -25,6 +25,11 @@ describe("column filters", () => {
     expect(applyColumnFilters(rows, cols, { status: "VOIDED" }).map((r) => r.saleNumber)).toEqual(["A-2"]);
   });
 
+  it("a method filter matches receipts paid several ways", () => {
+    const paid = [{ saleNumber: "B-1", paymentMethods: "CARD + CASH" }, { saleNumber: "B-2", paymentMethods: "QPAY" }];
+    expect(applyColumnFilters(paid, cols, { paymentMethods: "CASH" }).map((r) => r.saleNumber)).toEqual(["B-1"]);
+  });
+
   it("empty filters keep everything", () => {
     expect(applyColumnFilters(rows, cols, { total: "", status: "" })).toHaveLength(3);
   });

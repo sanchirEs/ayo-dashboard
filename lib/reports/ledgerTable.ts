@@ -21,7 +21,8 @@ const COMPARE = /^\s*(>=|<=|>|<|=)\s*(-?[\d,.\s]+)\s*$/;
 const NUMERIC = new Set(["money", "int", "vat", "pct"]);
 
 function matches(col: LedgerColumn, value: unknown, filter: string): boolean {
-  if (col.type === "enum" && col.pick && col.labels && filter in col.labels) return value === filter;
+  // "CARD + CASH" (several methods) matches either method.
+  if (col.type === "enum" && col.pick && col.labels && filter in col.labels) return String(value ?? "").split(" + ").includes(filter);
   if (col.pick && col.type !== "enum") return cellText(col, value) === filter;
   if (NUMERIC.has(col.type)) {
     const m = COMPARE.exec(filter);
