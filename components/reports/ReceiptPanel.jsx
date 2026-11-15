@@ -111,8 +111,9 @@ export default function ReceiptPanel({ saleId, token, rangeEnd, onClose }) {
             ))}
 
             <div style={rule} />
-            <Row label="Үндсэн үнээр" value={money(s.subtotal)} />
-            {s.allDiscount > 0 && <Row label="Хөнгөлөлт" value={`−${money(s.allDiscount)}`} />}
+            <Row label="Үндсэн үнээр" value={money(s.listTotal)} />
+            {s.campaignDiscount > 0 && <Row label="Хямдрал" value={`−${money(s.campaignDiscount)}`} />}
+            {s.manualDiscount > 0 && <Row label="Гар хөнгөлөлт" value={`−${money(s.manualDiscount)}`} />}
             {s.cargo > 0 && <Row label="Карго" value={money(s.cargo)} />}
             <Row label="Нийт" value={money(s.total)} strong />
             <Row label="НӨАТ (баримтад)" value={vat(s.vatCharged)} color={C.muted} />

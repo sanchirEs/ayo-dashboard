@@ -85,6 +85,7 @@ export const SUMMARY_COLUMNS: LedgerColumn[] = [
   { key: "vatCalculated", header: "НӨАТ (тооцоолсон 1/11)", type: "vat", explain: "Систем бодсон НӨАТ." },
   m("cost", "Өртөг", "Өртөг нь тодорхой баримтуудын өртөг."),
   m("profit", "Ашиг", "Өртөг нь тодорхой баримтуудын ашиг."),
+  n("noCost", "Өртөггүй баримт", "Өртөг тодорхойгүй тул өртөг, ашигт ороогүй баримтын тоо."),
   ...METHODS.map((k) => m(`pay${k}`, METHOD_LABELS[k], `${METHOD_LABELS[k]}-аар авсан мөнгө, буцаалт хасагдсан.`)),
   m("variance", "Ээлжийн зөрүү", "Ээлжүүдийн тоолсон минус байх ёстой бэлэн."),
   m("cashIn", "Кассанд нэмсэн", "Ээлжийн дунд нэмсэн бэлэн."),
@@ -118,7 +119,7 @@ export function branchSummary(tabs: Record<TabKey, Row[]>): Row[] {
     if (s.cost !== null && s.cost !== undefined) {
       add(r, "cost", s.cost);
       add(r, "profit", s.profit);
-    }
+    } else add(r, "noCost", 1);
   }
   for (const p of tabs.payments ?? []) if (p.counted) add(row(p.locationName), `pay${p.method}`, p.amount);
   for (const s of tabs.shifts ?? []) add(row(s.locationName), "variance", s.variance);

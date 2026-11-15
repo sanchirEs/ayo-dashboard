@@ -39,11 +39,12 @@ function quickRanges() {
 const sum = (rows, key, pred = () => true) => rows.reduce((a, r) => (pred(r) ? a + (Number(r[key]) || 0) : a), 0);
 
 /** The figures above each tab's table, from the rows the filters left. */
-function strip(tab, rows) {
+function strip(tab, rows, totals = {}) {
   const done = (r) => r.status === "COMPLETED";
   switch (tab) {
-    case "receipts":
-      return [
+    case "receipts": {
+      const noCost = rows.filter((r) => done(r) && r.cost === null).length;
+      const out = [
         ["Баримт", rows.filter(done).length],
         ["Хүчингүй", rows.filter((r) => r.status === "VOIDED").length],
         ["Борлуулалт", fmt(sum(rows, "total", done))],
@@ -53,6 +54,11 @@ function strip(tab, rows) {
         ["НӨАТ (баримтад)", fmt(sum(rows, "vatCharged", done))],
         ["Ашиг", fmt(sum(rows, "profit", (r) => done(r) && r.profit !== null))],
       ];
+      // Profit covers only receipts with a known cost; say how many it leaves out.
+      if (noCost) out.push(["Өртөггүй баримт", `${noCost} (ашигт ороогүй)`, C.amber]);
+      if (totals.earlierRefundCount) out.push(["Өмнөх баримтын буцаалт", `${totals.earlierRefundCount} ш, ${fmt(totals.earlierRefunded)}`, C.amber]);
+      return out;
+    }
     case "lines": {
       const ok = (r) => r.saleStatus === "COMPLETED";
       return [
@@ -61,6 +67,7 @@ function strip(tab, rows) {
         ["Буцаасан ширхэг", fmt(sum(rows, "qtyReturned", ok))],
         ["Цэвэр дүн", fmt(sum(rows, "netAmount", ok))],
         ["Ашиг", fmt(sum(rows, "lineProfit", (r) => ok(r) && r.lineProfit !== null))],
+        ...(rows.some((r) => ok(r) && r.lineProfit === null) ? [["Өртөггүй мөр", rows.filter((r) => ok(r) && r.lineProfit === null).length, C.amber]] : []),
       ];
     }
     case "payments": {
@@ -213,6 +220,11 @@ export default function AllTransactionsClient() {
       ["НӨАТ", "«НӨАТ (баримтад)» бол бодит нэхэмжилсэн НӨАТ: и-баримт гарсан бол, эс бөгөөс 0 (касс 0.00 хэвлэдэг). «НӨАТ (тооцоолсон 1/11)» бол систем бодсон дүн."],
       ["Буцаалт", "Баримт, бараа хуудсанд зөвхөн сонгосон хугацааны төгсгөл хүртэл хийсэн буцаалтыг хасна. Буцаалт хуудас буцаалтыг өөрийн огноогоор жагсаана."],
       ["Хүчингүй баримт", "Жагсаалтад байгаа ч нийт дүнд орохгүй."],
+      ["Ашиг", "Өртөг нь тодорхой баримт, мөрүүдийн ашиг. Өртөггүйг тоолж харуулна. Бараа хуудасны ашиг буцаалтыг хасаагүй тул Ашиг тайлантай яг таарахгүй."],
+      ["Өмнөх баримтын буцаалт", data.receipts?.totals?.earlierRefundCount
+        ? `Энэ хугацаанд өмнөх хугацааны ${data.receipts.totals.earlierRefundCount} баримтаас ${fmt(data.receipts.totals.earlierRefunded)}₮ буцаасан. Борлуулалт тайлан үүнийг хасдаг: Цэвэр борлуулалт − энэ дүн = Борлуулалт тайлангийн цэвэр дүн.`
+        : "Байхгүй."],
+      ["Төлбөр тайлан", "Одоогийн «Төлбөр» тайлан буцаалтыг хасахын оронд нэмж харуулж байна (алдаа). Энэ файлын Төлбөр хуудас зөв."],
       ["Баримтгүй QPay", "QPay төлөгдсөн ч касс баримтаа илгээгээгүй. Нийт дүнд орохгүй, шалгах хэрэгтэй."],
       ...LEDGER_TABS.filter((t) => data[t.key]?.truncated).map((t) => ["АНХААР", `${t.title}: 50,000-аас олон мөр байсан тул зөвхөн эхний 50,000 орсон. Хугацааг богиносгоно уу.`]),
       ...LEDGER_TABS.filter((t) => data[t.key]?.error).map((t) => ["АНХААР", `${t.title}: татаж чадсангүй (${data[t.key].error}).`]),
@@ -320,7 +332,7 @@ export default function AllTransactionsClient() {
       ))}
 
       <dl style={{ display: "flex", flexWrap: "wrap", gap: "6px 28px", margin: "0 0 14px", fontVariantNumeric: "tabular-nums" }}>
-        {strip(active, filtered[active] ?? []).map(([k, v, color]) => (
+        {strip(active, filtered[active] ?? [], current.totals).map(([k, v, color]) => (
           <div key={k}>
             <dt style={{ fontSize: 12, color: C.muted, margin: 0 }}>{k}</dt>
             <dd style={{ fontSize: 17, fontWeight: 600, margin: "3px 0 0", color: color || C.text }}>{v}</dd>

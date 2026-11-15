@@ -81,6 +81,9 @@ describe("branch summary", () => {
     expect(by["Төв"]).toMatchObject({ receipts: 1, voided: 1, total: 20000, refunded: 5000, netAfterReturns: 15000, payCASH: 15000, variance: -2000, profit: 8000 });
     expect(by["Соёолж"]).toMatchObject({ receipts: 1, total: 30000, payQPAY: 30000, cashOut: 3000, handovers: 1, handoverTotal: 45000, cargo: 2000 });
     expect(out[out.length - 1]).toMatchObject({ locationName: "Нийт", receipts: 2, total: 50000, netAfterReturns: 45000, payCASH: 15000, payQPAY: 30000 });
+    // Receipts with no cost are counted, so a profit figure never looks complete when it is not.
+    expect(by["Соёолж"]).toMatchObject({ noCost: 1, profit: 0 });
+    expect(by["Төв"]).toMatchObject({ noCost: 0 });
     for (const key of Object.keys(out[0])) expect(SUMMARY_COLUMNS.some((c) => c.key === key), key).toBe(true);
   });
 });
