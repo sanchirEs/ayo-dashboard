@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { exportToExcel } from "@/lib/exportToExcel";
+import {
+  buildOrderExportQuery,
+  fetchAllOrderPages,
+  orderExportFileName,
+  orderToExportRow,
+} from "@/lib/orderExport";
 
 export default function OrderFilters() {
   const router = useRouter();
@@ -13,7 +21,15 @@ export default function OrderFilters() {
   const [deliveryType, setDeliveryType] = useState(searchParams.get('deliveryType') || '');
   const [dateFrom, setDateFrom] = useState(searchParams.get('dateFrom') || '');
   const [dateTo, setDateTo] = useState(searchParams.get('dateTo') || '');
-  const [datePreset, setDatePreset] = useState('');
+  // A range already in the URL (reload, shared link) shows as explicit dates,
+  // so what's on screen is exactly what the table and the export use.
+  const [datePreset, setDatePreset] = useState(
+    searchParams.get('dateFrom') || searchParams.get('dateTo') ? 'custom' : ''
+  );
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  const [exportError, setExportError] = useState('');
+  const { data: session } = useSession();
 
   const localDateStr = (d) => {
     const pad = (n) => String(n).padStart(2, '0');
@@ -54,6 +70,11 @@ export default function OrderFilters() {
   const handleDatePresetChange = (presetValue) => {
     setDatePreset(presetValue);
     
+    if (presetValue === 'custom') {
+      // Keep whatever range is set; the date inputs below apply on change.
+      return;
+    }
+
     if (presetValue === '') {
       setDateFrom('');
       setDateTo('');
@@ -86,6 +107,55 @@ export default function OrderFilters() {
     router.push(`/order-list${queryString ? '?' + queryString : ''}`);
   };
 
+  const handleCustomDateChange = (newFrom, newTo) => {
+    setDateFrom(newFrom);
+    setDateTo(newTo);
+    // Apply once the range is complete, or when one end is cleared.
+    if ((newFrom && newTo) || (!newFrom && !newTo)) {
+      updateAllFilters(newFrom, newTo);
+    }
+  };
+
+  // Exports every order matching the filters in the URL (the ones the table is
+  // showing), across all pages — not only the 100 rows on screen.
+  const handleExportExcel = async () => {
+    if (exporting) return;
+    const token = session?.user?.accessToken;
+    if (!token) {
+      setExportError('Нэвтрэлт шалгагдаж байна, дахин оролдоно уу.');
+      return;
+    }
+    setExporting(true);
+    setExportProgress(0);
+    setExportError('');
+    try {
+      const orders = await fetchAllOrderPages(async (page) => {
+        const res = await fetch(`/api/v1/orders?${buildOrderExportQuery(searchParams, page)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: 'no-store',
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.message || `HTTP ${res.status}`);
+        }
+        const result = await res.json();
+        const data = Array.isArray(result?.data) ? result.data : [];
+        setExportProgress((n) => n + data.length);
+        return { data, pagination: result?.pagination };
+      });
+      if (orders.length === 0) {
+        setExportError('Энэ шүүлтүүрт захиалга алга.');
+        return;
+      }
+      await exportToExcel(orders.map(orderToExportRow), orderExportFileName(searchParams));
+    } catch (err) {
+      console.error('Order export failed:', err);
+      setExportError(`Excel татаж чадсангүй: ${err.message}`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const handleStatusChange = (newStatus) => {
     setStatus(newStatus);
     router.push(`/order-list?${buildParams({ status: newStatus }).toString()}`);
@@ -114,6 +184,7 @@ export default function OrderFilters() {
     setDateFrom('');
     setDateTo('');
     setDatePreset('');
+    setExportError('');
     router.push('/order-list');
   };
 
@@ -194,7 +265,72 @@ export default function OrderFilters() {
           <option value="last7days">Сүүлийн 7 хоног</option>
           <option value="last30days">Сүүлийн 30 хоног</option>
           <option value="last90days">Сүүлийн 90 хоног</option>
+          <option value="custom">Хугацаа сонгох</option>
         </select>
+
+        {/* Custom date range */}
+        {datePreset === 'custom' && (
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <input
+              type="date"
+              aria-label="Эхлэх огноо"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(e) => handleCustomDateChange(e.target.value, dateTo)}
+              style={{
+                padding: '7px 8px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                fontSize: '13px',
+              }}
+            />
+            <span style={{ color: '#9ca3af', fontSize: '13px' }}>–</span>
+            <input
+              type="date"
+              aria-label="Дуусах огноо"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(e) => handleCustomDateChange(dateFrom, e.target.value)}
+              style={{
+                padding: '7px 8px',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb',
+                fontSize: '13px',
+              }}
+            />
+          </div>
+        )}
+
+        {/* Export Excel — sits with the date filter; exports every filtered order */}
+        <button
+          type="button"
+          onClick={handleExportExcel}
+          disabled={exporting}
+          title="Шүүсэн бүх захиалгыг Excel-ээр татах"
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #16a34a',
+            fontSize: '13px',
+            fontWeight: 500,
+            backgroundColor: exporting ? '#f0fdf4' : 'white',
+            color: '#15803d',
+            cursor: exporting ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => { if (!exporting) e.currentTarget.style.backgroundColor = '#f0fdf4'; }}
+          onMouseLeave={(e) => { if (!exporting) e.currentTarget.style.backgroundColor = 'white'; }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {exporting ? `Татаж байна… ${exportProgress}` : 'Excel'}
+        </button>
 
         {/* Order Status Filter */}
         <select
@@ -260,35 +396,6 @@ export default function OrderFilters() {
           <option value="PICKUP">Ирж авах</option>
         </select>
 
-        {/* Export Excel */}
-        <button
-          onClick={() => window.dispatchEvent(new Event('export-orders-excel'))}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid #e5e7eb',
-            fontSize: '13px',
-            fontWeight: 500,
-            backgroundColor: 'white',
-            color: '#374151',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            whiteSpace: 'nowrap',
-            marginLeft: 'auto',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f9fafb'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white'; }}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          Excel
-        </button>
-
         {/* Clear Filters */}
         {activeFiltersCount > 0 && (
           <button
@@ -316,6 +423,11 @@ export default function OrderFilters() {
           </button>
         )}
       </div>
+      {exportError && (
+        <div role="alert" style={{ marginTop: '6px', fontSize: '12px', color: '#b91c1c' }}>
+          {exportError}
+        </div>
+      )}
     </div>
   );
 }

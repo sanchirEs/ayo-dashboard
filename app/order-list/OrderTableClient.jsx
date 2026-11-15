@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import OrderRowClient from "./OrderRowClient";
 import BulkActions from "./BulkActions";
-import { exportToExcel } from "@/lib/exportToExcel";
 import { useSession } from "next-auth/react";
 
 export default function OrderTableClient({ orders: initialOrders, pagination: initialPagination }) {
@@ -81,39 +80,6 @@ export default function OrderTableClient({ orders: initialOrders, pagination: in
     // Clear selection after successful bulk update
     setSelectedOrders(new Set());
   };
-
-  const handleExportExcel = async () => {
-    const rows = orders.map(order => ({
-      "Order ID": order.id,
-      "Customer": order.user ? `${order.user.firstName} ${order.user.lastName}` : "—",
-      "Email": order.user?.email || "",
-      "Phone": order.shipping?.recipientPhone || order.user?.telephone || "",
-      "Status": order.status,
-      "Total": order.total,
-      "Items": order.orderItems?.length || 0,
-      "Бүтээгдэхүүн": order.orderItems?.map(item => {
-        const name = item.product?.name || "Бүтээгдэхүүн";
-        return item.quantity > 1 ? `${name} x${item.quantity}` : name;
-      }).join(", ") || "",
-      "Payment Provider": order.payment?.provider || "",
-      "Payment Status": order.payment?.status || "",
-      "Хүргэлтийн төрөл": order.deliveryType === "PICKUP" ? "Ирж авах" : "Хүргэлт",
-      "Хаяг": order.deliveryType === "PICKUP"
-        ? (order.shipping?.pickupStoreName || "")
-        : [order.shipping?.addressLine1, order.shipping?.addressLine2].filter(Boolean).join(", "),
-      "Дүүрэг": order.shipping?.district || "",
-      "Date": order.createdAt ? new Date(order.createdAt).toLocaleString() : "",
-    }));
-    const date = new Date().toISOString().slice(0, 10);
-    await exportToExcel(rows, `orders-${date}`);
-  };
-
-  // Register export handler so OrderFilters can trigger it
-  useEffect(() => {
-    const handler = () => handleExportExcel();
-    window.addEventListener('export-orders-excel', handler);
-    return () => window.removeEventListener('export-orders-excel', handler);
-  }, [orders]);
 
   const allSelected = orders.length > 0 && orders.every((order) => selectedOrders.has(order?.id));
   const someSelected = orders.some((order) => selectedOrders.has(order?.id));
