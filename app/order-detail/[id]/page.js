@@ -142,7 +142,7 @@ export default async function OrderDetail({ params }) {
                   </li>
                   <li className="divider" />
                   <li className="cart-totals-item">
-                    <span className="body-title">Нийт дүн:</span>
+                    <span className="body-title">Захиалгын дүн:</span>
                     <span className="body-title tf-color-1">{formatPrice(orderTotal)}</span>
                   </li>
                 </ul>

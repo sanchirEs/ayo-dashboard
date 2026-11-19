@@ -374,7 +374,7 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     paddingTop: 12, marginTop: 6,
                     borderTop: "1.5px solid #111827",
                   }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Нийт дүн</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#111827" }}>Захиалгын дүн</span>
                     <span style={{ fontSize: 21, fontWeight: 800, color: "#111827", fontVariantNumeric: "tabular-nums", letterSpacing: "-0.01em" }}>{formatPrice(total)}</span>
                   </div>
                 </div>

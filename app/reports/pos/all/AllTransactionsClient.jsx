@@ -106,8 +106,8 @@ function strip(tab, rows, totals = {}, narrowed = false) {
     }
     case "cash":
       return [
-        ["Орлого", fmt(sum(rows, "amount", (r) => r.type === "IN"))],
-        ["Зарлага", fmt(sum(rows, "amount", (r) => r.type === "OUT"))],
+        ["Кассанд нэмсэн", fmt(sum(rows, "amount", (r) => r.type === "IN"))],
+        ["Кассаас гаргасан", fmt(sum(rows, "amount", (r) => r.type === "OUT"))],
         ["Касс нээсэн", rows.filter((r) => r.type === "NO_SALE").length],
       ];
     case "handovers":
@@ -258,7 +258,7 @@ export default function AllTransactionsClient() {
   return (
     <div className="wg-box" style={{ fontSize: 14 }}>
       <p style={{ margin: "0 0 16px", color: C.muted, fontSize: 15, maxWidth: 760 }}>
-        Кассын бүх гүйлгээ мөр мөрөөр: баримт, бараа, төлбөр, буцаалт, ээлж, кассын орлого зарлага, олгосон онлайн захиалга.
+        Кассын бүх гүйлгээ мөр мөрөөр: баримт, бараа, төлбөр, буцаалт, ээлж, кассанд нэмсэн, гаргасан мөнгө, олгосон онлайн захиалга.
         Мөр дээр дарж баримтыг бүтнээр нь харна. Excel файлд бүх хуудас, бүх багана орно.
       </p>
 

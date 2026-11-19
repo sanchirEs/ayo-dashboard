@@ -398,7 +398,7 @@ export default function OrderQuickView({ open, onOpenChange, orderId }) {
                     paddingTop: 10, marginTop: 4,
                     borderTop: "1.5px solid #111827",
                   }}>
-                    <span>Нийт дүн</span>
+                    <span>Захиалгын дүн</span>
                     <span>{formatPrice(total)}</span>
                   </div>
                 </div>

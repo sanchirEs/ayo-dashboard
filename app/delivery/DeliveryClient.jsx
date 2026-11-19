@@ -443,7 +443,7 @@ export default function DeliveryClient() {
               <>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                    {["Захиалга", "Хэрэглэгч", "Бараа", "Нийт дүн", "Огноо", "Үйлдэл"].map(h => (
+                    {["Захиалга", "Хэрэглэгч", "Бараа", "Захиалгын дүн", "Огноо", "Үйлдэл"].map(h => (
                       <th key={h} style={{ padding: "11px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
@@ -592,7 +592,7 @@ export default function DeliveryClient() {
               <>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Жолооч", "Нийт дүн", "Хүргэгдсэн огноо"].map(h => (
+                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Жолооч", "Захиалгын дүн", "Хүргэгдсэн огноо"].map(h => (
                       <th key={h} style={{ padding: "11px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
                         {h}
                       </th>
@@ -653,7 +653,7 @@ export default function DeliveryClient() {
               <>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #f3f4f6" }}>
-                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Нийт дүн", "Огноо", "Үйлдэл"].map(h => (
+                    {["Захиалга", "Хэрэглэгч", "Papa Код", "Захиалгын дүн", "Огноо", "Үйлдэл"].map(h => (
                       <th key={h} style={{ padding: "11px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em", whiteSpace: "nowrap" }}>
                         {h}
                       </th>

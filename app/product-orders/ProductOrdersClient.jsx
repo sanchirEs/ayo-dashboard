@@ -207,7 +207,7 @@ function UserGroupsTable({ userGroups }) {
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <StatCard label="Хэрэглэгч" value={totalUsers} sub="захиалга хийсэн" />
         <StatCard label="Нийт захиалга" value={totalOrders} sub="нийт захиалгын тоо" />
-        <StatCard label="Нийт орлого" value={formatCurrency(totalSpent)} sub="бүх захиалгын дүн" />
+        <StatCard label="Захиалгын дүн" value={formatCurrency(totalSpent)} sub="жагсаасан захиалгуудын нийт дүн, борлуулалт биш" />
         <StatCard label="Хайлтын үр дүн" value={filtered.length} sub={`/ ${totalUsers} хэрэглэгч`} />
       </div>
 
@@ -241,7 +241,7 @@ function UserGroupsTable({ userGroups }) {
           <li style={{ flex: '2 1 180px' }}><div className="body-title">Хэрэглэгч</div></li>
           <li style={{ flex: '1 1 80px', minWidth: 80 }}>{colHeader('Захиалга', 'orderCount')}</li>
           <li style={{ flex: '1 1 80px', minWidth: 80 }}>{colHeader('Нийт ш', 'totalQty')}</li>
-          <li style={{ flex: '1 1 120px', minWidth: 100 }}>{colHeader('Нийт дүн', 'totalSpent')}</li>
+          <li style={{ flex: '1 1 120px', minWidth: 100 }}>{colHeader('Захиалгын дүн', 'totalSpent')}</li>
           <li style={{ flex: '1 1 120px', minWidth: 100 }}>{colHeader('Сүүлд захиалсан', 'lastOrderedAt')}</li>
           <li style={{ flex: '1 1 140px', minWidth: 120 }}><div className="body-title">Холбоо барих</div></li>
         </ul>
@@ -433,7 +433,7 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
       "Бүтээгдэхүүн": group.productName,
       "Захиалгын тоо": group.orderCount,
       "Нийт ширхэг": group.totalQty,
-      "Орлого": group.totalRevenue,
+      "Барааны дүн": group.totalRevenue,
       "Сүүлд захиалсан": formatDate(group.lastOrderedAt),
       "Вариант SKU": group.variantSkus.join(", "),
     }));
@@ -450,7 +450,7 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
       "Утас": group.phone,
       "Захиалгын тоо": group.orderCount,
       "Нийт ширхэг": group.totalQty,
-      "Нийт дүн": group.totalSpent,
+      "Захиалгын дүн": group.totalSpent,
       "Сүүлд захиалсан": formatDate(group.lastOrderedAt),
     }));
 
@@ -515,7 +515,7 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
         <StatCard label="Бүтээгдэхүүн" value={stats.totalProducts} sub="захиалагдсан" />
         <StatCard label="Нийт тоо" value={`${stats.totalUnits.toLocaleString()} ш`} sub="нийт ширхэг" />
-        <StatCard label="Нийт орлого" value={formatCurrency(stats.totalRevenue)} sub="бүх захиалгын дүн" />
+        <StatCard label="Барааны дүн" value={formatCurrency(stats.totalRevenue)} sub="үнэ × тоо, жагсаасан захиалгуудаас, борлуулалт биш" />
         <StatCard label="Хайлтын үр дүн" value={filtered.length} sub={`/ ${groups.length} бүтээгдэхүүн`} />
       </div>
 
@@ -566,7 +566,7 @@ export default function ProductOrdersClient({ groups, userGroups, stats }) {
             {colHeader('Нийт ш', 'totalQty')}
           </li>
           <li style={{ flex: '1 1 120px', minWidth: 100 }}>
-            {colHeader('Орлого', 'totalRevenue')}
+            {colHeader('Барааны дүн', 'totalRevenue')}
           </li>
           <li style={{ flex: '1 1 120px', minWidth: 100 }}>
             {colHeader('Сүүлд захиалсан', 'lastOrderedAt')}

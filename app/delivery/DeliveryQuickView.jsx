@@ -182,7 +182,7 @@ export default function DeliveryQuickView({ open, onOpenChange, delivery }) {
             backgroundColor: "#f9fafb", borderRadius: "8px",
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}>
-            <span style={{ color: "#6b7280" }}>Нийт дүн</span>
+            <span style={{ color: "#6b7280" }}>Захиалгын дүн</span>
             <span style={{ fontWeight: "700", fontSize: "15px" }}>{formatPrice(delivery.total)}</span>
           </div>
         </div>
