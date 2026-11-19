@@ -241,28 +241,35 @@ describe("MANAGER", () => {
       "/store-locations",
       "/store-locations/new",
       "/cargo",
+      // 2026-11-19: everything except finance, reports and POS
+      "/",
+      "/transfer-forms",
+      "/sheet-payments",
+      "/all-user",
+      "/blocklist",
+      "/sms-broadcast",
+      "/retailers",
     ]) {
       expect(canAccessRoute("MANAGER", page), `MANAGER → ${page}`).toBe(true);
     }
   });
 
-  it("stays out of reports, users, settings, SMS, POS, stock and partners", () => {
+  it("stays out of finance, reports, POS, stock, partners and account admin", () => {
     for (const page of [
       "/report",
       "/sales",
       "/reports/pos/sales",
-      "/all-user",
+      "/reports/pos/all",
       "/add-new-user",
       "/create-role",
       "/setting",
       "/store-settings",
-      "/sms-broadcast",
-      "/sheet-payments",
+      "/pos",
       "/pos/registers",
       "/stock",
+      "/stock/goods-in",
       "/partners",
-      "/blocklist",
-      "/retailers",
+      "/partner-deliveries",
     ]) {
       expect(canAccessRoute("MANAGER", page), `MANAGER → ${page}`).toBe(false);
     }

@@ -111,7 +111,6 @@ export default function Menu() {
       "SHEET_PICKUP",
       "SHEET_DELIVERY",
       "SHEET_REFUND",
-      "MANAGER",
     ].includes(
       role
     )
@@ -177,94 +176,7 @@ export default function Menu() {
       },
     ];
 
-    // 2026-11-06, owner: MANAGER is the "smaller admin" — full control of
-    // these sections only. Keep in step with MANAGER_PAGES in lib/permissions.ts.
-    const MANAGER_MENU = [
-      {
-        key: 5,
-        heading: "Захиалга",
-        icon: "icon-file-plus",
-        items: [
-          ["/order-list", "Захиалгын жагсаалт"],
-          ["/transfer-forms", "Хүргэлтийн хүсэлт"],
-          ["/product-orders", "📦 Бүтээгдэхүүнээр"],
-          ["/pickup-orders", "Дэлгүүрээс авах"],
-          ["/delivery", "Хүргэлт"],
-          ["/import-orders", "Захиалгын бараа"],
-          ["/pickup-logs", "Авалтын түүх"],
-          ["/order-tracking", "Захиалга хянах"],
-        ],
-      },
-      {
-        key: 2,
-        heading: "Бараа",
-        icon: "icon-box",
-        items: [
-          ["/product-list", "Барааны жагсаалт"],
-          ["/add-product", "Бараа нэмэх"],
-          ["/barcodes", "Штрих код"],
-        ],
-      },
-      {
-        key: 3,
-        heading: "Ангилал, шинж чанар",
-        icon: "icon-layers",
-        items: [
-          ["/category-list", "Ангилал"],
-          ["/new-category", "Шинэ ангилал"],
-          ["/attributes", "Шинж чанар"],
-        ],
-      },
-      {
-        key: 13,
-        heading: "Брэнд",
-        icon: "icon-award",
-        items: [
-          ["/brand-list", "Брэнд"],
-          ["/new-brand", "Брэнд нэмэх"],
-        ],
-      },
-      {
-        key: 6,
-        heading: "Таг",
-        icon: "icon-tag",
-        items: [
-          ["/tags", "Таг"],
-          ["/add-tags", "Таг нэмэх"],
-          ["/hierarchical-tags", "Нэмэлт ангилал"],
-        ],
-      },
-      {
-        key: 8, // matches the /discounts and /flash-sale auto-open key
-        heading: "Урамшуулал",
-        icon: "icon-percent",
-        items: [
-          ["/discounts", "🏷️ Хямдрал"],
-          ["/flash-sale", "⚡ Flash Sale"],
-          ["/campaigns", "Кампанит ажил"],
-          ["/new-campaign", "Шинэ урамшуулал үүсгэх"],
-          ["/coupons", "Купон"],
-          ["/new-coupon", "Шинэ купон"],
-        ],
-      },
-      {
-        key: 0,
-        heading: "Бусад",
-        icon: "icon-settings",
-        items: [
-          ["/banners", "Баннер"],
-          ["/store-locations", "Салбарууд"],
-          ["/cargo", "Карго"],
-        ],
-      },
-    ];
-
-    const STAFF_MENU =
-      role === "BRANCH"
-        ? BRANCH_MENU
-        : role === "MANAGER"
-          ? MANAGER_MENU
-          : SHEET_MENU;
+    const STAFF_MENU = role === "BRANCH" ? BRANCH_MENU : SHEET_MENU;
 
     return (
       <div className="center">
@@ -313,6 +225,13 @@ export default function Menu() {
       </div>
     );
   }
+
+  // 2026-11-19, owner: MANAGER ("Ажилтан", e.g. the `Delivery` account) gets
+  // this same admin sidebar — same order, same names — minus finance, reports
+  // and POS: the ADMIN/SUPERADMIN-only blocks below (Харилцагч, Касс, Нөөц,
+  // POS тайлан), Дэлгүүрийн тохиргоо and Шинэ хэрэглэгч нэмэх.
+  // Keep in step with MANAGER_PAGES in lib/permissions.ts.
+  const isManager = role === "MANAGER";
 
   return (
     <div className="center">
@@ -1002,16 +921,18 @@ export default function Menu() {
                     <div className="text">Бүх хэрэглэгч</div>
                   </Link>
                 </li>
-                <li className="sub-menu-item">
-                  <Link
-                    href="/add-new-user"
-                    className={
-                      isSubMenuItemActive("/add-new-user") ? "active" : ""
-                    }
-                  >
-                    <div className="text">Шинэ хэрэглэгч нэмэх</div>
-                  </Link>
-                </li>
+                {!isManager && (
+                  <li className="sub-menu-item">
+                    <Link
+                      href="/add-new-user"
+                      className={
+                        isSubMenuItemActive("/add-new-user") ? "active" : ""
+                      }
+                    >
+                      <div className="text">Шинэ хэрэглэгч нэмэх</div>
+                    </Link>
+                  </li>
+                )}
                 <li className="sub-menu-item">
                   <Link
                     href="/blocklist"
@@ -1112,17 +1033,19 @@ export default function Menu() {
       <div className="center-item">
         <div className="center-heading">Тохиргоо</div>
         <ul className="menu-list">
-          <li className={`menu-item ${router === "/store-settings" ? "active" : ""}`}>
-            <Link
-              href="/store-settings"
-              className={isSubMenuItemActive("/store-settings") ? "active" : ""}
-            >
-              <div className="icon">
-                <i className="icon-settings" />
-              </div>
-              <div className="text">Дэлгүүрийн тохиргоо</div>
-            </Link>
-          </li>
+          {!isManager && (
+            <li className={`menu-item ${router === "/store-settings" ? "active" : ""}`}>
+              <Link
+                href="/store-settings"
+                className={isSubMenuItemActive("/store-settings") ? "active" : ""}
+              >
+                <div className="icon">
+                  <i className="icon-settings" />
+                </div>
+                <div className="text">Дэлгүүрийн тохиргоо</div>
+              </Link>
+            </li>
+          )}
           <li className={`menu-item ${router === "/banners" ? "active" : ""}`}>
             <Link
               href="/banners"
@@ -1156,7 +1079,7 @@ export default function Menu() {
               <div className="text">Эх сурвалж</div>
             </Link>
           </li>
-          {["ADMIN", "SUPERADMIN"].includes(role) && (
+          {["ADMIN", "SUPERADMIN", "MANAGER"].includes(role) && (
             <li className={`menu-item ${router.startsWith("/cargo") ? "active" : ""}`}>
               <Link
                 href="/cargo"

@@ -184,7 +184,8 @@ function RefundActionCell({ checked, canAct, onConfirm }) {
 //
 // Shared rather than written out per table: the two tables below had identical
 // copies, which is exactly how the two drift apart.
-const isAdminish = (role) => role === "ADMIN" || role === "SUPERADMIN";
+const isAdminish = (role) =>
+  role === "ADMIN" || role === "SUPERADMIN" || role === "MANAGER";
 const canPickupAs = (role) =>
   isAdminish(role) || role === "SHEET_PICKUP" || role === "BRANCH";
 const canDeliverAs = (role) => isAdminish(role) || role === "SHEET_DELIVERY";

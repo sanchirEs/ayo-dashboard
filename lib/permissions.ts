@@ -79,8 +79,14 @@ const BRANCH_PAGES = ["/order-list", "/unauthorized"];
  * MANAGER, the "smaller admin" (owner, 2026-11-06): everything an admin can do
  * on these sections, nothing outside them. Backend twin:
  * ayo-back/src/middlewares/managerAccess.js MANAGER_PREFIXES.
+ *
+ * 2026-11-19, owner (the `Delivery` account): everything except finance,
+ * reports and POS. Still out: /reports, /pos, /stock, /partners,
+ * /store-settings (prices, delivery fees) and /add-new-user (could make an
+ * ADMIN).
  */
 export const MANAGER_PAGES = [
+  "/", // only redirects to the landing page; the admin menu links it
   // Orders and fulfilment
   "/order-list",
   "/order-detail",
@@ -91,6 +97,11 @@ export const MANAGER_PAGES = [
   "/pickup-orders",
   "/pickup-logs",
   "/transfer-forms",
+  "/sheet-payments",
+  // Customers and messaging (2026-11-19)
+  "/all-user",
+  "/blocklist",
+  "/sms-broadcast",
   // Products
   "/product-list",
   "/products",
@@ -119,6 +130,7 @@ export const MANAGER_PAGES = [
   // Merchandising and places
   "/banners",
   "/store-locations",
+  "/retailers",
   "/cargo",
   "/unauthorized",
 ];
