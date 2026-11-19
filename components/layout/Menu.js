@@ -44,14 +44,12 @@ export default function Menu() {
       "/new-campaign": 11,
       "/discounts": 8,
       "/flash-sale": 8,
-      "/sales": 9,
       "/all-user": 10,
       "/add-new-user": 10,
       "/blocklist": 10,
       "/sms-broadcast": 0,
       "/login": 10,
       "/sign-up": 10,
-      "/report": 0,
       "/setting": 0,
       "/store-settings": 0,
       "/banners": 0,
@@ -827,24 +825,6 @@ export default function Menu() {
               </ul>
             </li>
             )}
-            {/** Removed from sidebar as requested
-             *  Sales (/sales)
-             */}
-            {false && (
-              <li
-                className={`menu-item ${activeAccordion === 9 ? "active" : ""}`}
-              >
-                <Link
-                  href="/sales"
-                  className={isSubMenuItemActive("/sales") ? "active" : ""}
-                >
-                  <div className="icon">
-                    <i className="icon-trending-up" />
-                  </div>
-                  <div className="text">Sales Analytics</div>
-                </Link>
-              </li>
-            )}
             {/* Partner ledger (падаан, payments) is owner-only: not in STAFF_MENU,
                 and hidden from vendors, whom the backend would refuse anyway. */}
             {["ADMIN", "SUPERADMIN"].includes(role) && (
@@ -1126,19 +1106,6 @@ export default function Menu() {
                 <div className="text">Gallery</div>
               </Link>
             </li> */}
-            {false && (
-            <li className={`menu-item ${router === "/report" ? "active" : ""}`}>
-              <Link
-                href="/report"
-                className={isSubMenuItemActive("/report") ? "active" : ""}
-              >
-                <div className="icon">
-                  <i className="icon-pie-chart" />
-                </div>
-                <div className="text">Тайлан</div>
-              </Link>
-            </li>
-            )}
           </ul>
         </div>
       </div>
