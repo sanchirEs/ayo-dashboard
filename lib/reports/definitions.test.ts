@@ -18,7 +18,7 @@ describe("report definitions", () => {
   });
 
   it("on screen money reads as ₮ and the channel as a word; the Excel rows keep the number", () => {
-    const row = { label: "Төв", channel: "STORE", count: 3, gross: 50000, discounts: 0, returns: 5000, net: 45000, vat: 4090.9 };
+    const row = { label: "Төв", channel: "STORE", count: 3, gross: 50000, discounts: 0, cargo: 0, sales: 50000, returns: 5000, net: 45000 };
     const shown = displayRow(REPORTS.sales, row);
     expect(shown.net).toBe("45,000₮");
     expect(shown.channel).toBe("Дэлгүүр");
@@ -32,6 +32,16 @@ describe("report definitions", () => {
     expect(totals.label).toBe("Нийт");
     expect(totals.net).toBe(45000);
     expect(totals.channel).toBe("");
+  });
+
+  it("no report shows VAT: Ayo charges none", () => {
+    for (const [name, report] of Object.entries(REPORTS)) {
+      expect(report.columns.filter((c) => /vat|НӨАТ/i.test(`${c.key} ${c.header}`)), name).toEqual([]);
+    }
+  });
+
+  it("the sales report reads gross − discounts + cargo = sales, sales − returns = net, in that order", () => {
+    expect(REPORTS.sales.columns.map((c) => c.key)).toEqual(["label", "channel", "count", "gross", "discounts", "cargo", "sales", "returns", "net"]);
   });
 
   it("a missing percentage reads as a dash, not null", () => {

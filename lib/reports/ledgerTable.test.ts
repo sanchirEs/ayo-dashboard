@@ -61,9 +61,9 @@ describe("branch summary", () => {
   it("one row per branch plus a total that sums them", () => {
     const out = branchSummary({
       receipts: [
-        { locationName: "Төв", status: "COMPLETED", total: 20000, allDiscount: 1000, cargo: 0, refunded: 5000, netAfterReturns: 15000, vatCharged: 0, vatCalculated: 1818.18, cost: 12000, profit: 8000 },
-        { locationName: "Төв", status: "VOIDED", total: 9000, allDiscount: 0, cargo: 0, refunded: 0, netAfterReturns: 0, vatCharged: 0, vatCalculated: 818.18, cost: null, profit: null },
-        { locationName: "Соёолж", status: "COMPLETED", total: 30000, allDiscount: 0, cargo: 2000, refunded: 0, netAfterReturns: 30000, vatCharged: 2727.27, vatCalculated: 2727.27, cost: null, profit: null },
+        { locationName: "Төв", status: "COMPLETED", listTotal: 21000, total: 20000, allDiscount: 1000, cargo: 0, refunded: 5000, netAfterReturns: 15000, cost: 12000, profit: 8000 },
+        { locationName: "Төв", status: "VOIDED", listTotal: 9000, total: 9000, allDiscount: 0, cargo: 0, refunded: 0, netAfterReturns: 0, cost: null, profit: null },
+        { locationName: "Соёолж", status: "COMPLETED", listTotal: 28000, total: 30000, allDiscount: 0, cargo: 2000, refunded: 0, netAfterReturns: 30000, cost: null, profit: null },
       ],
       lines: [],
       payments: [
@@ -72,15 +72,22 @@ describe("branch summary", () => {
         { locationName: "Соёолж", method: "QPAY", amount: 30000, counted: true },
         { locationName: "Соёолж", method: "QPAY", amount: 7000, counted: false },
       ],
-      returns: [],
+      // Returns count by the day the money went back, as the Борлуулалт report does: Соёолж
+      // refunded 4,000 of a receipt sold before the range, and a VOID is never a return.
+      returns: [
+        { locationName: "Төв", kind: "REFUND", refundAmount: 5000 },
+        { locationName: "Соёолж", kind: "REFUND", refundAmount: 4000 },
+        { locationName: "Төв", kind: "VOID", refundAmount: 9000 },
+      ],
       shifts: [{ locationName: "Төв", variance: -2000 }],
       cash: [{ locationName: "Соёолж", type: "OUT", amount: 3000 }],
       handovers: [{ locationName: "Соёолж", orderTotal: 45000 }],
     });
     const by = Object.fromEntries(out.map((r) => [r.locationName, r]));
-    expect(by["Төв"]).toMatchObject({ receipts: 1, voided: 1, total: 20000, refunded: 5000, netAfterReturns: 15000, payCASH: 15000, variance: -2000, profit: 8000 });
-    expect(by["Соёолж"]).toMatchObject({ receipts: 1, total: 30000, payQPAY: 30000, cashOut: 3000, handovers: 1, handoverTotal: 45000, cargo: 2000 });
-    expect(out[out.length - 1]).toMatchObject({ locationName: "Нийт", receipts: 2, total: 50000, netAfterReturns: 45000, payCASH: 15000, payQPAY: 30000 });
+    expect(by["Төв"]).toMatchObject({ receipts: 1, voided: 1, listTotal: 21000, allDiscount: 1000, total: 20000, refunded: 5000, net: 15000, payCASH: 15000, variance: -2000, profit: 8000 });
+    expect(by["Соёолж"]).toMatchObject({ receipts: 1, total: 30000, refunded: 4000, net: 26000, payQPAY: 30000, cashOut: 3000, handovers: 1, handoverTotal: 45000, cargo: 2000 });
+    expect(out[out.length - 1]).toMatchObject({ locationName: "Нийт", receipts: 2, listTotal: 49000, total: 50000, refunded: 9000, net: 41000, payCASH: 15000, payQPAY: 30000 });
+    expect(SUMMARY_COLUMNS.filter((c) => /vat|НӨАТ/i.test(`${c.key} ${c.header}`))).toEqual([]);
     // Receipts with no cost are counted, so a profit figure never looks complete when it is not.
     expect(by["Соёолж"]).toMatchObject({ noCost: 1, profit: 0 });
     expect(by["Төв"]).toMatchObject({ noCost: 0 });

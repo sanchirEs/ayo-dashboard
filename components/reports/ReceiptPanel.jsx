@@ -13,7 +13,6 @@ import { cellText, columnOf, METHOD_LABELS } from "@/lib/reports/ledgerColumns";
 
 const money = (v) => (v === null || v === undefined ? "" : Math.round(Number(v)).toLocaleString("en-US"));
 const when = (v) => cellText(columnOf("receipts", "occurredAt"), v);
-const vat = (v) => cellText(columnOf("receipts", "vatCalculated"), v ?? 0);
 
 function Row({ label, value, strong, color }) {
   return (
@@ -115,9 +114,7 @@ export default function ReceiptPanel({ saleId, token, rangeEnd, onClose }) {
             {s.campaignDiscount > 0 && <Row label="Хямдрал" value={`−${money(s.campaignDiscount)}`} />}
             {s.manualDiscount > 0 && <Row label="Гар хөнгөлөлт" value={`−${money(s.manualDiscount)}`} />}
             {s.cargo > 0 && <Row label="Карго" value={money(s.cargo)} />}
-            <Row label="Нийт" value={money(s.total)} strong />
-            <Row label="НӨАТ (баримтад)" value={vat(s.vatCharged)} color={C.muted} />
-            <Row label="НӨАТ (тооцоолсон 1/11)" value={vat(s.vatCalculated)} color={C.muted} />
+            <Row label="Борлуулалт" value={money(s.total)} strong />
             {s.profit !== null && <Row label="Ашиг" value={money(s.profit)} color={C.muted} />}
 
             <div style={rule} />

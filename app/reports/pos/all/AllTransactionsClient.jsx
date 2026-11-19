@@ -38,25 +38,32 @@ function quickRanges() {
 
 const sum = (rows, key, pred = () => true) => rows.reduce((a, r) => (pred(r) ? a + (Number(r[key]) || 0) : a), 0);
 
-/** The figures above each tab's table, from the rows the filters left. */
-function strip(tab, rows, totals = {}) {
+/**
+ * The figures above each tab's table, from the rows the filters left. `narrowed` is true
+ * when a search or column filter hides some rows.
+ */
+function strip(tab, rows, totals = {}, narrowed = false) {
   const done = (r) => r.status === "COMPLETED";
   switch (tab) {
     case "receipts": {
       const noCost = rows.filter((r) => done(r) && r.cost === null).length;
+      const sales = sum(rows, "total", done);
+      // The same Буцаалт as the Борлуулалт report: all money given back in the range, also for
+      // receipts sold before it. Narrowed to some receipts, only those receipts' refunds.
+      const returns = narrowed ? sum(rows, "refunded", done) : Number(totals.refundsInRange) || 0;
       const out = [
         ["Баримт", rows.filter(done).length],
         ["Хүчингүй", rows.filter((r) => r.status === "VOIDED").length],
-        ["Борлуулалт", fmt(sum(rows, "total", done))],
+        ["Үндсэн үнээр", fmt(sum(rows, "listTotal", done))],
         ["Хөнгөлөлт", fmt(sum(rows, "allDiscount", done))],
-        ["Буцаалт", fmt(sum(rows, "refunded", done))],
-        ["Цэвэр", fmt(sum(rows, "netAfterReturns", done))],
-        ["НӨАТ (баримтад)", fmt(sum(rows, "vatCharged", done))],
+        ["Карго", fmt(sum(rows, "cargo", done))],
+        ["Борлуулалт", fmt(sales)],
+        [narrowed ? "Буцаалт (эдгээр баримтын)" : "Буцаалт", fmt(returns)],
+        ["Цэвэр борлуулалт", fmt(sales - returns)],
         ["Ашиг", fmt(sum(rows, "profit", (r) => done(r) && r.profit !== null))],
       ];
       // Profit covers only receipts with a known cost; say how many it leaves out.
       if (noCost) out.push(["Өртөггүй баримт", `${noCost} (ашигт ороогүй)`, C.amber]);
-      if (totals.earlierRefundCount) out.push(["Өмнөх баримтын буцаалт", `${totals.earlierRefundCount} ш, ${fmt(totals.earlierRefunded)}`, C.amber]);
       return out;
     }
     case "lines": {
@@ -217,12 +224,12 @@ export default function AllTransactionsClient() {
       ["Хайлт", search || "—"],
       ["Татсан", new Date(Date.now() + UB_MS).toISOString().slice(0, 16).replace("T", " ")],
       ["Шүүлтүүр", "Хугацаа, салбар, кассчин, хайлт бүх хуудсанд үйлчилнэ. Баганын шүүлтүүр зөвхөн тухайн хуудсанд үйлчилнэ. Салбараар хуудас баганын шүүлтүүрийг тооцохгүй."],
-      ["НӨАТ", "«НӨАТ (баримтад)» бол бодит нэхэмжилсэн НӨАТ: и-баримт гарсан бол, эс бөгөөс 0 (касс 0.00 хэвлэдэг). «НӨАТ (тооцоолсон 1/11)» бол систем бодсон дүн."],
-      ["Буцаалт", "Баримт, бараа хуудсанд зөвхөн сонгосон хугацааны төгсгөл хүртэл хийсэн буцаалтыг хасна. Буцаалт хуудас буцаалтыг өөрийн огноогоор жагсаана."],
+      ["Тодорхойлолт", "Бүх тайланд нэг тодорхойлолт: Үндсэн үнээр − Хөнгөлөлт + Карго = Борлуулалт (худалдан авагчийн төлсөн). Борлуулалт − Буцаалт = Цэвэр борлуулалт. Хөнгөлөлтөд хямдрал, гар хөнгөлөлт, сагсны хөнгөлөлт бүгд орно. НӨАТ байхгүй."],
+      ["Буцаалт", "Салбараар хуудас болон дээрх нийт дүн: хугацаанд буцааж өгсөн бүх мөнгө, баримтыг хэзээ зарсанаас үл хамааран (Борлуулалт тайлантай ижил). Баримт, бараа хуудасны «Буцаасан» багана: тухайн баримтаас хугацааны төгсгөл хүртэл буцаасан."],
       ["Хүчингүй баримт", "Жагсаалтад байгаа ч нийт дүнд орохгүй."],
       ["Ашиг", "Өртөг нь тодорхой баримт, мөрүүдийн ашиг. Өртөггүйг тоолж харуулна. Бараа хуудасны ашиг буцаалтыг хасаагүй тул Ашиг тайлантай яг таарахгүй."],
       ["Өмнөх баримтын буцаалт", data.receipts?.totals?.earlierRefundCount
-        ? `Энэ хугацаанд өмнөх хугацааны ${data.receipts.totals.earlierRefundCount} баримтаас ${fmt(data.receipts.totals.earlierRefunded)}₮ буцаасан. Борлуулалт тайлан үүнийг хасдаг: Цэвэр борлуулалт − энэ дүн = Борлуулалт тайлангийн цэвэр дүн.`
+        ? `Энэ хугацаанд өмнө зарсан ${data.receipts.totals.earlierRefundCount} баримтаас ${fmt(data.receipts.totals.earlierRefunded)}₮ буцаасан. Баримт хуудсанд мөрөөр харагдахгүй ч Буцаалт, Цэвэр борлуулалтад орсон.`
         : "Байхгүй."],
       ["Баримтгүй QPay", "QPay төлөгдсөн ч касс баримтаа илгээгээгүй. Нийт дүнд орохгүй, шалгах хэрэгтэй."],
       ...LEDGER_TABS.filter((t) => data[t.key]?.truncated).map((t) => ["АНХААР", `${t.title}: 50,000-аас олон мөр байсан тул зөвхөн эхний 50,000 орсон. Хугацааг богиносгоно уу.`]),
@@ -331,7 +338,7 @@ export default function AllTransactionsClient() {
       ))}
 
       <dl style={{ display: "flex", flexWrap: "wrap", gap: "6px 28px", margin: "0 0 14px", fontVariantNumeric: "tabular-nums" }}>
-        {strip(active, filtered[active] ?? [], current.totals).map(([k, v, color]) => (
+        {strip(active, filtered[active] ?? [], current.totals, Boolean(search.trim()) || Object.values(filters[active] ?? {}).some((v) => String(v ?? "").trim())).map(([k, v, color]) => (
           <div key={k}>
             <dt style={{ fontSize: 12, color: C.muted, margin: 0 }}>{k}</dt>
             <dd style={{ fontSize: 17, fontWeight: 600, margin: "3px 0 0", color: color || C.text }}>{v}</dd>

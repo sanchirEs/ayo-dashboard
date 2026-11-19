@@ -18,7 +18,7 @@ export function searchRows<T extends Row>(rows: T[], columns: LedgerColumn[], q:
 }
 
 const COMPARE = /^\s*(>=|<=|>|<|=)\s*(-?[\d,.\s]+)\s*$/;
-const NUMERIC = new Set(["money", "int", "vat", "pct"]);
+const NUMERIC = new Set(["money", "int", "pct"]);
 
 function matches(col: LedgerColumn, value: unknown, filter: string): boolean {
   // "CARD + CASH" (several methods) matches either method.
@@ -76,13 +76,12 @@ export const SUMMARY_COLUMNS: LedgerColumn[] = [
   { key: "locationName", header: "Салбар", type: "text", explain: "Салбар. Сүүлийн мөр нь бүх салбарын нийт." },
   n("receipts", "Баримт", "Гүйцэтгэсэн баримтын тоо."),
   n("voided", "Хүчингүй баримт", "Хүчингүй болсон баримтын тоо (дүнд ороогүй)."),
-  m("total", "Борлуулалт", "Гүйцэтгэсэн баримтын нийт дүн."),
-  m("allDiscount", "Хөнгөлөлт", "Хямдрал болон гар хөнгөлөлт."),
+  m("listTotal", "Үндсэн үнээр", "Бүх хөнгөлөлтөөс өмнөх дүн (үндсэн үнэ × тоо)."),
+  m("allDiscount", "Хөнгөлөлт", "Бүх хөнгөлөлт: хямдрал, гар хөнгөлөлт, сагсны хөнгөлөлт."),
   m("cargo", "Карго", "Кассаар авсан карго."),
-  m("refunded", "Буцаалт", "Эдгээр баримтаас хугацааны төгсгөл хүртэл буцаасан."),
-  m("netAfterReturns", "Цэвэр борлуулалт", "Борлуулалт минус буцаалт."),
-  { key: "vatCharged", header: "НӨАТ (баримтад)", type: "vat", explain: "И-баримт гарсан баримтын НӨАТ." },
-  { key: "vatCalculated", header: "НӨАТ (тооцоолсон 1/11)", type: "vat", explain: "Систем бодсон НӨАТ." },
+  m("total", "Борлуулалт", "Худалдан авагчийн төлсөн: Үндсэн үнээр − Хөнгөлөлт + Карго."),
+  m("refunded", "Буцаалт", "Энэ салбарт хугацаанд буцааж өгсөн мөнгө, баримтыг хэзээ зарсанаас үл хамааран (Буцаалт хуудаснаас)."),
+  m("net", "Цэвэр борлуулалт", "Борлуулалт минус Буцаалт. Борлуулалт тайлантай ижил."),
   m("cost", "Өртөг", "Өртөг нь тодорхой баримтуудын өртөг."),
   m("profit", "Ашиг", "Өртөг нь тодорхой баримтуудын ашиг."),
   n("noCost", "Өртөггүй баримт", "Өртөг тодорхойгүй тул өртөг, ашигт ороогүй баримтын тоо."),
@@ -115,12 +114,14 @@ export function branchSummary(tabs: Record<TabKey, Row[]>): Row[] {
       continue;
     }
     add(r, "receipts", 1);
-    for (const k of ["total", "allDiscount", "cargo", "refunded", "netAfterReturns", "vatCharged", "vatCalculated"]) add(r, k, s[k]);
+    for (const k of ["listTotal", "allDiscount", "cargo", "total"]) add(r, k, s[k]);
     if (s.cost !== null && s.cost !== undefined) {
       add(r, "cost", s.cost);
       add(r, "profit", s.profit);
     } else add(r, "noCost", 1);
   }
+  // Returns as Борлуулалт counts them: by the day and branch the money went back.
+  for (const x of tabs.returns ?? []) if (x.kind === "REFUND") add(row(x.locationName), "refunded", x.refundAmount);
   for (const p of tabs.payments ?? []) if (p.counted) add(row(p.locationName), `pay${p.method}`, p.amount);
   for (const s of tabs.shifts ?? []) add(row(s.locationName), "variance", s.variance);
   for (const c of tabs.cash ?? []) {
@@ -135,9 +136,7 @@ export function branchSummary(tabs: Record<TabKey, Row[]>): Row[] {
 
   const rows = [...by.values()].sort((a, b) => String(a.locationName).localeCompare(String(b.locationName)));
   const total: Row = { locationName: "Нийт" };
+  for (const r of rows) r.net = num(r.total) - num(r.refunded);
   for (const c of SUMMARY_COLUMNS) if (c.key !== "locationName") total[c.key] = rows.reduce((a, r) => a + num(r[c.key]), 0);
-  for (const k of ["vatCharged", "vatCalculated"]) {
-    for (const r of [...rows, total]) r[k] = Math.round(num(r[k]) * 100) / 100;
-  }
   return [...rows, total];
 }
