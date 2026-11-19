@@ -90,6 +90,7 @@ export const MANAGER_PAGES = [
   "/import-orders",
   "/pickup-orders",
   "/pickup-logs",
+  "/transfer-forms",
   // Products
   "/product-list",
   "/products",

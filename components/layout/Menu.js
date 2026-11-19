@@ -37,6 +37,7 @@ export default function Menu() {
       "/pickup-logs": 5,
       "/delivery": 12,
       "/sheet-payments": 5,
+      "/transfer-forms": 5,
       "/coupons": 7,
       "/new-coupon": 7,
       "/campaigns": 11,
@@ -187,6 +188,7 @@ export default function Menu() {
         icon: "icon-file-plus",
         items: [
           ["/order-list", "Захиалгын жагсаалт"],
+          ["/transfer-forms", "Хүргэлтийн хүсэлт"],
           ["/product-orders", "📦 Бүтээгдэхүүнээр"],
           ["/pickup-orders", "Дэлгүүрээс авах"],
           ["/delivery", "Хүргэлт"],
@@ -411,6 +413,16 @@ export default function Menu() {
                     }
                   >
                     <div className="text">💳 ДАНС CHECK</div>
+                  </Link>
+                </li>
+                <li className="sub-menu-item">
+                  <Link
+                    href="/transfer-forms"
+                    className={
+                      isSubMenuItemActive("/transfer-forms") ? "active" : ""
+                    }
+                  >
+                    <div className="text">📝 Хүргэлтийн хүсэлт</div>
                   </Link>
                 </li>
                 {/* <li className="sub-menu-item">

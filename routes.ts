@@ -15,6 +15,7 @@ export const adminRoutes = [
   "/all-user",
   "/add-new-user",
   "/pickup-logs",
+  "/transfer-forms",
   "/category-list",
   "/new-category",
   "/attributes",
