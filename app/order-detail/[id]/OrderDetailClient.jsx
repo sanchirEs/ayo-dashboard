@@ -9,35 +9,8 @@ import { resolveImageUrl } from "@/lib/api/env";
 import { orderCargoTotal } from "@/lib/cargo/screens";
 import s from "./order-detail.module.css";
 
-// Same labels and colours as the order-list quick view, so a status reads the
-// same on both screens.
-const STATUS = {
-  PENDING:          { label: "Хүлээгдэж байна",   dot: "#f59e0b", bg: "#fffbeb", text: "#92400e" },
-  PROCESSING:       { label: "Баталгаажсан",      dot: "#3b82f6", bg: "#eff6ff", text: "#1e40af" },
-  SHIPPED:          { label: "Илгээгдсэн",        dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
-  OUT_FOR_DELIVERY: { label: "Хүргэлтэд гарсан",  dot: "#f97316", bg: "#fff7ed", text: "#9a3412" },
-  DELIVERED:        { label: "Хүргэгдсэн",        dot: "#10b981", bg: "#ecfdf5", text: "#065f46" },
-  CANCELLED:        { label: "Цуцлагдсан",        dot: "#ef4444", bg: "#fef2f2", text: "#991b1b" },
-  RETURNED:         { label: "Буцаалт",           dot: "#8b5cf6", bg: "#f5f3ff", text: "#5b21b6" },
-  PICKED_UP:        { label: "Ирж авсан",         dot: "#06b6d4", bg: "#ecfeff", text: "#0e7490" },
-};
-const STATUS_ORDER = ["PENDING", "PROCESSING", "SHIPPED", "OUT_FOR_DELIVERY", "DELIVERED", "PICKED_UP", "RETURNED", "CANCELLED"];
-
-const PAYMENT_STATUS = {
-  COMPLETED: { label: "Төлөгдсөн",        color: "#065f46", bg: "#ecfdf5" },
-  PENDING:   { label: "Хүлээгдэж байна",  color: "#92400e", bg: "#fffbeb" },
-  FAILED:    { label: "Амжилтгүй",        color: "#991b1b", bg: "#fef2f2" },
-  EXPIRED:   { label: "Хугацаа дууссан",  color: "#4b5563", bg: "#f3f4f6" },
-  CANCELLED: { label: "Цуцлагдсан",       color: "#991b1b", bg: "#fef2f2" },
-};
-
-const PROVIDER = {
-  BANK_TRANSFER: "Дансны шилжүүлэг",
-  QPAY: "QPay",
-  STOREPAY: "StorePay",
-  POCKET: "Pocket",
-  STRIPE: "Карт (Stripe)",
-};
+import { STATUS, STATUS_ORDER, PAYMENT_STATUS, PROVIDER, fmtDate } from "@/components/orderOps/shared";
+import ReturnDialog from "@/components/orderOps/ReturnDialog";
 
 const TIMELINE_LABEL = {
   ORDER_CREATED: "Захиалга үүссэн",
@@ -53,16 +26,6 @@ const num = (v) => {
   const n = Number.parseFloat(v);
   return Number.isFinite(n) ? n : 0;
 };
-
-function fmtDate(value, withTime = true) {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  const date = d.toLocaleDateString("en-CA", { timeZone: "Asia/Ulaanbaatar" }); // 2026-11-21
-  if (!withTime) return date;
-  const time = d.toLocaleTimeString("en-GB", { timeZone: "Asia/Ulaanbaatar", hour: "2-digit", minute: "2-digit" });
-  return `${date} ${time}`;
-}
 
 function StatusPill({ status, large }) {
   const cfg = STATUS[status] || { label: status, dot: "#6b7280", bg: "#f3f4f6", text: "#374151" };
@@ -213,10 +176,12 @@ export default function OrderDetailClient({ orderId }) {
   }
   if (!data) return <Skeleton />;
 
-  return <OrderDetailView order={data.order} timeline={data.timeline} token={token} onChanged={load} />;
+  return <OrderDetailView order={data.order} timeline={data.timeline} token={token} role={session?.user?.role} onChanged={load} />;
 }
 
-export function OrderDetailView({ order, timeline = [], token, onChanged }) {
+export function OrderDetailView({ order, timeline = [], token, role, onChanged }) {
+  const [returnOpen, setReturnOpen] = useState(false);
+  const isAdmin = role === "ADMIN" || role === "SUPERADMIN";
   const items = order.orderItems || [];
   const isPickup = order.deliveryType === "PICKUP";
   const ship = order.shipping || {};
@@ -235,6 +200,10 @@ export function OrderDetailView({ order, timeline = [], token, onChanged }) {
   const gap = pay && pay.status === "COMPLETED" ? Math.round(paid - total) : null; // <0 short, >0 over
   const transfers = Array.isArray(pay?.providerData?.transfers) ? pay.providerData.transfers : [];
   const transferFormId = pay?.providerData?.transferFormId || null;
+  const returns = Array.isArray(pay?.providerData?.returns) ? pay.providerData.returns : [];
+  const returnedByItem = new Map();
+  returns.forEach((r) => (r.lines || []).forEach((l) => returnedByItem.set(l.orderItemId, (returnedByItem.get(l.orderItemId) || 0) + l.qty)));
+  const itemName = new Map(items.map((i) => [i.id, i.product?.name || "Бүтээгдэхүүн"]));
 
   const customerName = [order.user?.firstName, order.user?.lastName].filter(Boolean).join(" ").trim();
   const customerPhone = order.user?.telephone || null;
@@ -278,7 +247,12 @@ export function OrderDetailView({ order, timeline = [], token, onChanged }) {
               {isPickup && ship.pickupStoreName ? ` · ${ship.pickupStoreName}` : ""}
             </p>
           </div>
-          <StatusControl order={order} token={token} onChanged={onChanged} />
+          <div className={s.headActions}>
+            {isAdmin && (
+              <button type="button" className={s.ghostBtn} onClick={() => setReturnOpen(true)}>Буцаалт бүртгэх</button>
+            )}
+            <StatusControl order={order} token={token} onChanged={onChanged} />
+          </div>
         </div>
       </header>
 
@@ -356,6 +330,9 @@ export function OrderDetailView({ order, timeline = [], token, onChanged }) {
                         ))}
                         {sku && <span className={s.sku}>{sku}</span>}
                         {isReserved && <span className={s.tag} style={{ color: "#1e40af", background: "#eff6ff" }}>Нөөцөлсөн</span>}
+                        {returnedByItem.get(item.id) > 0 && (
+                          <span className={s.tag} style={{ color: "#5b21b6", background: "#f5f3ff" }}>{returnedByItem.get(item.id)} буцаасан</span>
+                        )}
                         {item.importNote && <span>{item.importNote}</span>}
                       </div>
                     </div>
@@ -404,12 +381,15 @@ export function OrderDetailView({ order, timeline = [], token, onChanged }) {
           <section className={s.card}>
             <h2 className={s.cardTitle}>Хэрэглэгч</h2>
             <dl className={s.rows}>
-              <Row label="Нэр">{customerName || "Нэргүй"}</Row>
+              <Row label="Нэр">
+                {order.userId
+                  ? <Link href={`/customer/${order.userId}`} className={s.link}>{customerName || "Нэргүй"}</Link>
+                  : customerName || "Нэргүй"}
+              </Row>
               <Row label="Утас">
                 {customerPhone ? <a href={`tel:${customerPhone}`} className={s.link}>{customerPhone}</a> : null}
               </Row>
               {order.user?.email && <Row label="И-мэйл">{order.user.email}</Row>}
-              {order.userId && <Row label="Хэрэглэгчийн ID">{order.userId}</Row>}
             </dl>
           </section>
 
@@ -488,9 +468,34 @@ export function OrderDetailView({ order, timeline = [], token, onChanged }) {
                 </ul>
               </div>
             )}
+            {returns.length > 0 && (
+              <div className={s.transfers}>
+                <h3 className={s.subTitle}>Буцаалт</h3>
+                <ul>
+                  {returns.map((r) => (
+                    <li key={r.id}>
+                      <div className={s.transferTop}>
+                        <span>{fmtDate(r.at)}</span>
+                        <strong>{r.refund ? `−${formatPrice(r.refund.amount)}` : "Мөнгө буцаагаагүй"}</strong>
+                      </div>
+                      <div className={s.transferDesc}>
+                        {(r.lines || []).map((l) => `${itemName.get(l.orderItemId) || `Мөр ${l.orderItemId}`} × ${l.qty}`).join(", ")}
+                        {r.lines?.some((l) => l.restocked) ? ". Нөөцөд буцаасан" : ". Нөөцөд буцаагаагүй"}
+                        {r.refund?.method ? `. ${PROVIDER[r.refund.method] || r.refund.method}` : ""}
+                        {r.note ? `. ${r.note}` : ""}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
         </aside>
       </div>
+
+      {isAdmin && (
+        <ReturnDialog open={returnOpen} onOpenChange={setReturnOpen} orderId={order.id} token={token} onRecorded={onChanged} />
+      )}
     </div>
   );
 }

@@ -74,8 +74,8 @@ export default async function DataTable({ searchParams }) {
               </div>
               <div className="flex items-center justify-between gap20 flex-grow">
                 <div className="name">
-                  <Link href="#" className="body-title-2">
-                    {user.username}
+                  <Link href={`/customer/${user.id}`} className="body-title-2">
+                    {user.username || [user.firstName, user.lastName].filter(Boolean).join(" ") || user.telephone || `#${user.id}`}
                   </Link>
                   <div className="text-tiny mt-3">{user.role}</div>
                 </div>

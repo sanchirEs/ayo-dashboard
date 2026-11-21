@@ -38,6 +38,9 @@ export default function Menu() {
       "/delivery": 12,
       "/sheet-payments": 5,
       "/transfer-forms": 5,
+      "/payment-issues": 5,
+      "/returns": 5,
+      "/customer": 5,
       "/coupons": 7,
       "/new-coupon": 7,
       "/campaigns": 11,
@@ -342,6 +345,26 @@ export default function Menu() {
                     <div className="text">📝 Хүргэлтийн хүсэлт</div>
                   </Link>
                 </li>
+                {["ADMIN", "SUPERADMIN"].includes(role) && (
+                  <>
+                    <li className="sub-menu-item">
+                      <Link
+                        href="/payment-issues"
+                        className={isSubMenuItemActive("/payment-issues") ? "active" : ""}
+                      >
+                        <div className="text">Төлбөрийн зөрүү</div>
+                      </Link>
+                    </li>
+                    <li className="sub-menu-item">
+                      <Link
+                        href="/returns"
+                        className={isSubMenuItemActive("/returns") ? "active" : ""}
+                      >
+                        <div className="text">Буцаалт</div>
+                      </Link>
+                    </li>
+                  </>
+                )}
                 {/* <li className="sub-menu-item">
                   <Link
                     href="/order-detail"

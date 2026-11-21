@@ -48,6 +48,7 @@ const STAFF_PAGES = [
   "/banners",
   // People and places
   "/all-user", // customer database — granted explicitly by the owner
+  "/customer", // one customer's profile, opened from the user list or an order
   "/store-locations",
   "/states",
   // The dead end itself, so a bounce to it terminates (see below).
@@ -100,6 +101,7 @@ export const MANAGER_PAGES = [
   "/sheet-payments",
   // Customers and messaging (2026-11-19)
   "/all-user",
+  "/customer",
   "/blocklist",
   "/sms-broadcast",
   // Products

@@ -280,3 +280,21 @@ describe("MANAGER", () => {
     expect(shouldRedirectRestrictedRole("MANAGER", "/order-list")).toBe(false);
   });
 });
+
+describe("order operations pages (2026-11-21)", () => {
+  it("lets staff and MANAGER open a customer profile", () => {
+    for (const role of ["MANAGER", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"] as const) {
+      expect(canAccessRoute(role, "/customer/9085"), `${role} → /customer`).toBe(true);
+    }
+    expect(canAccessRoute("BRANCH", "/customer/9085")).toBe(false);
+  });
+
+  it("keeps payment problems and returns (money) to ADMIN/SUPERADMIN", () => {
+    for (const role of ["MANAGER", "BRANCH", "SHEET_PICKUP", "SHEET_DELIVERY", "SHEET_REFUND"] as const) {
+      expect(canAccessRoute(role, "/payment-issues"), `${role} → /payment-issues`).toBe(false);
+      expect(canAccessRoute(role, "/returns"), `${role} → /returns`).toBe(false);
+    }
+    expect(canAccessRoute("ADMIN", "/payment-issues")).toBe(true);
+    expect(canAccessRoute("SUPERADMIN", "/returns")).toBe(true);
+  });
+});
