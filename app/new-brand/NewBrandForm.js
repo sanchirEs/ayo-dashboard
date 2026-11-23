@@ -12,7 +12,7 @@ const brandSchema = z.object({
   name: z.string()
     .min(2, "Brand name must be at least 2 characters")
     .max(100, "Brand name too long")
-    .regex(/^[a-zA-Z0-9\s\-_&.]+$/, "Brand name contains invalid characters"),
+    .regex(/^[\p{L}\p{N}\s\-_&.'’+(),!/]+$/u, "Brand name contains invalid characters"),
   description: z.string().max(1000, "Description too long").optional(),
   websiteUrl: z.string().url("Invalid website URL").optional().or(z.literal("")),
 });
@@ -134,7 +134,7 @@ export default function NewBrandForm() {
           aria-required="true"
         />
         <div className="text-tiny" style={{ color: '#6b7280', marginTop: '4px' }}>
-          Brand name must be unique and contain only letters, numbers, spaces, hyphens, underscores, ampersands, and periods
+          Brand name must be unique and contain only letters, numbers, spaces and - _ & . ' + ( ) , ! /
         </div>
         {form.formState.errors.name && (
           <div className="text-red-500 text-sm mt-1">

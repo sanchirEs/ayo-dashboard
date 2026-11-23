@@ -11,7 +11,7 @@ const schema = z.object({
   name: z.string()
     .min(2, "Brand name must be at least 2 characters")
     .max(100, "Brand name too long")
-    .regex(/^[a-zA-Z0-9\s\-_&.]+$/, "Brand name contains invalid characters"),
+    .regex(/^[\p{L}\p{N}\s\-_&.'’+(),!/]+$/u, "Brand name contains invalid characters"),
   description: z.string().max(1000, "Description too long").optional(),
   websiteUrl: z.string().url("Invalid website URL").optional().or(z.literal("")),
 });
