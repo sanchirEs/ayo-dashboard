@@ -97,7 +97,7 @@ export default function BrandRowsClient({ brand }) {
       </div>
       
       <div className="body-text">
-        <span style={{ fontWeight: 'bold' }}>{brand.productCount || 0}</span>
+        <span style={{ fontWeight: 'bold' }}>{brand.productCount ?? brand._count?.products ?? 0}</span>
         <span style={{ color: '#6b7280', fontSize: '12px', marginLeft: '4px' }}>products</span>
       </div>
       
@@ -105,7 +105,7 @@ export default function BrandRowsClient({ brand }) {
         {new Date(brand.createdAt).toLocaleDateString()}
       </div>
       
-      <BrandRowActions id={brand.id} productCount={brand.productCount || 0} brandName={brand.name} />
+      <BrandRowActions id={brand.id} productCount={brand.productCount ?? brand._count?.products ?? 0} brandName={brand.name} />
     </li>
   );
 }

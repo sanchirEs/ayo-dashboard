@@ -65,7 +65,7 @@ export default async function BrandDetail({ params }) {
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <i className="icon-package" />
-                      <span>{brand.productCount || 0} products</span>
+                      <span>{brand.productCount ?? brand._count?.products ?? 0} products</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <i className="icon-calendar" />
@@ -109,7 +109,7 @@ export default async function BrandDetail({ params }) {
                     <i className="icon-package text-white text-xl" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-blue-900">{brand.productCount || 0}</div>
+                    <div className="text-2xl font-bold text-blue-900">{brand.productCount ?? brand._count?.products ?? 0}</div>
                     <div className="text-blue-700">Products</div>
                   </div>
                 </div>

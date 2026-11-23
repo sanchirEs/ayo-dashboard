@@ -11,6 +11,7 @@ export interface Brand {
   createdAt: string;
   updatedAt: string;
   productCount?: number;
+  _count?: { products?: number };
   totalRevenue?: number;
 }
 
