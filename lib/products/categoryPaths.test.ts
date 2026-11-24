@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { flattenCategoryTree, searchCategoryPaths, selectableCategoryEntries } from './categoryPaths';
+import { flattenCategoryTree, searchCategoryPaths, selectableCategories, selectableCategoryEntries } from './categoryPaths';
 
 const tree = [
   {
@@ -102,6 +102,38 @@ describe('selectableCategoryEntries', () => {
     ]);
     expect(selectableCategoryEntries(entries, undefined).map((e) => e.id)).toEqual([1]);
     expect(selectableCategoryEntries(entries, []).map((e) => e.id)).toEqual([1]);
+  });
+});
+
+describe('selectableCategories', () => {
+  const list = [
+    { id: 1, name: 'Арьс арчилгаа', isActive: true },
+    { id: 749, name: 'Anua', isActive: false, redirectPath: '/brand/anua' },
+    { id: 760, name: 'Тонер' },
+    { id: 751, name: 'Hersteller', isActive: false },
+  ];
+
+  it('hides archived categories (a campaign or mapping on one would match nothing)', () => {
+    expect(selectableCategories(list, []).map((c) => c.id)).toEqual([1, 760]);
+    expect(selectableCategories(list).map((c) => c.id)).toEqual([1, 760]);
+  });
+
+  it('keeps an archived category that is already selected', () => {
+    expect(selectableCategories(list, [749]).map((c) => c.id)).toEqual([1, 749, 760]);
+    expect(selectableCategories(list, [null, undefined, 751]).map((c) => c.id)).toEqual([1, 760, 751]);
+  });
+
+  it('treats a missing isActive as active, and tolerates a missing list', () => {
+    expect(selectableCategories([{ id: 5, name: 'x' }], []).map((c) => c.id)).toEqual([5]);
+    expect(selectableCategories(null, [])).toEqual([]);
+    expect(selectableCategories(undefined)).toEqual([]);
+  });
+
+  it('keeps the objects and their order, and does not mutate the input', () => {
+    const copy = [...list];
+    const out = selectableCategories(list, []);
+    expect(out[0]).toBe(list[0]);
+    expect(list).toEqual(copy);
   });
 });
 

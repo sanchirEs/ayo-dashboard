@@ -8,6 +8,7 @@ import {
   updateRetailerCategory,
   regateProducts,
 } from "@/lib/api/retailers";
+import { selectableCategories } from "@/lib/products/categoryPaths";
 
 /**
  * The highest-leverage screen in the retailer flow.
@@ -59,6 +60,14 @@ export default function CategoryMapClient({ slug, initialRows, initialError, cat
   const [msg, setMsg] = useState(null);
 
   const staged = (r) => r._count?.products ?? 0;
+
+  // Mapping targets: an archived brand category holds no products any more, so a mapping onto
+  // it would gate every row to nothing. `categories` stays whole for looking up a row's label.
+  const targetCategories = useMemo(() => selectableCategories(categories, []), [categories]);
+  const archivedById = useMemo(
+    () => new Map(categories.filter((c) => c.isActive === false).map((c) => [c.id, c])),
+    [categories]
+  );
 
   const stats = useMemo(() => {
     let mapped = 0;
@@ -315,7 +324,7 @@ export default function CategoryMapClient({ slug, initialRows, initialError, cat
             <span className="body-title-2">{selected.size} сонгосон →</span>
             <select value={bulkTarget} onChange={(e) => setBulkTarget(e.target.value)}>
               <option value="">— ангилал сонгох —</option>
-              {categories.map((c) => (
+              {targetCategories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -408,11 +417,15 @@ export default function CategoryMapClient({ slug, initialRows, initialError, cat
                       style={{ width: "100%" }}
                     >
                       <option value="">— холбоогүй —</option>
-                      {categories.map((c) => (
+                      {targetCategories.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name}
                         </option>
                       ))}
+                      {/* A row already mapped to an archived category keeps showing it, so it can be changed. */}
+                      {archivedById.has(row.categoryId) && (
+                        <option value={row.categoryId}>{archivedById.get(row.categoryId).name} (архивлагдсан)</option>
+                      )}
                     </select>
                   </div>
 

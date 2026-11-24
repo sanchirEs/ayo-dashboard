@@ -59,8 +59,22 @@ export function selectableCategoryEntries(
   entries: CategoryPathEntry[],
   selectedIds: readonly number[] | null | undefined
 ): CategoryPathEntry[] {
+  return selectableCategories(entries, selectedIds);
+}
+
+/**
+ * The same rule for any plain list of categories (the campaign picker's root
+ * categories, the retailer category-mapping list): archived ones are not offered
+ * as targets, except the ids in `selectedIds` (a mapping that already points at
+ * one stays visible so it can be changed). A campaign or mapping on an archived
+ * brand category would match nothing, since its products moved to the brand.
+ */
+export function selectableCategories<T extends { id: number; isActive?: boolean }>(
+  categories: readonly T[] | null | undefined,
+  selectedIds?: readonly (number | null | undefined)[] | null
+): T[] {
   const keep = new Set(selectedIds || []);
-  return entries.filter((entry) => entry.isActive !== false || keep.has(entry.id));
+  return (categories || []).filter((category) => category.isActive !== false || keep.has(category.id));
 }
 
 /**

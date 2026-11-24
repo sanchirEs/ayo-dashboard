@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { BRAND_SLUG_PATTERN, brandExtraFields, slugToSend } from './brandFields';
+import { BRAND_NAME_PATTERN, BRAND_SLUG_PATTERN, brandExtraFields, brandNameField, slugToSend } from './brandFields';
 
 const schema = z.object(brandExtraFields);
 
@@ -15,6 +15,29 @@ describe('brand slug pattern', () => {
     for (const bad of ['About Tone', 'about_tone', '-anua', 'anua-', 'about--tone', 'Anua', 'брэнд', 'a b', '']) {
       expect(BRAND_SLUG_PATTERN.test(bad), bad).toBe(false);
     }
+  });
+});
+
+describe('brand name', () => {
+  const ok = (name: string) => brandNameField.safeParse(name).success;
+
+  it('accepts a colon, so "A:Fable" can be saved', () => {
+    expect(ok('A:Fable')).toBe(true);
+    expect(BRAND_NAME_PATTERN.test('A:Fable')).toBe(true);
+  });
+
+  it('keeps accepting the names that already worked', () => {
+    for (const name of ["HC LAB's", 'Dr. Althea', 'edit.b', 'ONDO Skin Clotho', 'Сүлхи', 'Beauty of Joseon (KR)', 'Mamonde + Co', 'Klairs, Inc!', 'Anua/Medicube', 'Re:Zero & Co']) {
+      expect(ok(name), name).toBe(true);
+    }
+  });
+
+  it('still rejects markup-ish characters, and the length limits', () => {
+    for (const name of ['<b>Anua</b>', 'Anua;', 'a|b', 'a@b', 'a#b', 'a=b', 'a"b', 'a\\b']) {
+      expect(ok(name), name).toBe(false);
+    }
+    expect(ok('A')).toBe(false);
+    expect(ok('x'.repeat(101))).toBe(false);
   });
 });
 

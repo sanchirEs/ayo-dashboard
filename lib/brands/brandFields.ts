@@ -9,6 +9,18 @@ import { z } from "zod";
 // joined by single dashes.
 export const BRAND_SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+// Letters of any script, digits, spaces and the punctuation real brand names use:
+// - _ & . ' ’ + ( ) , ! / and the colon of "A:Fable". The backend has no such rule; this
+// only keeps markup-ish characters out of the name.
+export const BRAND_NAME_PATTERN = /^[\p{L}\p{N}\s\-_&.'’+(),!/:]+$/u;
+
+// The name field both brand forms share.
+export const brandNameField = z
+  .string()
+  .min(2, "Brand name must be at least 2 characters")
+  .max(100, "Brand name too long")
+  .regex(BRAND_NAME_PATTERN, "Brand name contains invalid characters");
+
 export const brandExtraFields = {
   // Optional: a blank slug on create means "generate one from the name".
   slug: z

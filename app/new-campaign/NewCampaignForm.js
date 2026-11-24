@@ -7,6 +7,7 @@ import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import { createCampaign } from "@/lib/api/campaigns";
 import { getCategoryTreePublic } from "@/lib/api/categories-client";
 import { getBrandsClient } from "@/lib/api/brands";
+import { selectableCategories } from "@/lib/products/categoryPaths";
 import { useRouter } from "next/navigation";
 
 // Campaign validation schema
@@ -82,7 +83,8 @@ export default function NewCampaignForm() {
           getCategoryTreePublic(),
           getBrandsClient(TOKEN)
         ]);
-        setCategories(categoriesData);
+        // Archived brand categories no longer hold products; a campaign on one would discount nothing.
+        setCategories(selectableCategories(categoriesData, []));
         setBrands(brandsData);
       } catch (error) {
         console.error("Failed to load data:", error);

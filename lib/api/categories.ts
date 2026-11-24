@@ -7,6 +7,9 @@ export interface Category {
   name: string;
   description?: string;
   productCount?: number;
+  /** false = archived (a brand category that now lives on /brand/<slug>). */
+  isActive?: boolean;
+  redirectPath?: string | null;
 }
 
 export interface CategoryNode {

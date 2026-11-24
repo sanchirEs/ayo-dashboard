@@ -5,15 +5,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import { createBrand } from "@/lib/api/brands";
-import { brandExtraFields, slugToSend } from "@/lib/brands/brandFields";
+import { brandExtraFields, brandNameField, slugToSend } from "@/lib/brands/brandFields";
 import { useRouter } from "next/navigation";
 
 // Brand validation schema
 const brandSchema = z.object({
-  name: z.string()
-    .min(2, "Brand name must be at least 2 characters")
-    .max(100, "Brand name too long")
-    .regex(/^[\p{L}\p{N}\s\-_&.'’+(),!/]+$/u, "Brand name contains invalid characters"),
+  name: brandNameField,
   ...brandExtraFields,
   description: z.string().max(1000, "Description too long").optional(),
   websiteUrl: z.string().url("Invalid website URL").optional().or(z.literal("")),
