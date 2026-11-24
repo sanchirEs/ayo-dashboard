@@ -326,6 +326,59 @@ export const listCounts = async (token: string, status?: CountStatus) =>
 
 export const getCount = async (id: string, token: string) => (await request<{ count: StockCount }>("getCount", `/counts/${id}`, token)).count;
 
+/** One counted item: where its system number came from, and the difference. */
+export interface CountReportRow {
+  countId: string;
+  countNumber: string;
+  countStatus: CountStatus;
+  countedAt: string;
+  variantId: number;
+  name: string;
+  variantLabel: string;
+  sku: string | null;
+  barcode: string | null;
+  price: number;
+  previousCountNumber: string | null;
+  previousCountedAt: string | null;
+  opening: number;
+  received: number;
+  sold: number;
+  transferIn: number;
+  transferOut: number;
+  other: number;
+  unexplained: number;
+  expected: number;
+  counted: number;
+  diff: number;
+  diffValue: number;
+}
+
+export interface CountReportTotals {
+  items: number;
+  matched: number;
+  shortUnits: number;
+  shortValue: number;
+  overUnits: number;
+  overValue: number;
+  netValue: number;
+  unexplainedRows: number;
+}
+
+export interface CountReport {
+  locationId: number;
+  counts: { id: string; number: string; status: CountStatus; scope: string; startedAt: string; decidedAt: string | null }[];
+  rows: CountReportRow[];
+  totals: CountReportTotals;
+}
+
+/** Тооллогын тайлан for a branch's counts started on [from, to] (YYYY-MM-DD, Ulaanbaatar days). */
+export const getCountReport = (token: string, params: { locationId?: number; from?: string; to?: string; countId?: string }) =>
+  request<CountReport>("getCountReport", `/counts/report${query(params)}`, token);
+
+/** Days a branch counted on, newest first. */
+export const getCountDays = async (token: string, locationId: number) =>
+  (await request<{ days: { day: string; counts: number }[] }>("getCountDays", `/counts/report/days${query({ locationId })}`, token)).days;
+
 export const approveCount = (id: string, token: string) => request<{ count?: StockCount }>("approveCount", `/counts/${id}/approve`, token, send("POST"));
 
 export const rejectCount = async (id: string, token: string) =>

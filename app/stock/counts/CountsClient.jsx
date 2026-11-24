@@ -8,6 +8,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { approveCount, getCount, listCounts, rejectCount } from "@/lib/api/stock";
 import { formatMnt } from "@/lib/partners/format";
 import { COUNT_STATUS, countDiffRows, signed } from "@/lib/stock/labels";
@@ -57,6 +58,9 @@ function Review({ id, token, nameOf, onClose, onChanged }) {
             <CountPill status={count.status} />
             <span style={{ color: C.muted, fontSize: 14 }}>Хамрах хүрээ: {count.scope}</span>
             {count.valueImpact != null && <span style={{ color: C.muted, fontSize: 14 }}>· Үнийн нөлөө {formatMnt(count.valueImpact)}</span>}
+            <Link href={`/stock/counts/report?countId=${count.id}`} style={{ marginLeft: "auto", fontSize: 14, color: C.blue }}>
+              Дэлгэрэнгүй тайлан →
+            </Link>
           </div>
           <p style={{ margin: "0 0 12px", color: C.muted, fontSize: 14 }}>
             {(count.lines ?? []).length} бараа тоолсон; {same} нь системтэй таарсан, {diffs.length} нь зөрсөн.
