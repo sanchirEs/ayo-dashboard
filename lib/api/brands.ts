@@ -8,6 +8,12 @@ export interface Brand {
   description?: string;
   logoUrl?: string;
   websiteUrl?: string;
+  /** /brand/<slug> on the storefront. Null until the brand has been given one. */
+  slug: string | null;
+  /** Featured brands are listed first in the storefront БРЭНД menu. */
+  isFeatured: boolean;
+  /** Featured brands sort by this (ascending), then by name. */
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
   productCount?: number;
@@ -117,10 +123,28 @@ export async function getBrandById(id: number, tokenOverride?: string | null): P
 
 export type CreateBrandPayload = {
   name: string;
+  /** Optional: the backend derives one from the name when omitted. */
+  slug?: string;
   description?: string;
   websiteUrl?: string;
+  isFeatured?: boolean;
+  sortOrder?: number;
   logo?: File;
 };
+
+// The brand routes take multipart bodies, so every value goes in as a string.
+// A blank slug is never sent: the backend rejects it (400) rather than ignoring it.
+function appendBrandExtras(formData: FormData, payload: Partial<CreateBrandPayload>) {
+  if (payload.slug) {
+    formData.append('slug', payload.slug);
+  }
+  if (payload.isFeatured !== undefined) {
+    formData.append('isFeatured', payload.isFeatured ? 'true' : 'false');
+  }
+  if (typeof payload.sortOrder === 'number' && Number.isFinite(payload.sortOrder)) {
+    formData.append('sortOrder', String(payload.sortOrder));
+  }
+}
 
 export async function createBrand(
   payload: CreateBrandPayload,
@@ -139,6 +163,8 @@ export async function createBrand(
     if (payload.websiteUrl) {
       formData.append('websiteUrl', payload.websiteUrl);
     }
+
+    appendBrandExtras(formData, payload);
     
     if (payload.logo) {
       formData.append('logo', payload.logo);
@@ -188,6 +214,8 @@ export async function updateBrand(
     if (payload.websiteUrl !== undefined) {
       formData.append('websiteUrl', payload.websiteUrl);
     }
+
+    appendBrandExtras(formData, payload);
     
     if (payload.logo) {
       formData.append('logo', payload.logo);
@@ -244,6 +272,49 @@ export async function deleteBrand(
     console.error('Error deleting brand:', error);
     return { success: false, message: 'Network error occurred' };
   }
+}
+
+export type MergeBrandsResult = {
+  movedProducts: number;
+  movedCampaignBrands: number;
+  droppedDuplicateCampaignBrands: number;
+  movedRetailerBrands: number;
+};
+
+/**
+ * Folds the loser brand into the survivor: its products, campaign brands and
+ * retailer brands move over and the loser is deleted. It cannot be undone.
+ *
+ * Unlike the create/update helpers this throws on failure (with the backend's
+ * message, e.g. a 404 for a brand that no longer exists) so the caller can keep
+ * its dialog open and show why. A 401/403 still raises AuthenticationError, which
+ * also signs the user out.
+ */
+export async function mergeBrands(
+  survivorId: number,
+  loserId: number,
+  token: string | null | undefined
+): Promise<MergeBrandsResult> {
+  if (survivorId === loserId) {
+    throw new Error('Брэндийг өөртэй нь нэгтгэх боломжгүй');
+  }
+
+  const response = await fetchWithAuthHandling(`${getBackendUrl()}/api/v1/brands/${survivorId}/merge`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ loserId }),
+  }, 'mergeBrands');
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data?.message || `Нэгтгэж чадсангүй (${response.status})`);
+  }
+
+  return data.data;
 }
 
 export async function getBrandsWithStats(tokenOverride?: string | null): Promise<Brand[]> {

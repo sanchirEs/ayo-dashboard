@@ -1,9 +1,21 @@
 "use client";
+import { useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import MergeBrandDialog from "./MergeBrandDialog";
+
+const COMPACT = { width: 20, padding: 0, flexShrink: 0 };
 
 export default function BrandRowActions({ id, productCount = 0, brandName }) {
   const router = useRouter();
+  // The token comes from the session: this runs in a click handler's tree, where
+  // the server-only token helper returns null and the backend answers 401.
+  const { data: session } = useSession();
+  const [merging, setMerging] = useState(false);
+  // The brand routes are ADMIN / SUPERADMIN only; a 403 would also sign the user out.
+  const canMerge = ["ADMIN", "SUPERADMIN"].includes(session?.user?.role);
 
   async function handleDelete() {
     let confirmMessage = "Delete this brand? This cannot be undone.";
@@ -55,21 +67,49 @@ export default function BrandRowActions({ id, productCount = 0, brandName }) {
   }
 
   return (
-    <div className="list-icon-function">
+    // Four icons overflow the template's 130px Actions column: `.list-icon-function
+    // .item` makes each one 32px wide with a 20px gap. With merge shown the gap
+    // tightens and the two buttons are 20px (the icon's own width) so nothing shrinks.
+    <div className="list-icon-function" style={canMerge ? { gap: 14 } : undefined}>
       <Link href={`/brand-detail/${id}`} className="item eye" title="View brand details">
         <i className="icon-eye" />
       </Link>
       <Link href={`/edit-brand/${id}`} className="item edit" title="Edit brand">
         <i className="icon-edit-3" />
       </Link>
+      {canMerge && (
+        <button
+          type="button"
+          className="item"
+          style={{ color: '#7c3aed', ...COMPACT }}
+          title="Өөр брэндтэй нэгтгэх"
+          aria-label={`${brandName} брэндийг нэгтгэх`}
+          onClick={() => setMerging(true)}
+        >
+          <i className="icon-git-merge" />
+        </button>
+      )}
       <button 
         type="button" 
-        className="item trash" 
+        className="item trash"
+        style={canMerge ? COMPACT : undefined}
         title={productCount > 0 ? `Delete brand (${productCount} products will be updated)` : "Delete brand"} 
         onClick={handleDelete}
       >
         <i className="icon-trash-2" />
       </button>
+      {merging &&
+        createPortal(
+          <MergeBrandDialog
+            loser={{ id, name: brandName }}
+            token={session?.user?.accessToken}
+            onClose={(merged) => {
+              setMerging(false);
+              if (merged) router.refresh();
+            }}
+          />,
+          document.body
+        )}
     </div>
   );
 }

@@ -10,6 +10,8 @@
 export interface CategoryTreeNode {
   id: number;
   name: string;
+  /** false = archived (a brand category that now lives on /brand/<slug>). */
+  isActive?: boolean;
   children?: CategoryTreeNode[] | null;
 }
 
@@ -18,6 +20,7 @@ export interface CategoryPathEntry {
   name: string;
   path: string[];
   pathLabel: string;
+  isActive?: boolean;
 }
 
 export const PATH_SEPARATOR = ' › ';
@@ -35,12 +38,29 @@ export function flattenCategoryTree(nodes: CategoryTreeNode[] | null | undefined
       name: node.name,
       path,
       pathLabel: path.join(PATH_SEPARATOR),
+      isActive: node.isActive,
     });
     (node.children || []).forEach((child) => walk(child, path));
   };
 
   nodes.forEach((node) => walk(node, []));
   return out;
+}
+
+/**
+ * Drops archived categories from the picker, except the ones the product already
+ * has. The tree endpoint returns archived categories on purpose (the dashboard
+ * must see them, or saving a product would silently drop its existing links), but
+ * they must never be offered for new products. Keeping the already-selected ones
+ * means an archived link stays visible and can be removed, never lost by accident.
+ * A missing isActive counts as active.
+ */
+export function selectableCategoryEntries(
+  entries: CategoryPathEntry[],
+  selectedIds: readonly number[] | null | undefined
+): CategoryPathEntry[] {
+  const keep = new Set(selectedIds || []);
+  return entries.filter((entry) => entry.isActive !== false || keep.has(entry.id));
 }
 
 /**

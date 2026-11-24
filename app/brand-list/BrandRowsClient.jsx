@@ -47,7 +47,28 @@ export default function BrandRowsClient({ brand }) {
           </div>
         )}
         <div>
-          <div className="body-title-2">{brand.name}</div>
+          <div className="body-title-2" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {brand.name}
+            {brand.isFeatured && (
+              <span
+                title={`Онцлох брэнд (эрэмбэ ${brand.sortOrder ?? 0})`}
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#b45309',
+                  backgroundColor: '#fef3c7',
+                  borderRadius: '999px',
+                  padding: '1px 8px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                ★ Онцлох · {brand.sortOrder ?? 0}
+              </span>
+            )}
+          </div>
+          <div className="text-tiny" style={{ color: brand.slug ? '#6b7280' : '#b45309', fontSize: '12px' }}>
+            {brand.slug ? `/brand/${brand.slug}` : 'slug байхгүй'}
+          </div>
           {brand.websiteUrl && (
             <a 
               href={brand.websiteUrl} 

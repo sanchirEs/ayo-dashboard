@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { flattenCategoryTree, searchCategoryPaths } from './categoryPaths';
+import { flattenCategoryTree, searchCategoryPaths, selectableCategoryEntries } from './categoryPaths';
 
 const tree = [
   {
@@ -76,5 +76,43 @@ describe('searchCategoryPaths', () => {
 
   it('returns an empty array when nothing matches', () => {
     expect(searchCategoryPaths(entries, 'zzzz')).toEqual([]);
+  });
+});
+
+describe('selectableCategoryEntries', () => {
+  it('hides archived categories unless the product already has them', () => {
+    const entries = [
+      { id: 1, isActive: true },
+      { id: 751, isActive: false },
+      { id: 9, isActive: false },
+    ].map((e) => ({ ...e, name: `c${e.id}`, path: [`c${e.id}`], pathLabel: `c${e.id}` }));
+
+    expect(selectableCategoryEntries(entries, [9]).map((e) => e.id)).toEqual([1, 9]);
+  });
+
+  it('treats a missing isActive as active', () => {
+    const entries = flattenCategoryTree(tree);
+    expect(selectableCategoryEntries(entries, [])).toHaveLength(8);
+  });
+
+  it('offers no archived category when nothing is selected', () => {
+    const entries = flattenCategoryTree([
+      { id: 1, name: 'A', isActive: true, children: [] },
+      { id: 751, name: 'Hersteller', isActive: false, children: [] },
+    ]);
+    expect(selectableCategoryEntries(entries, undefined).map((e) => e.id)).toEqual([1]);
+    expect(selectableCategoryEntries(entries, []).map((e) => e.id)).toEqual([1]);
+  });
+});
+
+describe('flattenCategoryTree isActive', () => {
+  it('carries isActive from the tree onto each entry', () => {
+    const entries = flattenCategoryTree([
+      { id: 1, name: 'A', isActive: true, children: [{ id: 2, name: 'B', isActive: false }] },
+    ]);
+    expect(entries.map((e) => [e.id, e.isActive])).toEqual([
+      [1, true],
+      [2, false],
+    ]);
   });
 });

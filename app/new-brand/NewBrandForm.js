@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import GetToken, { GetSession } from "@/lib/GetTokenClient";
 import { createBrand } from "@/lib/api/brands";
+import { brandExtraFields, slugToSend } from "@/lib/brands/brandFields";
 import { useRouter } from "next/navigation";
 
 // Brand validation schema
@@ -13,6 +14,7 @@ const brandSchema = z.object({
     .min(2, "Brand name must be at least 2 characters")
     .max(100, "Brand name too long")
     .regex(/^[\p{L}\p{N}\s\-_&.'’+(),!/]+$/u, "Brand name contains invalid characters"),
+  ...brandExtraFields,
   description: z.string().max(1000, "Description too long").optional(),
   websiteUrl: z.string().url("Invalid website URL").optional().or(z.literal("")),
 });
@@ -31,8 +33,11 @@ export default function NewBrandForm() {
     resolver: zodResolver(brandSchema),
     defaultValues: {
       name: "",
+      slug: "",
       description: "",
       websiteUrl: "",
+      isFeatured: false,
+      sortOrder: 0,
     },
   });
 
@@ -54,8 +59,11 @@ export default function NewBrandForm() {
       try {
         const brandData = {
           name: values.name,
+          slug: slugToSend(values.slug, null),
           description: values.description || undefined,
           websiteUrl: values.websiteUrl || undefined,
+          isFeatured: Boolean(values.isFeatured),
+          sortOrder: values.sortOrder,
           logo: logoFile || undefined,
         };
 
@@ -143,6 +151,27 @@ export default function NewBrandForm() {
         )}
       </fieldset>
 
+      <fieldset className="slug">
+        <div className="body-title">Slug</div>
+        <input
+          {...form.register("slug")}
+          className="flex-grow"
+          type="text"
+          placeholder="about-tone"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+        />
+        <div className="text-tiny" style={{ color: '#6b7280', marginTop: '4px' }}>
+          Вэб хаяг: /brand/slug. Жижиг латин үсэг, тоо, дундын зураас. Хоосон орхивол нэрнээс автоматаар үүснэ.
+        </div>
+        {form.formState.errors.slug && (
+          <div className="text-red-500 text-sm mt-1">
+            {form.formState.errors.slug.message}
+          </div>
+        )}
+      </fieldset>
+
       <fieldset className="description">
         <div className="body-title">Description</div>
         <textarea
@@ -176,6 +205,43 @@ export default function NewBrandForm() {
         {form.formState.errors.websiteUrl && (
           <div className="text-red-500 text-sm mt-1">
             {form.formState.errors.websiteUrl.message}
+          </div>
+        )}
+      </fieldset>
+
+      <fieldset className="featured">
+        <div className="body-title">Онцлох брэнд</div>
+        <label
+          htmlFor="isFeatured"
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+        >
+          <input
+            id="isFeatured"
+            type="checkbox"
+            {...form.register("isFeatured")}
+            style={{ flexShrink: 0 }}
+          />
+          <span className="body-text">Брэндийн цэсэнд эхэнд нь харуулна</span>
+        </label>
+      </fieldset>
+
+      <fieldset className="sort-order">
+        <div className="body-title">Эрэмбэ</div>
+        <input
+          {...form.register("sortOrder")}
+          className="flex-grow"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={1}
+          placeholder="0"
+        />
+        <div className="text-tiny" style={{ color: '#6b7280', marginTop: '4px' }}>
+          Онцлох брэндүүд энэ тоогоор (бага нь түрүүлж), дараа нь нэрээр эрэмбэлэгдэнэ.
+        </div>
+        {form.formState.errors.sortOrder && (
+          <div className="text-red-500 text-sm mt-1">
+            {form.formState.errors.sortOrder.message}
           </div>
         )}
       </fieldset>

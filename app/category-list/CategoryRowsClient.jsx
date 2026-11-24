@@ -67,6 +67,23 @@ export default function CategoryRowsClient({ nodes, query }) {
             <div className="min-w-0">
               <span className="body-title-2 block truncate" title={c.name}>
                 {c.name}
+                {c.isActive === false && (
+                  <span
+                    title={c.redirectPath ? `Архивласан. /shop/${c.id} → ${c.redirectPath}` : "Архивласан: дэлгүүрт харагдахгүй"}
+                    style={{
+                      marginLeft: 8,
+                      padding: "1px 8px",
+                      borderRadius: 999,
+                      backgroundColor: "#f3f4f6",
+                      color: "#6b7280",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Архивласан
+                  </span>
+                )}
               </span>
               {depth > 0 ? (
                 <span className="text-xs text-muted-foreground ml-2">(level {depth})</span>

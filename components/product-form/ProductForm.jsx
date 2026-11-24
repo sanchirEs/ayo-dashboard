@@ -29,7 +29,7 @@ const VENDOR_ID = 1;
 export default function ProductForm({ mode = "create", initialValues, onSubmit, formRef, submitDisabled = false, simpleVariantId }) {
   const token = GetToken();
   const { categoryEntries, brands, attributes, tagPresets, tagGroups, loading, error } =
-    useProductFormData(token);
+    useProductFormData(token, initialValues?.categoryIds);
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");

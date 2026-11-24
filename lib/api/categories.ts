@@ -15,6 +15,10 @@ export interface CategoryNode {
   description?: string | null;
   parentId?: number | null;
   createdAt?: string;
+  /** false = archived: hidden from the storefront, kept so products keep their links. */
+  isActive?: boolean;
+  /** Set when the storefront redirects /shop/<id> elsewhere (an archived brand category). */
+  redirectPath?: string | null;
   _count?: { products?: number; children?: number };
   children?: CategoryNode[];
 }
