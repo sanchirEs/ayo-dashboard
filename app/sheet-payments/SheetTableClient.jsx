@@ -402,6 +402,46 @@ function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, o
   );
 }
 
+// Азтан and the Costco lists: shown as they are on the sheet, under the sheet's own column
+// names. Read only: nothing on these tabs is ticked or edited from here.
+function ListTable({ headers = [], rows, query, loading }) {
+  return (
+    <div className="wg-table table-all-category" style={{ width: "100%", overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "auto" }}>
+        <thead>
+          <tr>
+            <th style={{ ...TH, width: "56px", color: "#9ca3af" }}>Мөр</th>
+            {headers.map((h, i) => (
+              <th key={i} style={TH}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={headers.length + 1} style={{ ...TD, textAlign: "center", color: "#9ca3af", padding: "32px" }}>
+                {loading ? "Ачаалж байна..." : query ? "Хайлтад тохирох мөр олдсонгүй" : "Мөр байхгүй байна"}
+              </td>
+            </tr>
+          )}
+          {rows.map((row) => (
+            <tr key={row.rowIndex} style={{ borderBottom: "1px solid #f3f4f6" }}>
+              <td style={{ ...TD, color: "#9ca3af", fontSize: "12px", fontVariantNumeric: "tabular-nums" }}>{row.rowIndex}</td>
+              {headers.map((_, i) => (
+                <td key={i} style={{ ...TD, fontSize: "12px", color: "#374151", maxWidth: "260px" }}>
+                  <span title={row.cells[i]} style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {row.cells[i] || ""}
+                  </span>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function SheetTableClient({ initialData, initialToken, tabId, tabType, initialQuery = "" }) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -527,11 +567,13 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
     }
   };
 
-  const { rows = [], total = 0, page = 1, totalPages = 1 } = data || {};
+  const { rows = [], total = 0, page = 1, totalPages = 1, headers = [] } = data || {};
 
   const searchPlaceholder = tabType === "order"
-    ? "Бараа, утас, хаягаар хайх..."
-    : "Дансны дугаар, гүйлгээний тайлбар, утасаар хайх...";
+    ? "Захиалгын дугаар, бараа, утас, хаяг, дүнгээр хайх..."
+    : tabType === "list"
+      ? "Аль ч баганаар хайх..."
+      : "Дансны дугаар, гүйлгээний тайлбар, утас, дүнгээр хайх...";
 
   return (
     <div>
@@ -596,7 +638,9 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
         </div>
       )}
 
-      {tabType === "order" ? (
+      {tabType === "list" ? (
+        <ListTable headers={headers} rows={rows} query={query} loading={loading} />
+      ) : tabType === "order" ? (
         <OrderTable
           rows={rows}
           query={query}
