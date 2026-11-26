@@ -39,6 +39,7 @@ export const adminRoutes = [
   "/stock/sets",
   "/pos",
   "/reports/pos/all",
+  "/reports/pos/pickups",
   "/reports/pos/sales",
   "/reports/pos/margin",
   "/reports/pos/stock-value",

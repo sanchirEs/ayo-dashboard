@@ -77,6 +77,7 @@ export default function Menu() {
       "/stock/sets": 16,
       "/pos": 15,
       "/reports/pos/all": 17,
+      "/reports/pos/pickups": 17,
       "/reports/pos/sales": 17,
       "/reports/pos/margin": 17,
       "/reports/pos/stock-value": 17,
@@ -899,6 +900,7 @@ export default function Menu() {
                 >
                   {[
                     ["/reports/pos/all", "Бүх гүйлгээ"],
+                    ["/reports/pos/pickups", "Салбарын захиалга"],
                     ["/reports/pos/sales", "Борлуулалт"],
                     ["/reports/pos/margin", "Ашиг"],
                     ["/reports/pos/stock-value", "Нөөцийн үнэлгээ"],
