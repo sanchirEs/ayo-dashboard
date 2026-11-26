@@ -115,7 +115,7 @@ function ActionCell({ checked, canAct, onClick, title }) {
   );
 }
 
-function RefundActionCell({ checked, canAct, onConfirm }) {
+function RefundActionCell({ checked, date, canAct, onConfirm }) {
   const [confirming, setConfirming] = useState(false);
 
   if (checked) {
@@ -127,6 +127,7 @@ function RefundActionCell({ checked, canAct, onConfirm }) {
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           fontSize: "13px", color: "#dc2626",
         }}>✓</span>
+        {date && <div style={{ marginTop: "2px", fontSize: "11px", color: "#dc2626", whiteSpace: "nowrap" }}>{date}</div>}
       </td>
     );
   }
@@ -282,6 +283,7 @@ function TransactionTable({ rows, query, loading, tabId, token, role, onPhoneUpd
               />
               <RefundActionCell
                 checked={row.refunded}
+                date={row.refundDate}
                 canAct={canRefund}
                 onConfirm={() => onRefundConfirm(row.rowIndex)}
               />
@@ -391,6 +393,7 @@ function OrderTable({ rows, query, loading, tabId, token, role, onPhoneUpdate, o
               />
               <RefundActionCell
                 checked={row.refunded}
+                date={row.refundDate}
                 canAct={canRefund}
                 onConfirm={() => onRefundConfirm(row.rowIndex)}
               />
@@ -555,10 +558,10 @@ export default function SheetTableClient({ initialData, initialToken, tabId, tab
 
   const handleRefundConfirm = async (rowIndex) => {
     try {
-      await confirmTabRefund(tabId, rowIndex, token);
+      const { refundDate = "" } = (await confirmTabRefund(tabId, rowIndex, token)) || {};
       setData((prev) => ({
         ...prev,
-        rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, refunded: true } : r)),
+        rows: prev.rows.map((r) => (r.rowIndex === rowIndex ? { ...r, refunded: true, refundDate } : r)),
       }));
       setSuccessMsg("✅ Буцаалт баталгаажлаа!");
       setTimeout(() => setSuccessMsg(""), 3500);

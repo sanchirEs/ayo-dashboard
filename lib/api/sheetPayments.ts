@@ -10,6 +10,8 @@ export interface SheetRow {
   pickupChecked: boolean;
   deliveryChecked: boolean;
   refunded: boolean;
+  /** The day the money went back (sheet column K), shown under the Буцаалт tick. */
+  refundDate?: string;
   phone: string;
 }
 
@@ -291,7 +293,7 @@ export async function confirmTabRefund(
   tabId: string,
   rowIndex: number,
   token: string
-): Promise<{ message: string }> {
+): Promise<{ message: string; refundDate?: string }> {
   const res = await fetchWithAuthHandling(
     `${getBackendUrl()}/api/v1/sheet-payments/tabs/${tabId}/rows/${rowIndex}/confirm-refund`,
     { method: 'POST', headers: headers(token) },
