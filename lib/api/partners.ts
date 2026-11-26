@@ -183,8 +183,9 @@ export const getDelivery = (deliveryId: string, token: string) =>
 export const saveDraftLines = (deliveryId: string, lines: LineInput[], token: string) =>
   request<Delivery>("saveDraftLines", `/deliveries/${deliveryId}/lines`, token, { method: "PUT", body: JSON.stringify({ lines }) });
 
-export const sendDelivery = (deliveryId: string, token: string) =>
-  request<Delivery>("sendDelivery", `/deliveries/${deliveryId}/send`, token, post());
+/** `applyStock` true takes the goods out of Төв's stock; false records the падаан only. */
+export const sendDelivery = (deliveryId: string, applyStock: boolean, token: string) =>
+  request<Delivery>("sendDelivery", `/deliveries/${deliveryId}/send`, token, post({ applyStock }));
 
 export const confirmDelivery = (deliveryId: string, signedByName: string, token: string) =>
   request<Delivery>("confirmDelivery", `/deliveries/${deliveryId}/confirm`, token, post({ signedByName }));

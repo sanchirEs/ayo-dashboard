@@ -112,7 +112,7 @@ function ShortfallModal({ delivery, line, left, token, onClose, onDone }) {
           ))}
         </div>
         {kind === "SHORTFALL_TO_STOCK" && !delivery.stockApplied && (
-          <div style={{ fontSize: 13, color: C.muted }}>Энэ падаан нөөц хөдөлгөөгүй (Төв Dayansoft дээр байсан) тул зөвхөн төлбөрөөс хасна.</div>
+          <div style={{ fontSize: 13, color: C.muted }}>Энэ падаан Төвийн нөөцөөс хасаагүй тул зөвхөн төлбөрөөс хасна.</div>
         )}
         <label>
           <span style={labelStyle}>Тэмдэглэл</span>

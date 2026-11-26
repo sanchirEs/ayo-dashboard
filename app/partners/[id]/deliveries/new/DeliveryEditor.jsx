@@ -58,8 +58,11 @@ function lineFromSaved(l) {
   };
 }
 
+// The tick box starts unticked: a падаан records the numbers only unless the
+// sender chooses to take the goods out of Төв's stock.
 function SendConfirm({ delivery, onCancel, onConfirm, busy, error }) {
   const ayo = delivery.fromLocation?.stockMode === "AYO";
+  const [applyStock, setApplyStock] = useState(false);
   return (
     <Modal title="Падаан илгээх" onClose={onCancel}>
       <div style={{ fontSize: 15, color: C.text, display: "grid", gap: 10 }}>
@@ -67,15 +70,44 @@ function SendConfirm({ delivery, onCancel, onConfirm, busy, error }) {
           <strong>{delivery.partner?.name}</strong>-д {delivery.lines.length} мөр,{" "}
           <strong>{formatMnt(delivery.total)}</strong>.
         </div>
-        <div style={{ padding: 12, borderRadius: 8, backgroundColor: ayo ? C.amberBg : C.grayBg, color: ayo ? C.amber : C.muted }}>
-          {ayo ? "Төв салбарын нөөцөөс хасагдана." : "Төв Dayansoft дээр байгаа тул нөөц хөдлөхгүй."}
-        </div>
+        {ayo ? (
+          <label
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+              padding: 12,
+              borderRadius: 8,
+              cursor: "pointer",
+              backgroundColor: applyStock ? C.amberBg : C.grayBg,
+              color: applyStock ? C.amber : C.muted,
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={applyStock}
+              onChange={(e) => setApplyStock(e.target.checked)}
+              style={{ marginTop: 3, width: 16, height: 16, flexShrink: 0 }}
+            />
+            <span>
+              <strong>Төв салбарын нөөцөөс хасах</strong>
+              <br />
+              <span style={{ fontSize: 14 }}>
+                {applyStock ? "Бараа Төвийн нөөцөөс хасагдана." : "Нөөц хөдлөхгүй, зөвхөн падааны тоо, дүн хадгалагдана."}
+              </span>
+            </span>
+          </label>
+        ) : (
+          <div style={{ padding: 12, borderRadius: 8, backgroundColor: C.grayBg, color: C.muted }}>
+            Төв Dayansoft дээр байгаа тул нөөц хөдлөхгүй.
+          </div>
+        )}
         <div style={{ color: C.muted, fontSize: 14 }}>Илгээсний дараа засах боломжгүй. Харилцагчийн үлдэгдэл нэмэгдэнэ.</div>
       </div>
       <ErrorText>{error}</ErrorText>
       <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
         <Button kind="secondary" onClick={onCancel}>Болих</Button>
-        <Button onClick={onConfirm} disabled={busy}>Илгээх</Button>
+        <Button onClick={() => onConfirm(ayo && applyStock)} disabled={busy}>Илгээх</Button>
       </div>
     </Modal>
   );
@@ -228,11 +260,11 @@ export default function DeliveryEditor({ partnerId, draftId: initialDraftId }) {
     setBusy(false);
   };
 
-  const onConfirmSend = async () => {
+  const onConfirmSend = async (applyStock) => {
     setBusy(true);
     setSendError(null);
     try {
-      const sent = await sendDelivery(confirming.id, token);
+      const sent = await sendDelivery(confirming.id, applyStock, token);
       router.push(`/partner-deliveries/${sent.id}`);
     } catch (e) {
       setSendError(e.message);
