@@ -17,7 +17,7 @@ export function useToken() {
   return session?.user?.accessToken;
 }
 
-/** Branches that hold stock (real branches and the TST test location). */
+/** Locations that hold stock: real branches, partner shops on the POS, and the TST test location. */
 export function useLocations(token) {
   const [locations, setLocations] = useState([]);
   const [error, setError] = useState(null);
@@ -25,7 +25,7 @@ export function useLocations(token) {
   useEffect(() => {
     if (!token) return;
     listLocations(token)
-      .then((all) => setLocations(all.filter((l) => l.kind === "BRANCH" || l.kind === "TEST")))
+      .then((all) => setLocations(all.filter((l) => ["BRANCH", "PARTNER", "TEST"].includes(l.kind))))
       .catch((e) => setError(e.message));
   }, [token]);
 
